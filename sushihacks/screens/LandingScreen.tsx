@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
+  Image,
   Animated,
   Dimensions,
 } from 'react-native';
@@ -143,16 +144,14 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
             ]}
           >
             <View style={styles.iconWrapper}>
-              <LinearGradient
-                colors={[Colors.gradient.start, Colors.gradient.end]}
-                style={styles.iconGradient}
-              >
-                <Ionicons name="hand-left" size={60} color={Colors.white} />
-              </LinearGradient>
+              <Image
+                source={require('../assets/images/logo.png')} // correct relative path
+                style={{ width: '100%', height: '100%', resizeMode: 'contain' }}
+              />
             </View>
           </Animated.View>
 
-          <Animated.View
+          {/* <Animated.View
             style={[
               styles.textContainer,
               {
@@ -161,9 +160,9 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
               },
             ]}
           >
-            <Text style={styles.title}>Carp</Text>
-            <Text style={styles.subtitle}>Monitor Your Grip, Protect Your Future</Text>
-          </Animated.View>
+            <Text style={styles.title}>Carp El Tracker</Text>
+            <Text style={styles.subtitle}>Stronger grip, Safer catch</Text>
+          </Animated.View> */}
 
           <Animated.View
             style={[
@@ -190,10 +189,6 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
               },
             ]}
           >
-            <View style={styles.trustBadge}>
-              <Ionicons name="shield-checkmark" size={20} color={Colors.success} />
-              <Text style={styles.trustText}>Trusted by 10,000+ fishermen</Text>
-            </View>
             <View style={styles.features}>
               <View style={styles.feature}>
                 <Ionicons name="analytics" size={16} color={Colors.primary} />
@@ -212,12 +207,8 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
   waveContainer: {
     position: 'absolute',
     top: 0,
@@ -227,31 +218,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  wave: {
-    position: 'absolute',
-  },
-  wave2: {
-    top: 100,
-  },
+  wave: { position: 'absolute' },
+  wave2: { top: 100 },
   content: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Spacing.xl,
   },
-  logoContainer: {
-    marginBottom: Spacing.xl,
-  },
+  logoContainer: { marginBottom: Spacing.xl },
   iconWrapper: {
-    width: 120,
-    height: 120,
+    width: 240,
+    height: 240,
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
-  },
-  iconGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   textContainer: {
     alignItems: 'center',
@@ -273,9 +253,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: Spacing.xxl,
   },
-  button: {
-    width: '100%',
-  },
+  button: { width: '100%' },
   trustContainer: {
     position: 'absolute',
     bottom: Spacing.xxl,
@@ -287,20 +265,8 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     marginBottom: Spacing.md,
   },
-  trustText: {
-    ...Typography.caption,
-    fontWeight: '500',
-  },
-  features: {
-    flexDirection: 'row',
-    gap: Spacing.lg,
-  },
-  feature: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  featureText: {
-    ...Typography.small,
-  },
+  trustText: { ...Typography.caption, fontWeight: '500' },
+  features: { flexDirection: 'row', gap: Spacing.lg },
+  feature: { flexDirection: 'row', alignItems: 'center', gap: Spacing.xs },
+  featureText: { ...Typography.small },
 });

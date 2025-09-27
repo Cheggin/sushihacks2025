@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -9,26 +9,31 @@ import {
   RefreshControl,
   Dimensions,
   TouchableOpacity,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Card } from '../components/Card';
-import { GiftedChartCard } from '../components/GiftedChartCard';
-import { ComingSoonCard } from '../components/ComingSoonCard';
-import { RiskIndicator } from '../components/RiskIndicator';
-import { Button } from '../components/Button';
-import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../constants/colors';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Card } from "../components/Card";
+import { GiftedChartCard } from "../components/GiftedChartCard";
+import { RiskIndicator } from "../components/RiskIndicator";
+import { Button } from "../components/Button";
+import {
+  Colors,
+  Typography,
+  Spacing,
+  BorderRadius,
+  Shadows,
+} from "../constants/colors";
 import {
   generateDailyReadings,
   generateWeeklyData,
-  calculateRiskLevel,
+  generateMonthlyData,
   formatTime,
   getCurrentGreeting,
-} from '../utils/dataGenerator';
-import { RiskLevel } from '../types';
+} from "../utils/dataGenerator";
+import { RiskLevel } from "../types";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 interface DashboardScreenProps {
   navigation?: any;
@@ -44,19 +49,23 @@ interface ProfileData {
   crossSectionalArea: string;
 }
 
-export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
+export const DashboardScreen: React.FC<DashboardScreenProps> = ({
+  navigation,
+}) => {
   const [refreshing, setRefreshing] = useState(false);
+  const [showMonthly, setShowMonthly] = useState(false);
   const [dailyReadings] = useState(generateDailyReadings());
   const [weeklyData] = useState(generateWeeklyData());
-  const [riskLevel, setRiskLevel] = useState<RiskLevel>('MODERATE');
+  const [monthlyData] = useState(generateMonthlyData());
+  const [riskLevel, setRiskLevel] = useState<RiskLevel>("MODERATE");
   const [profileData, setProfileData] = useState<ProfileData>({
-    name: 'User',
-    age: '',
-    sex: '',
-    bmi: '',
-    nrs: '',
-    palmarBowing: '',
-    crossSectionalArea: '',
+    name: "User",
+    age: "",
+    sex: "",
+    bmi: "",
+    nrs: "",
+    palmarBowing: "",
+    crossSectionalArea: "",
   });
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -64,61 +73,49 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 
   const loadProfileData = async () => {
     try {
-      const savedData = await AsyncStorage.getItem('userProfile');
+      const savedData = await AsyncStorage.getItem("userProfile");
       if (savedData) {
         const data = JSON.parse(savedData);
         setProfileData(data);
-
-        // Calculate risk based on user's health metrics
-        const risk = calculateUserRisk(data);
-        setRiskLevel(risk);
+        setRiskLevel(calculateUserRisk(data));
       }
     } catch (error) {
-      console.error('Error loading profile data:', error);
+      console.error("Error loading profile data:", error);
     }
   };
 
   const calculateUserRisk = (profile: ProfileData): RiskLevel => {
-    // Calculate risk based on multiple factors
     let riskScore = 0;
-
-    // BMI factor (normal range: 18.5 - 24.9)
     const bmi = parseFloat(profile.bmi);
     if (bmi && (bmi < 18.5 || bmi > 30)) riskScore += 2;
-    else if (bmi && (bmi > 24.9)) riskScore += 1;
+    else if (bmi && bmi > 24.9) riskScore += 1;
 
-    // NRS pain scale factor (0-10)
     const nrs = parseFloat(profile.nrs);
     if (nrs >= 7) riskScore += 3;
     else if (nrs >= 4) riskScore += 2;
     else if (nrs >= 1) riskScore += 1;
 
-    // Palmar bowing factor (higher values indicate more nerve compression)
     const pb = parseFloat(profile.palmarBowing);
     if (pb > 3) riskScore += 2;
     else if (pb > 2) riskScore += 1;
 
-    // Cross-sectional area factor (normal < 10 mm²)
     const csa = parseFloat(profile.crossSectionalArea);
     if (csa > 15) riskScore += 3;
     else if (csa > 12) riskScore += 2;
     else if (csa > 10) riskScore += 1;
 
-    // Age factor
     const age = parseInt(profile.age);
     if (age > 50) riskScore += 1;
 
-    // Grip strength from readings
     const averageStrength =
       dailyReadings.reduce((acc, reading) => acc + reading.value, 0) /
       dailyReadings.length;
     if (averageStrength < 40) riskScore += 2;
     else if (averageStrength < 50) riskScore += 1;
 
-    // Determine risk level based on total score
-    if (riskScore <= 3) return 'LOW';
-    if (riskScore <= 7) return 'MODERATE';
-    return 'HIGH';
+    if (riskScore <= 3) return "LOW";
+    if (riskScore <= 7) return "MODERATE";
+    return "HIGH";
   };
 
   useEffect(() => {
@@ -139,37 +136,31 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   }, []);
 
   useEffect(() => {
-    if (refreshing) {
-      loadProfileData();
-    }
+    if (refreshing) loadProfileData();
   }, [refreshing]);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
+    setTimeout(() => setRefreshing(false), 2000);
   }, []);
 
   const dailyChartData = {
-    labels: dailyReadings.slice(0, 6).map(r => formatTime(r.timestamp)),
-    datasets: [
-      {
-        data: dailyReadings.slice(0, 6).map(r => r.value),
-      },
-    ],
+    labels: dailyReadings.slice(0, 6).map((r) => formatTime(r.timestamp)),
+    datasets: [{ data: dailyReadings.slice(0, 6).map((r) => r.value) }],
   };
 
   const weeklyChartData = {
-    labels: weeklyData.map(d => d.day),
-    datasets: [
-      {
-        data: weeklyData.map(d => d.value),
-      },
-    ],
+    labels: weeklyData.map((d) => d.day),
+    datasets: [{ data: weeklyData.map((d) => d.value) }],
   };
 
-  const currentStrengthValue = dailyReadings[dailyReadings.length - 1]?.value || 0;
+  const monthlyChartData = {
+    labels: monthlyData.map((d) => d.day),
+    datasets: [{ data: monthlyData.map((d) => d.value) }],
+  };
+
+  const currentStrengthValue =
+    dailyReadings[dailyReadings.length - 1]?.value || 0;
   const currentStrength = currentStrengthValue.toFixed(2);
   const trend = currentStrengthValue > dailyReadings[0]?.value;
 
@@ -191,18 +182,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             />
           }
         >
+          {/* Header */}
           <Animated.View
             style={[
               styles.header,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
+              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
             ]}
           >
             <TouchableOpacity
               style={styles.headerLeft}
-              onPress={() => navigation?.navigate('profile')}
+              onPress={() => navigation?.navigate("profile")}
               activeOpacity={0.7}
             >
               <View style={styles.profileImage}>
@@ -210,76 +199,94 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               </View>
               <View>
                 <Text style={styles.greeting}>{getCurrentGreeting()}</Text>
-                <Text style={styles.userName}>{profileData.name || 'User'}</Text>
+                <Text style={styles.userName}>
+                  {profileData.name || "User"}
+                </Text>
               </View>
             </TouchableOpacity>
             <View style={styles.headerRight}>
               <View style={styles.notificationBadge}>
-                <Ionicons name="notifications-outline" size={24} color={Colors.text.primary} />
+                <Ionicons
+                  name="notifications-outline"
+                  size={24}
+                  color={Colors.text.primary}
+                />
                 <View style={styles.notificationDot} />
               </View>
             </View>
           </Animated.View>
 
-          <Animated.View
-            style={[
-              styles.dateContainer,
-              {
-                opacity: fadeAnim,
-              },
-            ]}
-          >
+          {/* Date */}
+          <Animated.View style={[styles.dateContainer, { opacity: fadeAnim }]}>
             <Text style={styles.dateText}>
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
+              {new Date().toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
               })}
             </Text>
           </Animated.View>
 
+          {/* Top Row: Stats + Trends */}
           <Animated.View
             style={[
-              styles.chartsRow,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
+              styles.topRow,
+              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
             ]}
           >
-            <View style={styles.halfCard}>
-              <ComingSoonCard title="Monthly Trends" icon="trending-up" />
-            </View>
-            <View style={styles.halfCard}>
-              <GiftedChartCard
-                title="Weekly"
-                type="bar"
-                data={weeklyChartData}
-                width={(width - 48 - 16) / 2}
-                height={140}
-                showValues={true}
-              />
+            {/* Stats Card */}
+            <Card style={styles.statsCard}>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>Latest Grip</Text>
+                <Text style={styles.statValue}>{currentStrength}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={styles.statLabel}>CTS Risk</Text>
+                <Text style={styles.statValue}>{riskLevel}</Text>
+              </View>
+            </Card>
+
+            {/* Trends Card with hovering arrow */}
+            <View style={styles.trendsCardContainer}>
+              <Card style={styles.trendsCard}>
+                <GiftedChartCard
+                  title={showMonthly ? "Monthly Trends" : "Weekly Trends"}
+                  type="bar"
+                  data={showMonthly ? monthlyChartData : weeklyChartData}
+                  width={width / 2 - 32}
+                  height={140}
+                  showValues
+                />
+              </Card>
+              <TouchableOpacity
+                style={styles.arrowButton}
+                onPress={() => setShowMonthly((prev) => !prev)}
+              >
+                <Ionicons
+                  name={showMonthly ? "arrow-back" : "arrow-forward"}
+                  size={28}
+                  color={Colors.primary}
+                />
+              </TouchableOpacity>
             </View>
           </Animated.View>
 
+          {/* Daily Grip Chart */}
           <Animated.View
             style={[
               styles.mainChartContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
+              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
             ]}
           >
             <Card>
               <View style={styles.chartHeader}>
-                <View>
-                  <Text style={styles.chartTitle}>Today's Grip Strength</Text>
-                </View>
+                <Text style={styles.chartTitle}>Today's Grip Strength</Text>
                 <View style={styles.currentValue}>
-                  <Text style={styles.currentValueNumber}>{currentStrength}</Text>
+                  <Text style={styles.currentValueNumber}>
+                    {currentStrength}
+                  </Text>
                   <Ionicons
-                    name={trend ? 'trending-up' : 'trending-down'}
+                    name={trend ? "trending-up" : "trending-down"}
                     size={20}
                     color={trend ? Colors.success : Colors.warning}
                   />
@@ -295,17 +302,17 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             />
           </Animated.View>
 
+          {/* Risk Assessment */}
           <Animated.View
             style={[
               styles.riskContainer,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
-              },
+              { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
             ]}
           >
             <Card>
-              <Text style={styles.riskTitle}>Carpal Tunnel Risk Assessment</Text>
+              <Text style={styles.riskTitle}>
+                Carpal Tunnel Risk Assessment
+              </Text>
               <RiskIndicator level={riskLevel} />
               {profileData.nrs && (
                 <View style={styles.metricsRow}>
@@ -324,7 +331,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               <View style={styles.actionButtons}>
                 <Button
                   title="Update Profile"
-                  onPress={() => navigation?.navigate('profile')}
+                  onPress={() => navigation?.navigate("profile")}
                   variant="outline"
                   size="medium"
                   style={styles.actionButton}
@@ -339,7 +346,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               </View>
             </Card>
           </Animated.View>
-
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -347,56 +353,34 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 20 },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: Spacing.lg,
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.md,
   },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: Spacing.md },
   profileImage: {
     width: 48,
     height: 48,
     borderRadius: BorderRadius.xl,
     backgroundColor: Colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     ...Shadows.sm,
   },
-  greeting: {
-    ...Typography.caption,
-  },
-  userName: {
-    ...Typography.subheading,
-    fontWeight: '600',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  notificationBadge: {
-    position: 'relative',
-  },
+  greeting: { ...Typography.caption },
+  userName: { ...Typography.subheading, fontWeight: "600" },
+  headerRight: { flexDirection: "row", alignItems: "center" },
+  notificationBadge: { position: "relative" },
   notificationDot: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     right: 0,
     width: 8,
@@ -404,78 +388,86 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: Colors.danger,
   },
-  dateContainer: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
-  dateText: {
-    ...Typography.caption,
-  },
-  chartsRow: {
-    flexDirection: 'row',
+  dateContainer: { paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg },
+  dateText: { ...Typography.caption },
+  topRow: {
+    flexDirection: "row",
     paddingHorizontal: Spacing.lg,
     gap: Spacing.md,
     marginBottom: Spacing.md,
   },
-  halfCard: {
+  statsCard: {
     flex: 1,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    justifyContent: "space-around",
   },
-  mainChartContainer: {
-    paddingHorizontal: Spacing.md,
-    marginBottom: Spacing.lg,
+  statItem: { alignItems: "center", marginBottom: Spacing.sm },
+  statLabel: {
+    ...Typography.caption,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.xs,
   },
-  mainChart: {
-    paddingTop: Spacing.lg,
+  statValue: {
+    ...Typography.subheading,
+    fontWeight: "700",
+    color: Colors.primary,
   },
+  trendsCardContainer: {
+    width: width / 2,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  trendsCard: { padding: 0, width: "100%" },
+  arrowButton: {
+    position: "absolute",
+    right: 8, // move inside the card edge
+    top: "50%",
+    transform: [{ translateY: -20 }],
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    ...Shadows.sm,
+  },
+  mainChartContainer: { paddingHorizontal: Spacing.md, marginBottom: Spacing.lg },
   chartHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: Spacing.md,
     paddingHorizontal: Spacing.lg,
   },
-  chartTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  currentValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
+  chartTitle: { fontSize: 16, fontWeight: "600", color: Colors.text.primary },
+  currentValue: { flexDirection: "row", alignItems: "center", gap: 4 },
   currentValueNumber: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.primary,
   },
-  riskContainer: {
-    paddingHorizontal: Spacing.lg,
-    marginBottom: Spacing.lg,
-  },
+  riskContainer: { paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg },
   riskTitle: {
     ...Typography.subheading,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: Spacing.md,
   },
   actionButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: Spacing.md,
     paddingHorizontal: Spacing.md,
   },
-  actionButton: {
-    flex: 1,
-  },
+  actionButton: { flex: 1 },
   metricsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginTop: Spacing.md,
     marginBottom: Spacing.md,
     paddingHorizontal: Spacing.lg,
   },
-  metricItem: {
-    alignItems: 'center',
-  },
+  metricItem: { alignItems: "center" },
   metricLabel: {
     ...Typography.caption,
     color: Colors.text.secondary,
@@ -483,7 +475,7 @@ const styles = StyleSheet.create({
   },
   metricValue: {
     ...Typography.subheading,
-    fontWeight: '600',
+    fontWeight: "600",
     color: Colors.primary,
   },
 });

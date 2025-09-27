@@ -31,6 +31,14 @@ export const generateWeeklyData = (): WeeklyData[] => {
   }));
 };
 
+export const generateMonthlyData = () => {
+  // temporary filler data
+  return Array.from({ length: 6 }, (_, i) => ({
+    day: `Day ${i + 1}`,
+    value: Math.floor(Math.random() * 60) + 20,
+  }));
+};
+
 export const calculateRiskLevel = (averageStrength: number): RiskLevel => {
   if (averageStrength >= 50) return 'LOW';
   if (averageStrength >= 40) return 'MODERATE';
