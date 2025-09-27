@@ -8,9 +8,11 @@ import {
   Animated,
   RefreshControl,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Card } from '../components/Card';
 import { GiftedChartCard } from '../components/GiftedChartCard';
 import { ComingSoonCard } from '../components/ComingSoonCard';
@@ -28,14 +30,96 @@ import { RiskLevel } from '../types';
 
 const { width } = Dimensions.get('window');
 
-export const DashboardScreen: React.FC = () => {
+interface DashboardScreenProps {
+  navigation?: any;
+}
+
+interface ProfileData {
+  name: string;
+  age: string;
+  sex: string;
+  bmi: string;
+  nrs: string;
+  palmarBowing: string;
+  crossSectionalArea: string;
+}
+
+export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [dailyReadings] = useState(generateDailyReadings());
   const [weeklyData] = useState(generateWeeklyData());
   const [riskLevel, setRiskLevel] = useState<RiskLevel>('MODERATE');
+  const [profileData, setProfileData] = useState<ProfileData>({
+    name: 'User',
+    age: '',
+    sex: '',
+    bmi: '',
+    nrs: '',
+    palmarBowing: '',
+    crossSectionalArea: '',
+  });
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+
+  const loadProfileData = async () => {
+    try {
+      const savedData = await AsyncStorage.getItem('userProfile');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        setProfileData(data);
+
+        // Calculate risk based on user's health metrics
+        const risk = calculateUserRisk(data);
+        setRiskLevel(risk);
+      }
+    } catch (error) {
+      console.error('Error loading profile data:', error);
+    }
+  };
+
+  const calculateUserRisk = (profile: ProfileData): RiskLevel => {
+    // Calculate risk based on multiple factors
+    let riskScore = 0;
+
+    // BMI factor (normal range: 18.5 - 24.9)
+    const bmi = parseFloat(profile.bmi);
+    if (bmi && (bmi < 18.5 || bmi > 30)) riskScore += 2;
+    else if (bmi && (bmi > 24.9)) riskScore += 1;
+
+    // NRS pain scale factor (0-10)
+    const nrs = parseFloat(profile.nrs);
+    if (nrs >= 7) riskScore += 3;
+    else if (nrs >= 4) riskScore += 2;
+    else if (nrs >= 1) riskScore += 1;
+
+    // Palmar bowing factor (higher values indicate more nerve compression)
+    const pb = parseFloat(profile.palmarBowing);
+    if (pb > 3) riskScore += 2;
+    else if (pb > 2) riskScore += 1;
+
+    // Cross-sectional area factor (normal < 10 mm²)
+    const csa = parseFloat(profile.crossSectionalArea);
+    if (csa > 15) riskScore += 3;
+    else if (csa > 12) riskScore += 2;
+    else if (csa > 10) riskScore += 1;
+
+    // Age factor
+    const age = parseInt(profile.age);
+    if (age > 50) riskScore += 1;
+
+    // Grip strength from readings
+    const averageStrength =
+      dailyReadings.reduce((acc, reading) => acc + reading.value, 0) /
+      dailyReadings.length;
+    if (averageStrength < 40) riskScore += 2;
+    else if (averageStrength < 50) riskScore += 1;
+
+    // Determine risk level based on total score
+    if (riskScore <= 3) return 'LOW';
+    if (riskScore <= 7) return 'MODERATE';
+    return 'HIGH';
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -51,11 +135,14 @@ export const DashboardScreen: React.FC = () => {
       }),
     ]).start();
 
-    const averageStrength =
-      dailyReadings.reduce((acc, reading) => acc + reading.value, 0) /
-      dailyReadings.length;
-    setRiskLevel(calculateRiskLevel(averageStrength));
+    loadProfileData();
   }, []);
+
+  useEffect(() => {
+    if (refreshing) {
+      loadProfileData();
+    }
+  }, [refreshing]);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
@@ -113,15 +200,19 @@ export const DashboardScreen: React.FC = () => {
               },
             ]}
           >
-            <View style={styles.headerLeft}>
+            <TouchableOpacity
+              style={styles.headerLeft}
+              onPress={() => navigation?.navigate('profile')}
+              activeOpacity={0.7}
+            >
               <View style={styles.profileImage}>
                 <Ionicons name="person" size={24} color={Colors.primary} />
               </View>
               <View>
                 <Text style={styles.greeting}>{getCurrentGreeting()}</Text>
-                <Text style={styles.userName}>Captain Fisher</Text>
+                <Text style={styles.userName}>{profileData.name || 'User'}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
             <View style={styles.headerRight}>
               <View style={styles.notificationBadge}>
                 <Ionicons name="notifications-outline" size={24} color={Colors.text.primary} />
@@ -216,10 +307,24 @@ export const DashboardScreen: React.FC = () => {
             <Card>
               <Text style={styles.riskTitle}>Carpal Tunnel Risk Assessment</Text>
               <RiskIndicator level={riskLevel} />
+              {profileData.nrs && (
+                <View style={styles.metricsRow}>
+                  <View style={styles.metricItem}>
+                    <Text style={styles.metricLabel}>Pain Level</Text>
+                    <Text style={styles.metricValue}>{profileData.nrs}/10</Text>
+                  </View>
+                  {profileData.bmi && (
+                    <View style={styles.metricItem}>
+                      <Text style={styles.metricLabel}>BMI</Text>
+                      <Text style={styles.metricValue}>{profileData.bmi}</Text>
+                    </View>
+                  )}
+                </View>
+              )}
               <View style={styles.actionButtons}>
                 <Button
-                  title="View Details"
-                  onPress={() => {}}
+                  title="Update Profile"
+                  onPress={() => navigation?.navigate('profile')}
                   variant="outline"
                   size="medium"
                   style={styles.actionButton}
@@ -360,5 +465,25 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: Spacing.md,
+    marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+  },
+  metricItem: {
+    alignItems: 'center',
+  },
+  metricLabel: {
+    ...Typography.caption,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.xs,
+  },
+  metricValue: {
+    ...Typography.subheading,
+    fontWeight: '600',
+    color: Colors.primary,
   },
 });
