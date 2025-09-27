@@ -16,6 +16,7 @@ import { InputField } from '../components/InputField';
 import { SelectField } from '../components/SelectField';
 import { Button } from '../components/Button';
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '../constants/colors';
+import { predictFeatures } from '../services/api';
 
 interface ProfileData {
   name: string;
@@ -43,6 +44,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [predicting, setPredicting] = useState(false);
 
   useEffect(() => {
     loadProfileData();
@@ -68,6 +70,58 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       Alert.alert('Error', 'Failed to save profile data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePrediction = async () => {
+    console.log('Starting prediction with data:', profileData);
+
+    // Validate required fields
+    if (!profileData.age || !profileData.bmi || !profileData.sex ||
+        !profileData.crossSectionalArea || !profileData.palmarBowing || !profileData.nrs) {
+      Alert.alert('Missing Data', 'Please fill in all health and clinical measurements');
+      return;
+    }
+
+    setPredicting(true);
+    try {
+      console.log('Calling API...');
+      const result = await predictFeatures(
+        profileData.age,
+        profileData.bmi,
+        profileData.crossSectionalArea,
+        profileData.palmarBowing,
+        profileData.nrs,
+        profileData.sex
+      );
+
+      console.log('API Response:', result);
+
+      // Get risk factors from metadata
+      const riskFactors = result.metadata.risk_factors || [];
+      const riskLevel = result.metadata.risk_level || 'Unknown';
+
+      let message = `Risk Score: ${(result.prediction * 100).toFixed(1)}%\n`;
+      message += `Confidence: ${(result.confidence * 100).toFixed(0)}%\n`;
+      message += `Risk Level: ${riskLevel}\n\n`;
+
+      if (riskFactors.length > 0) {
+        message += `Risk Factors:\n`;
+        riskFactors.forEach((factor: string) => {
+          message += `• ${factor}\n`;
+        });
+      }
+
+      Alert.alert(
+        'Carpal Tunnel Syndrome Risk Assessment',
+        message,
+        [{ text: 'OK' }]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to get prediction. Make sure the backend server is running.');
+      console.error('Prediction error:', error);
+    } finally {
+      setPredicting(false);
     }
   };
 
@@ -202,6 +256,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               size="large"
               style={styles.saveButton}
             />
+
+            <Button
+              title="Get Prediction"
+              onPress={handlePrediction}
+              loading={predicting}
+              size="large"
+              variant="secondary"
+              style={styles.predictionButton}
+            />
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -274,6 +337,10 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   saveButton: {
+    width: '100%',
+    marginBottom: Spacing.md,
+  },
+  predictionButton: {
     width: '100%',
   },
 });
