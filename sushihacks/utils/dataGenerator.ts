@@ -2,12 +2,12 @@ import { GripStrengthReading, WeeklyData, RiskLevel } from '../types';
 
 export const generateDailyReadings = (): GripStrengthReading[] => {
   const readings: GripStrengthReading[] = [];
-  const hoursToShow = 12;
+  const hoursToShow = 6;
   const now = new Date();
 
   for (let i = 0; i < hoursToShow; i++) {
     const time = new Date(now);
-    time.setHours(now.getHours() - (hoursToShow - i - 1));
+    time.setHours(now.getHours() - (hoursToShow - i - 1) * 2);
 
     const baseValue = 50;
     const variation = Math.sin(i * 0.5) * 10 + Math.random() * 5;
@@ -22,7 +22,7 @@ export const generateDailyReadings = (): GripStrengthReading[] => {
 };
 
 export const generateWeeklyData = (): WeeklyData[] => {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const days = ['M', 'T', 'W', 'Th', 'F', 'Sa', 'S'];
   const values = [45, 52, 48, 55, 51, 47, 49];
 
   return days.map((day, index) => ({
@@ -38,10 +38,10 @@ export const calculateRiskLevel = (averageStrength: number): RiskLevel => {
 };
 
 export const formatTime = (date: Date): string => {
-  return date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    hour12: true,
-  });
+  const hour = date.getHours();
+  const period = hour >= 12 ? 'pm' : 'am';
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}${period}`;
 };
 
 export const getCurrentGreeting = (): string => {

@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Card } from '../components/Card';
-import { ChartCard } from '../components/ChartCard';
+import { GiftedChartCard } from '../components/GiftedChartCard';
 import { ComingSoonCard } from '../components/ComingSoonCard';
 import { RiskIndicator } from '../components/RiskIndicator';
 import { Button } from '../components/Button';
@@ -65,10 +65,10 @@ export const DashboardScreen: React.FC = () => {
   }, []);
 
   const dailyChartData = {
-    labels: dailyReadings.map(r => formatTime(r.timestamp)),
+    labels: dailyReadings.slice(0, 6).map(r => formatTime(r.timestamp)),
     datasets: [
       {
-        data: dailyReadings.map(r => r.value),
+        data: dailyReadings.slice(0, 6).map(r => r.value),
       },
     ],
   };
@@ -82,8 +82,9 @@ export const DashboardScreen: React.FC = () => {
     ],
   };
 
-  const currentStrength = dailyReadings[dailyReadings.length - 1]?.value || 0;
-  const trend = currentStrength > dailyReadings[0]?.value;
+  const currentStrengthValue = dailyReadings[dailyReadings.length - 1]?.value || 0;
+  const currentStrength = currentStrengthValue.toFixed(2);
+  const trend = currentStrengthValue > dailyReadings[0]?.value;
 
   return (
     <LinearGradient
@@ -159,12 +160,12 @@ export const DashboardScreen: React.FC = () => {
               <ComingSoonCard title="Monthly Trends" icon="trending-up" />
             </View>
             <View style={styles.halfCard}>
-              <ChartCard
-                title="Weekly Average"
+              <GiftedChartCard
+                title="Weekly"
                 type="bar"
                 data={weeklyChartData}
-                width={width / 2 - 36}
-                height={160}
+                width={(width - 48 - 16) / 2}
+                height={140}
                 showValues={true}
               />
             </View>
@@ -179,9 +180,11 @@ export const DashboardScreen: React.FC = () => {
               },
             ]}
           >
-            <Card style={styles.mainChart}>
+            <Card>
               <View style={styles.chartHeader}>
-                <Text style={styles.chartTitle}>Today's Grip Strength</Text>
+                <View>
+                  <Text style={styles.chartTitle}>Today's Grip Strength</Text>
+                </View>
                 <View style={styles.currentValue}>
                   <Text style={styles.currentValueNumber}>{currentStrength}</Text>
                   <Ionicons
@@ -191,14 +194,14 @@ export const DashboardScreen: React.FC = () => {
                   />
                 </View>
               </View>
-              <ChartCard
-                title=""
-                type="line"
-                data={dailyChartData}
-                width={width - 48}
-                height={180}
-              />
             </Card>
+            <GiftedChartCard
+              title=""
+              type="line"
+              data={dailyChartData}
+              width={width - 32}
+              height={160}
+            />
           </Animated.View>
 
           <Animated.View
@@ -232,31 +235,6 @@ export const DashboardScreen: React.FC = () => {
             </Card>
           </Animated.View>
 
-          <Animated.View
-            style={[
-              styles.bottomNav,
-              {
-                opacity: fadeAnim,
-              },
-            ]}
-          >
-            <View style={styles.navItem}>
-              <Ionicons name="home" size={24} color={Colors.primary} />
-              <Text style={[styles.navText, styles.navTextActive]}>Home</Text>
-            </View>
-            <View style={styles.navItem}>
-              <Ionicons name="bar-chart-outline" size={24} color={Colors.text.light} />
-              <Text style={styles.navText}>History</Text>
-            </View>
-            <View style={styles.navItem}>
-              <Ionicons name="bulb-outline" size={24} color={Colors.text.light} />
-              <Text style={styles.navText}>Insights</Text>
-            </View>
-            <View style={styles.navItem}>
-              <Ionicons name="settings-outline" size={24} color={Colors.text.light} />
-              <Text style={styles.navText}>Settings</Text>
-            </View>
-          </Animated.View>
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>
@@ -274,7 +252,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
@@ -338,7 +316,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   mainChartContainer: {
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     marginBottom: Spacing.lg,
   },
   mainChart: {
@@ -349,18 +327,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.md,
+    paddingHorizontal: Spacing.lg,
   },
   chartTitle: {
-    ...Typography.heading,
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text.primary,
   },
   currentValue: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: 4,
   },
   currentValueNumber: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 16,
+    fontWeight: '600',
     color: Colors.primary,
   },
   riskContainer: {
@@ -379,30 +360,5 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-  },
-  bottomNav: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: Colors.white,
-    paddingVertical: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-    ...Shadows.md,
-  },
-  navItem: {
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  navText: {
-    ...Typography.small,
-    color: Colors.text.light,
-  },
-  navTextActive: {
-    color: Colors.primary,
-    fontWeight: '600',
   },
 });

@@ -161,7 +161,7 @@ export const LandingScreen: React.FC<LandingScreenProps> = ({ navigation }) => {
               },
             ]}
           >
-            <Text style={styles.title}>GripGuard</Text>
+            <Text style={styles.title}>Carp</Text>
             <Text style={styles.subtitle}>Monitor Your Grip, Protect Your Future</Text>
           </Animated.View>
 
