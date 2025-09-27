@@ -2,8 +2,19 @@ import pickle
 import pandas as pd
 
 def feature_predict(json_data: dict) -> int:
+    """
+    json data example:
+    {   
+        "age": int,
+        "bmi": float,
+        "csa": float,
+        "pb": float,
+        "nrs": (int 0-10),
+        "sex": (0=male, 1-female)
+    }
+    """
     # Load the pre-trained model
-    with open("xgboost_rf_model.pkl", "rb") as f:
+    with open("new_model.pkl", "rb") as f:
         loaded_model = pickle.load(f)
 
     # Convert JSON data to DataFrame
@@ -15,7 +26,7 @@ def feature_predict(json_data: dict) -> int:
     return prediction[0]
 
 def test():
-    with open("xgboost_rf_model.pkl", "rb") as f:
+    with open("new_model.pkl", "rb") as f:
         loaded_model = pickle.load(f)
 
     # Example new data for prediction
@@ -24,13 +35,8 @@ def test():
         "bmi": 23.530366,
         "csa": 27.0,
         "pb": 3.9,
-        "duration": 12,
         "nrs": 7,
-        "sex": 0,        # e.g. male=1, female=0 (depends how you encoded it)
-        "side": 0,       # left/right encoding
-        "diabetes": 1,
-        "np": 1,
-        "weakness": 1
+        "sex": 0,
     }])
 
     pred_class = loaded_model.predict(new_data)
