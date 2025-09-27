@@ -305,37 +305,24 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             ]}
           >
             <Card>
-              <Text style={styles.riskTitle}>Carpal Tunnel Risk Assessment</Text>
-              <RiskIndicator level={riskLevel} />
-              {profileData.nrs && (
-                <View style={styles.metricsRow}>
-                  <View style={styles.metricItem}>
-                    <Text style={styles.metricLabel}>Pain Level</Text>
-                    <Text style={styles.metricValue}>{profileData.nrs}/10</Text>
-                  </View>
-                  {profileData.bmi && (
-                    <View style={styles.metricItem}>
-                      <Text style={styles.metricLabel}>BMI</Text>
-                      <Text style={styles.metricValue}>{profileData.bmi}</Text>
-                    </View>
-                  )}
-                </View>
-              )}
-              <View style={styles.actionButtons}>
+              <View style={styles.testSection}>
+                <Ionicons name="fitness-outline" size={48} color={Colors.primary} />
+                <Text style={styles.testTitle}>Carpal Tunnel Risk Test</Text>
+                <Text style={styles.testDescription}>
+                  Measure your pinch strength and get an instant risk assessment
+                </Text>
                 <Button
-                  title="Update Profile"
-                  onPress={() => navigation?.navigate('profile')}
-                  variant="outline"
-                  size="medium"
-                  style={styles.actionButton}
-                />
-                <Button
-                  title="Get Tips"
-                  onPress={() => {}}
+                  title="Take Test"
+                  onPress={() => navigation?.navigate('test')}
                   variant="primary"
-                  size="medium"
-                  style={styles.actionButton}
+                  size="large"
+                  style={styles.testButton}
                 />
+                {profileData.nrs && (
+                  <View style={styles.lastTestInfo}>
+                    <Text style={styles.lastTestLabel}>Current Pain Level: {profileData.nrs}/10</Text>
+                  </View>
+                )}
               </View>
             </Card>
           </Animated.View>
@@ -453,37 +440,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     marginBottom: Spacing.lg,
   },
-  riskTitle: {
-    ...Typography.subheading,
-    textAlign: 'center',
-    marginBottom: Spacing.md,
+  testSection: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
   },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  actionButton: {
-    flex: 1,
-  },
-  metricsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  testTitle: {
+    ...Typography.heading,
     marginTop: Spacing.md,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
+  },
+  testDescription: {
+    ...Typography.body,
+    color: Colors.text.secondary,
+    textAlign: 'center',
+    marginBottom: Spacing.xl,
     paddingHorizontal: Spacing.lg,
   },
-  metricItem: {
-    alignItems: 'center',
+  testButton: {
+    minWidth: 200,
   },
-  metricLabel: {
+  lastTestInfo: {
+    marginTop: Spacing.lg,
+    padding: Spacing.md,
+    backgroundColor: Colors.background,
+    borderRadius: BorderRadius.md,
+  },
+  lastTestLabel: {
     ...Typography.caption,
     color: Colors.text.secondary,
-    marginBottom: Spacing.xs,
-  },
-  metricValue: {
-    ...Typography.subheading,
-    fontWeight: '600',
-    color: Colors.primary,
+    textAlign: 'center',
   },
 });
