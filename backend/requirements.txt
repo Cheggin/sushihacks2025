@@ -2,3 +2,5 @@ pandas
 openpyxl
 xgboost
 scikit-learn
+fastapi
+pydantic
