@@ -1,8 +1,21 @@
-pandas
+# Requirements for Carpal Tunnel Syndrome Prediction System
+# Data processing and ML
+pandas==2.1.3
 openpyxl
-xgboost
-scikit-learn
-fastapi
-pydantic
+scikit-learn==1.3.2
+joblib==1.3.2
+numpy==1.25.2
+
+# API
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# Client testing
+requests==2.31.0
+
+# Sensor integration
 bleak
-uvicorn
+
+# Legacy (can be removed if not using XGBoost)
+xgboost

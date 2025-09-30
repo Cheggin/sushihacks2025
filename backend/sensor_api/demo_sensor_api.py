@@ -290,5 +290,5 @@ if __name__ == "__main__":
     import uvicorn
     print("🎭 Starting Demo SensorNode API - No Hardware Required!")
     print("📊 Simulating realistic sensor data patterns")
-    print("🔗 API will be available at http://localhost:8082")
-    uvicorn.run(app, host="0.0.0.0", port=8082)
+    print("🔗 API will be available at http://localhost:8004")
+    uvicorn.run(app, host="0.0.0.0", port=8004)

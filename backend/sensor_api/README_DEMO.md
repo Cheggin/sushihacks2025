@@ -9,7 +9,7 @@ cd backend
 python3 demo_sensor_api.py
 ```
 
-API available at: **http://localhost:8082**
+API available at: **http://localhost:8004**
 
 ## 📊 Data Simulation
 
@@ -32,13 +32,13 @@ Simulated device discovery (2-4.5s delay)
 ### GET `/sensors/stream`
 Real-time data streaming (Server-Sent Events)
 ```bash
-curl "http://localhost:8082/sensors/stream?duration=10&poll_interval=0.1"
+curl "http://localhost:8004/sensors/stream?duration=10&poll_interval=0.1"
 ```
 
 ### POST `/sensors/collect`
 Batch data collection
 ```bash
-curl -X POST "http://localhost:8082/sensors/collect" \
+curl -X POST "http://localhost:8004/sensors/collect" \
   -H "Content-Type: application/json" \
   -d '{"duration_seconds": 10, "poll_interval": 0.1}'
 ```
@@ -53,7 +53,7 @@ pip install -r requirements.txt
 python3 demo_sensor_api.py
 
 # Test in another terminal
-curl "http://localhost:8082/sensors/info"
+curl "http://localhost:8004/sensors/info"
 ```
 
-**Note**: Demo runs on port **8082**, real API on port **8000**
+**Note**: Demo runs on port **8004**, real sensor API on port **8003**
