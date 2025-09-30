@@ -7,6 +7,7 @@ import { RiskLevel } from '../types';
 interface RiskIndicatorProps {
   level: RiskLevel;
   subtitle?: string;
+  riskLevel?: RiskLevel;
 }
 
 export const RiskIndicator: React.FC<RiskIndicatorProps> = ({

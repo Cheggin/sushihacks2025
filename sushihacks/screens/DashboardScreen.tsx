@@ -1,3 +1,16 @@
+  // Weather icon helper
+  const getWeatherIcon = (weatherCode: number | null) => {
+    if (weatherCode === null) return null;
+    switch (weatherCode) {
+      case 0: return <Ionicons name="sunny" size={48} color={Colors.primary} />;
+      case 1: return <Ionicons name="partly-sunny" size={48} color={Colors.primary} />;
+      case 2: return <Ionicons name="cloudy" size={48} color={Colors.primary} />;
+      case 3: return <Ionicons name="rainy" size={48} color={Colors.primary} />;
+      case 4: return <Ionicons name="thunderstorm" size={48} color={Colors.primary} />;
+      case 5: return <Ionicons name="snow" size={48} color={Colors.primary} />;
+      default: return <Ionicons name="cloud-outline" size={48} color={Colors.primary} />;
+    }
+  };
 import React, { useEffect, useRef, useState } from "react";
 import {
   View,
@@ -10,6 +23,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
+import axios from "axios";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -68,6 +82,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     crossSectionalArea: "",
   });
 
+  const [weather, setWeather] = useState<{
+    temperature: number | null;
+    weatherCode: number | null;
+  }>({
+    temperature: null,
+    weatherCode: null,
+  });
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -118,6 +140,29 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     return "HIGH";
   };
 
+  const fetchWeatherJMA = async () => {
+    try {
+      const lat = 35.68;
+      const lon = 139.77;
+      // Pick which variables you want. At minimum: temperature (2 m), weather code, etc.
+      // The “current” parameter gives you instantaneous current values.
+      const url = `https://api.open-meteo.com/v1/jma?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode&hourly=temperature_2m,weathercode&timezone=auto`;
+
+      const resp = await axios.get(url);
+      const data = resp.data;
+
+      // current conditions object is in data.current
+      const current = data.current;
+
+      setWeather({
+        temperature: current.temperature_2m,
+        weatherCode: current.weathercode,
+      });
+    } catch (error) {
+      console.error("Error fetching JMA weather:", error);
+    }
+  };
+
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -133,10 +178,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
     ]).start();
 
     loadProfileData();
+    fetchWeatherJMA();
   }, []);
 
   useEffect(() => {
-    if (refreshing) loadProfileData();
+    if (refreshing) {
+      loadProfileData();
+      fetchWeatherJMA();
+    }
   }, [refreshing]);
 
   const onRefresh = React.useCallback(() => {
@@ -216,25 +265,58 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </View>
           </Animated.View>
 
-          {/* Date */}
-          <Animated.View style={[styles.dateContainer, { opacity: fadeAnim }]}>
-            <Text style={styles.dateText}>
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </Text>
-          </Animated.View>
+          {/* Date inside weather card below */}
+          <View style={styles.cardsSection}>
+            <View style={styles.cardsRow}>
+              <Card style={styles.weatherCard}>
+                <View style={styles.weatherDateRow}>
+                  <View style={styles.dateBox}>
+                    <Text style={styles.dayNumber}>
+                      {new Date().getDate()}
+                    </Text>
+                    <Text style={styles.dayName}>
+                      {new Date().toLocaleDateString("en-US", {
+                        weekday: "short",
+                      })}
+                    </Text>
+                  </View>
+                  <View style={styles.weatherInfo}>
+                    {getWeatherIcon(weather.weatherCode)}
+                    {weather.temperature !== null ? (
+                      <>
+                        <Text style={styles.tempText}>
+                          {weather.temperature}°C
+                        </Text>
+                      </>
+                    ) : (
+                      <Text style={styles.weatherText}>Loading...</Text>
+                    )}
+                  </View>
+                </View>
+              </Card>
 
-          {/* Top Row: Stats + Trends */}
+              <Card style={styles.fishCard}>
+                <Text style={styles.cardTitle}>Top Fish to Fish</Text>
+                <Text style={styles.cardPlaceholder}>
+                  Fish data coming soon...
+                </Text>
+              </Card>
+            </View>
+            <Card style={styles.mapCardFullWidth}>
+              <Text style={styles.cardTitle}>Map</Text>
+              <Text style={styles.cardPlaceholder}>
+                Map will be added here later.
+              </Text>
+            </Card>
+          </View>
+
+          {/* rest of your UI below */}
           <Animated.View
             style={[
               styles.topRow,
               { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
             ]}
           >
-            {/* Stats Card */}
             <Card style={styles.statsCard}>
               <View style={styles.statItem}>
                 <Text style={styles.statLabel}>Latest Grip</Text>
@@ -245,8 +327,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 <Text style={styles.statValue}>{riskLevel}</Text>
               </View>
             </Card>
-
-            {/* Trends Card with hovering arrow */}
             <View style={styles.trendsCardContainer}>
               <Card style={styles.trendsCard}>
                 <GiftedChartCard
@@ -271,7 +351,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </View>
           </Animated.View>
 
-          {/* Daily Grip Chart */}
           <Animated.View
             style={[
               styles.mainChartContainer,
@@ -302,7 +381,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
             />
           </Animated.View>
 
-          {/* Risk Assessment */}
           <Animated.View
             style={[
               styles.riskContainer,
@@ -311,21 +389,27 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
           >
             <Card>
               <View style={styles.testSection}>
-                <Ionicons name="fitness-outline" size={48} color={Colors.primary} />
+                <Ionicons
+                  name="fitness-outline"
+                  size={48}
+                  color={Colors.primary}
+                />
                 <Text style={styles.testTitle}>Carpal Tunnel Risk Test</Text>
                 <Text style={styles.testDescription}>
                   Measure your pinch strength and get an instant risk assessment
                 </Text>
                 <Button
                   title="Take Test"
-                  onPress={() => navigation?.navigate('test')}
+                  onPress={() => navigation?.navigate("test")}
                   variant="primary"
                   size="large"
                   style={styles.testButton}
                 />
                 {profileData.nrs && (
                   <View style={styles.lastTestInfo}>
-                    <Text style={styles.lastTestLabel}>Current Pain Level: {profileData.nrs}/10</Text>
+                    <Text style={styles.lastTestLabel}>
+                      Current Pain Level: {profileData.nrs}/10
+                    </Text>
                   </View>
                 )}
               </View>
@@ -342,6 +426,47 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   scrollView: { flex: 1 },
   scrollContent: { paddingBottom: 20 },
+  cardsSection: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  cardsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 16,
+  },
+  weatherCard: {
+    flex: 1,
+    minHeight: 120,
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  fishCard: {
+    flex: 1,
+    minHeight: 120,
+    justifyContent: "center",
+    alignItems: "flex-start",
+    marginLeft: 16,
+  },
+  mapCardFullWidth: {
+    width: "100%",
+    minHeight: 180,
+    marginTop: 16,
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+    color: Colors.primary,
+  },
+  cardPlaceholder: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+  },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -350,7 +475,11 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.lg,
     paddingBottom: Spacing.md,
   },
-  headerLeft: { flexDirection: "row", alignItems: "center", gap: Spacing.md },
+  headerLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.md,
+  },
   profileImage: {
     width: 48,
     height: 48,
@@ -373,8 +502,40 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: Colors.danger,
   },
-  dateContainer: { paddingHorizontal: Spacing.lg, marginBottom: Spacing.lg },
-  dateText: { ...Typography.caption },
+  // --- New/weather layout styles ---
+  weatherDateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  dateBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 8,
+  },
+  dayNumber: {
+    fontSize: 48,
+    fontWeight: "700",
+    color: Colors.primary,
+  },
+  dayName: {
+    fontSize: 16,
+    color: Colors.text.secondary,
+  },
+  weatherInfo: {
+    alignItems: "flex-end",
+    justifyContent: "center",
+  },
+  tempText: {
+    fontSize: 28,
+    fontWeight: "600",
+    color: Colors.primary,
+  },
+  weatherText: {
+    fontSize: 14,
+    color: Colors.text.secondary,
+  },
   topRow: {
     flexDirection: "row",
     paddingHorizontal: Spacing.lg,
@@ -407,7 +568,7 @@ const styles = StyleSheet.create({
   trendsCard: { padding: 0, width: "100%" },
   arrowButton: {
     position: "absolute",
-    right: 8, // move inside the card edge
+    right: 8,
     top: "50%",
     transform: [{ translateY: -20 }],
     backgroundColor: Colors.background,
@@ -438,34 +599,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   testSection: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: Spacing.xl,
-  },
-  riskTitle: {
-    ...Typography.subheading,
-    textAlign: "center",
-    marginBottom: Spacing.md,
-  },
-  actionButtons: {
-    flexDirection: "row",
-    gap: Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  actionButton: { flex: 1 },
-  metricsRow: {
-    flexDirection: "row",
-    justifyContent: "space-around",
   },
   testTitle: {
     ...Typography.heading,
     marginTop: Spacing.md,
     marginBottom: Spacing.sm,
-    textAlign: 'center',
+    textAlign: "center",
   },
   testDescription: {
     ...Typography.body,
     color: Colors.text.secondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: Spacing.xl,
     paddingHorizontal: Spacing.lg,
   },
@@ -492,6 +638,8 @@ const styles = StyleSheet.create({
   lastTestLabel: {
     ...Typography.caption,
     color: Colors.text.secondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
+
+export default DashboardScreen;
