@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+@theme {
+  /* Main Colors */
+  --color-primary: #5ecdbf;
+  --color-secondary: #a8e6a3;
+  --color-warning: #ffd93d;
+  --color-danger: #ff6b6b;
+  --color-success: #26de81;
+
+  /* Background Colors */
+  --color-background: #f5f7fa;
+  --color-card: #ffffff;
+
+  /* Text Colors */
+  --color-text-primary: #2d3436;
+  --color-text-secondary: #636e72;
+  --color-text-light: #95a5a6;
+
+  /* Border & Shadow */
+  --color-border: #e1e4e8;
+
+  /* Chart Colors */
+  --color-teal: #5ecdbf;
+  --color-light-teal: #a3e4db;
+
+  /* Risk Colors */
+  --color-risk-low: #a8e6a3;
+  --color-risk-moderate: #ffd93d;
+  --color-risk-high: #ff6b6b;
+
+  /* Fish Zone Colors */
+  --color-zone-tuna: #ff6b6b;
+  --color-zone-eel: #45b7d1;
+  --color-zone-lanternfish: #4ecdc4;
+  --color-zone-reef: #ffd93d;
+
+  /* Legacy for compatibility */
+  --color-light: #ffffff;
+  --color-dark: #171717;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  padding: 0;
+}
+
+@media (prefers-color-scheme: light) {
+  body {
+    color: var(--color-text-primary);
+    background: var(--color-background);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    color: var(--color-light);
+    background: var(--color-dark);
+  }
+}
