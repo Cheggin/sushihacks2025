@@ -7,7 +7,7 @@ import {
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { Colors, BorderRadius, Spacing, Typography } from '../constants/colors';
+import { Colors, BorderRadius, Spacing } from '../constants/colors';
 
 interface ButtonProps {
   title: string;

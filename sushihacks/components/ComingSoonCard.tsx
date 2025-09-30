@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from './Card';
-import { Colors, Typography, Spacing, BorderRadius } from '../constants/colors';
+import { Colors, Typography, Spacing } from '../constants/colors';
 
 interface ComingSoonCardProps {
   title?: string;

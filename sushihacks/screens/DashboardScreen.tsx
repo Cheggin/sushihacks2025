@@ -415,6 +415,37 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </View>
             </Card>
           </Animated.View>
+<<<<<<< Updated upstream
+=======
+
+          <Animated.View
+            style={[
+              styles.riskContainer,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <Card>
+              <View style={styles.testSection}>
+                <Ionicons name="map-outline" size={48} color={Colors.primary} />
+                <Text style={styles.testTitle}>Fish Distribution Map</Text>
+                <Text style={styles.testDescription}>
+                  Explore 19,465 fish occurrences across the Asia-Pacific region with interactive heatmaps
+                </Text>
+                <Button
+                  title="View Fish Map"
+                  onPress={() => navigation?.navigate('fishmap')}
+                  variant="secondary"
+                  size="large"
+                  style={styles.testButton}
+                />
+              </View>
+            </Card>
+          </Animated.View>
+
+>>>>>>> Stashed changes
         </ScrollView>
       </SafeAreaView>
     </LinearGradient>

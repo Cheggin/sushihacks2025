@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LineChart, BarChart } from 'react-native-gifted-charts';
 import { Card } from './Card';
-import { Colors, Typography, Spacing } from '../constants/colors';
+import { Colors, Spacing } from '../constants/colors';
 
 const screenWidth = Dimensions.get('window').width;
 

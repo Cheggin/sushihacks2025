@@ -23,6 +23,7 @@ export const RiskIndicator: React.FC<RiskIndicatorProps> = ({
       friction: 5,
       useNativeDriver: true,
     }).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level]);
 
   const getRiskConfig = () => {
