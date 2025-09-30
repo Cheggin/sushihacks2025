@@ -72,7 +72,7 @@ export default function FishMap({ viewMode = 'points', selectedType = 'All Fish'
       }
     }
 
-    loadFishData();
+    void loadFishData();
   }, [selectedType]);
 
   const zones = useMemo(() => {
@@ -146,7 +146,7 @@ export default function FishMap({ viewMode = 'points', selectedType = 'All Fish'
                 <div className="text-sm">
                   <strong>{fish.scientificName}</strong>
                   <br />
-                  {fish.country || 'Unknown location'}
+                  {fish.decimalLatitude.toFixed(4)}°, {fish.decimalLongitude.toFixed(4)}°
                 </div>
               </Popup>
             </CircleMarker>

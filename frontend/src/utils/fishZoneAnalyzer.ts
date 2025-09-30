@@ -56,10 +56,10 @@ export function analyzeGeographicZones(
   // Find bounds
   const lats = fishData.map(f => f.decimalLatitude);
   const lngs = fishData.map(f => f.decimalLongitude);
-  const minLat = Math.floor(Math.min(...lats) / gridSize) * gridSize;
-  const maxLat = Math.ceil(Math.max(...lats) / gridSize) * gridSize;
-  const minLng = Math.floor(Math.min(...lngs) / gridSize) * gridSize;
-  const maxLng = Math.ceil(Math.max(...lngs) / gridSize) * gridSize;
+  const _minLat = Math.floor(Math.min(...lats) / gridSize) * gridSize;
+  const _maxLat = Math.ceil(Math.max(...lats) / gridSize) * gridSize;
+  const _minLng = Math.floor(Math.min(...lngs) / gridSize) * gridSize;
+  const _maxLng = Math.ceil(Math.max(...lngs) / gridSize) * gridSize;
 
   // Create grid zones
   const zoneMap = new Map<string, FishOccurrence[]>();
