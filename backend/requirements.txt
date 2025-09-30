@@ -4,3 +4,5 @@ xgboost
 scikit-learn
 fastapi
 pydantic
+bleak
+uvicorn
