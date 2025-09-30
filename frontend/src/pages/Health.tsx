@@ -21,7 +21,7 @@ const weeklyData = [
   { day: 'Sun', value: 50 },
 ];
 
-export default function Dashboard() {
+export default function Health() {
   const [formData, setFormData] = useState({
     age: '',
     bmi: '',

@@ -4,7 +4,7 @@ import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import Landing from './pages/Landing';
 import FishMapPage from './pages/FishMapPage';
-import Dashboard from './pages/Dashboard';
+import Health from "./pages/Health";
 
 export default function App() {
   return (
@@ -14,7 +14,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/map" element={<FishMapPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/health" element={<Health />} />
           <Route path="/homepage" element={<HomePage />} />
         </Routes>
       </main>

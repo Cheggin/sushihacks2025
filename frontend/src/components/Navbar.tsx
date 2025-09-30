@@ -15,7 +15,7 @@ export default function Navbar() {
         <a href="homepage" className="hover:text-blue-100">Dashboard</a>
         <a href="map" className="hover:text-blue-100">Map</a>
         <a href="#" className="hover:text-blue-100">My Fish</a>
-        <a href="dashboard" className="hover:text-blue-100">Health</a>
+        <a href="health" className="hover:text-blue-100">Health</a>
         <a href="#" className="hover:text-blue-100">Send out fish</a>
       </div>
 
