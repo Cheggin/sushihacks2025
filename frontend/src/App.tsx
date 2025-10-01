@@ -90,8 +90,8 @@ export default function App() {
         />
       )}
 
-      {/* Search Toggle Button */}
-      {userMarker && !showSearchPanel && (
+      {/* Search Toggle Button - only show when globe is visible (no popups active) */}
+      {userMarker && !showSearchPanel && !activePopup && (
         <button
           onClick={() => setShowSearchPanel(true)}
           className="fixed top-6 left-6 z-40 p-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl hover:bg-white/20 transition-all shadow-lg"
