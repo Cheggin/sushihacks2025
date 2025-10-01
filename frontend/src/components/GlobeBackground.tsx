@@ -22,10 +22,22 @@ interface RingData {
   color: string;
 }
 
-export default function GlobeBackground() {
+interface UserMarker {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+interface GlobeBackgroundProps {
+  onFishClick: (fish: FishOccurrence) => void;
+  userMarker: UserMarker | null;
+}
+
+export default function GlobeBackground({ onFishClick, userMarker }: GlobeBackgroundProps) {
   const globeEl = useRef<HTMLDivElement>(null);
   const globeInstance = useRef<any>(null);
   const [fishData, setFishData] = useState<FishOccurrence[]>([]);
+  const [countries, setCountries] = useState<any>([]);
 
   // Load and parse CSV data
   useEffect(() => {
@@ -80,14 +92,24 @@ export default function GlobeBackground() {
     loadFishData();
   }, []);
 
+  // Load country data for labels
+  useEffect(() => {
+    fetch('//unpkg.com/world-atlas/countries-110m.json')
+      .then(res => res.json())
+      .then(data => {
+        setCountries(data);
+      })
+      .catch(err => console.error('Error loading countries:', err));
+  }, []);
+
   // Initialize globe
   useEffect(() => {
     if (!globeEl.current) return;
 
     const globe = (Globe as any)()(globeEl.current)
-      .globeImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/earth-blue-marble.jpg')
-      .bumpImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png')
-      .backgroundImageUrl('//cdn.jsdelivr.net/npm/three-globe/example/img/night-sky.png')
+      .globeImageUrl('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg')
+      .bumpImageUrl('//unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundImageUrl('//unpkg.com/three-globe/example/img/night-sky.png')
       .showAtmosphere(true)
       .atmosphereColor('#4a90e2')
       .atmosphereAltitude(0.25)
@@ -102,12 +124,11 @@ export default function GlobeBackground() {
     // Point the camera at Asia-Pacific region
     globe.pointOfView({ lat: 25, lng: 130, altitude: 2.5 }, 0);
 
-    // Enable auto-rotation and zoom
-    globe.controls().autoRotate = true;
-    globe.controls().autoRotateSpeed = 0.3;
+    // Enable zoom controls
+    globe.controls().autoRotate = false;
     globe.controls().enableZoom = true;
-    globe.controls().minDistance = 150; // Closest zoom
-    globe.controls().maxDistance = 800; // Farthest zoom
+    globe.controls().minDistance = 0; // Closest zoom (no limit)
+    globe.controls().maxDistance = 1000; // Farthest zoom
 
     globeInstance.current = globe;
 
@@ -131,12 +152,12 @@ export default function GlobeBackground() {
       if (e.key === '=' || e.key === '+') {
         // Zoom in
         const distance = camera.position.length();
-        const newDistance = Math.max(150, distance - zoomSpeed);
+        const newDistance = Math.max(0, distance - zoomSpeed);
         camera.position.multiplyScalar(newDistance / distance);
       } else if (e.key === '-' || e.key === '_') {
         // Zoom out
         const distance = camera.position.length();
-        const newDistance = Math.min(800, distance + zoomSpeed);
+        const newDistance = Math.min(1000, distance + zoomSpeed);
         camera.position.multiplyScalar(newDistance / distance);
       }
     };
@@ -159,8 +180,8 @@ export default function GlobeBackground() {
     const pointsData = fishData.map((fish) => ({
       lat: fish.decimalLatitude,
       lng: fish.decimalLongitude,
-      size: 0.4,
-      color: getColorFromGenus(fish.genus || fish.family || ''),
+      size: 0.15,
+      color: getColorFromFishType(fish.scientificName, fish.genus, fish.family),
       name: fish.scientificName || 'Unknown',
       genus: fish.genus || fish.family || 'Unknown',
       occurrence: fish
@@ -201,16 +222,8 @@ export default function GlobeBackground() {
           globeInstance.current.pointsData([...pointsData]);
         }, 200);
 
-        alert(`Fish Details:
-
-Scientific Name: ${point.occurrence.scientificName}
-Genus: ${point.occurrence.genus || 'Unknown'}
-Family: ${point.occurrence.family || 'Unknown'}
-Location: ${point.occurrence.waterBody || point.occurrence.locality || 'Unknown'}
-Country: ${point.occurrence.country || 'Unknown'}
-Year: ${point.occurrence.year || 'Unknown'}
-Individual Count: ${point.occurrence.individualCount || 'Unknown'}
-Coordinates: ${point.occurrence.decimalLatitude.toFixed(4)}, ${point.occurrence.decimalLongitude.toFixed(4)}`);
+        // Open sidebar with fish details
+        onFishClick(point.occurrence);
       })
       .pointsMerge(false);
 
@@ -223,7 +236,7 @@ Coordinates: ${point.occurrence.decimalLatitude.toFixed(4)}, ${point.occurrence.
         maxR: 2,
         propagationSpeed: 1,
         repeatPeriod: 3000,
-        color: getColorFromGenus(fish.genus || fish.family || '')
+        color: getColorFromFishType(fish.scientificName, fish.genus, fish.family)
       }));
 
     globeInstance.current
@@ -233,33 +246,187 @@ Coordinates: ${point.occurrence.decimalLatitude.toFixed(4)}, ${point.occurrence.
       .ringPropagationSpeed('propagationSpeed')
       .ringRepeatPeriod('repeatPeriod');
 
-  }, [fishData]);
+  }, [fishData, onFishClick]);
 
-  const getColorFromGenus = (genus: string) => {
-    // Color mapping based on common fish genera/families
+  // Add user marker when available
+  useEffect(() => {
+    if (!globeInstance.current || !userMarker) return;
+
+    const userMarkerData = [{
+      lat: userMarker.lat,
+      lng: userMarker.lng,
+      label: userMarker.name,
+      size: 2,
+      color: '#FFD700'
+    }];
+
+    globeInstance.current
+      .htmlElementsData(userMarkerData)
+      .htmlElement((d: any) => {
+        const el = document.createElement('div');
+        el.innerHTML = `
+          <div style="
+            position: relative;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          ">
+            <div style="
+              width: 20px;
+              height: 20px;
+              background: linear-gradient(135deg, #FFD700, #FFA500);
+              border: 3px solid white;
+              border-radius: 50%;
+              box-shadow: 0 4px 12px rgba(255, 215, 0, 0.6);
+              animation: pulse 2s infinite;
+            "></div>
+            <div style="
+              position: absolute;
+              top: -30px;
+              white-space: nowrap;
+              background: rgba(0, 0, 0, 0.8);
+              color: white;
+              padding: 4px 8px;
+              border-radius: 4px;
+              font-size: 12px;
+              font-weight: bold;
+              pointer-events: none;
+            ">${d.label}</div>
+          </div>
+        `;
+
+        // Add pulse animation
+        const style = document.createElement('style');
+        style.innerHTML = `
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+          }
+        `;
+        el.appendChild(style);
+
+        return el;
+      })
+      .htmlAltitude(0.05);
+
+    // Fly to user location with closer zoom
+    globeInstance.current.pointOfView(
+      { lat: userMarker.lat, lng: userMarker.lng, altitude: 0.5 },
+      2000
+    );
+
+  }, [userMarker]);
+
+  // Add country polygons and labels when data is loaded
+  useEffect(() => {
+    if (!globeInstance.current || !countries.features) return;
+
+    globeInstance.current
+      .polygonsData(countries.features)
+      .polygonAltitude(0.001)
+      .polygonCapColor(() => 'rgba(0, 0, 0, 0)')
+      .polygonSideColor(() => 'rgba(255, 255, 255, 0.05)')
+      .polygonStrokeColor(() => 'rgba(255, 255, 255, 0.3)')
+      .polygonLabel(({ properties }: any) => `
+        <div style="background: rgba(0,0,0,0.8); padding: 6px 10px; border-radius: 4px; color: white; font-weight: bold;">
+          ${properties.name}
+        </div>
+      `);
+
+    // Add country labels that are always visible
+    globeInstance.current
+      .labelsData(countries.features)
+      .labelLat((d: any) => {
+        // Calculate centroid latitude (simplified)
+        return 0;
+      })
+      .labelLng((d: any) => 0)
+      .labelText((d: any) => d.properties.name)
+      .labelSize(0.5)
+      .labelColor(() => 'rgba(255, 255, 255, 0.7)')
+      .labelResolution(2)
+      .labelAltitude(0.01);
+  }, [countries]);
+
+  const getColorFromFishType = (scientificName: string, genus?: string, family?: string) => {
+    // Color mapping based on scientific names and taxonomy
     const colors: Record<string, string> = {
-      'Pleuromamma': '#4a90e2',
-      'Euchaeta': '#50c878',
-      'Disseta': '#ff6b6b',
+      // Pleuromamma species - Blue shades
+      'Pleuromamma xiphias': '#4a90e2',
+      'Pleuromamma': '#5B9BD5',
+
+      // Euchaeta species - Green shades
+      'Euchaeta wolfendeni': '#50c878',
+      'Euchaeta spinosa': '#2ecc71',
+      'Euchaeta': '#27AE60',
+
+      // Disseta species - Red/Pink
+      'Disseta scopularis': '#ff6b6b',
+      'Disseta': '#E74C3C',
+
+      // Calanus species - Yellow/Gold
       'Calanus': '#ffd700',
+
+      // Megacalanus species - Orange
       'Megacalanus': '#ff8c42',
+
+      // Eucalanus species - Purple
       'Eucalanus': '#9b59b6',
+
+      // Undinula species - Teal
       'Undinula': '#1abc9c',
-      'Metridinidae': '#4a90e2',
-      'Euchaetidae': '#50c878',
-      'Calanidae': '#ffd700',
-      'Heterorhabdidae': '#ff6b6b',
+
+      // Other copepod genera
+      'Metridia': '#3498db',
+      'Candacia': '#e74c3c',
+      'Heterorhabdus': '#f39c12',
+      'Lucicutia': '#16a085',
+      'Scolecithrix': '#8e44ad',
+      'Rhincalanus': '#e67e22',
+      'Gaetanus': '#c0392b',
+      'Pareuchaeta': '#95a5a6',
     };
 
-    // Check if genus matches any key
+    // Try exact scientific name match first
+    if (colors[scientificName]) {
+      return colors[scientificName];
+    }
+
+    // Try genus match
+    if (genus && colors[genus]) {
+      return colors[genus];
+    }
+
+    // Try partial match in scientific name
     for (const key in colors) {
-      if (genus.includes(key)) {
+      if (scientificName.includes(key)) {
         return colors[key];
       }
     }
 
-    // Default ocean blue color
-    return '#5ECDBF';
+    // Family-based colors as fallback
+    const familyColors: Record<string, string> = {
+      'Metridinidae': '#4a90e2',
+      'Euchaetidae': '#50c878',
+      'Calanidae': '#ffd700',
+      'Heterorhabdidae': '#ff6b6b',
+      'Eucalanidae': '#9b59b6',
+      'Lucicutiidae': '#16a085',
+      'Scolecitrichidae': '#8e44ad',
+      'Megacalanidae': '#ff8c42',
+    };
+
+    if (family && familyColors[family]) {
+      return familyColors[family];
+    }
+
+    // Generate a consistent color based on the first letter of the name
+    // This ensures different species get different colors
+    const firstLetter = scientificName.charCodeAt(0);
+    const hue = (firstLetter * 137.5) % 360; // Golden angle for good distribution
+    return `hsl(${hue}, 70%, 60%)`;
   };
 
   return (

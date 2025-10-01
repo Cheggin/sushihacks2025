@@ -3,13 +3,28 @@ import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import FishMapPage from "./pages/FishMapPage";
 import HealthPage from "./pages/Health";
+import Landing from "./pages/Landing";
 import GlobeBackground from "./components/GlobeBackground";
+import FishSidebar from "./components/FishSidebar";
+import type { FishOccurrence } from "./types/fish";
+
+interface UserMarker {
+  name: string;
+  lat: number;
+  lng: number;
+}
 
 export default function App() {
-  const [activePopup, setActivePopup] = useState<string | null>("homepage");
-  const [isHomePageVisible, setIsHomePageVisible] = useState<boolean>(true);
+  const [userMarker, setUserMarker] = useState<UserMarker | null>(null);
+  const [activePopup, setActivePopup] = useState<string | null>(null);
+  const [isHomePageVisible, setIsHomePageVisible] = useState<boolean>(false);
   const [isMapPageVisible, setIsMapPageVisible] = useState<boolean>(false);
   const [isHealthPageVisible, setIsHealthPageVisible] = useState<boolean>(false);
+  const [selectedFish, setSelectedFish] = useState<FishOccurrence | null>(null);
+
+  const handleLandingSubmit = (name: string, lat: number, lng: number) => {
+    setUserMarker({ name, lat, lng });
+  };
 
   const togglePopup = (page: string) => {
     if (activePopup === page) {
@@ -35,7 +50,17 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Globe background */}
-      <GlobeBackground />
+      <GlobeBackground onFishClick={setSelectedFish} userMarker={userMarker} />
+
+      {/* Landing Page Overlay */}
+      {!userMarker && (
+        <div className="fixed inset-0 z-40">
+          <Landing onSubmit={handleLandingSubmit} />
+        </div>
+      )}
+
+      {/* Fish Details Sidebar */}
+      <FishSidebar fish={selectedFish} onClose={() => setSelectedFish(null)} />
 
       {/* Main content area */}
       <main className="flex-1 p-6 relative" style={{ zIndex: activePopup ? 20 : 5 }}>
