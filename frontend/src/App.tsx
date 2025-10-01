@@ -5,8 +5,8 @@ import FishMapPage from "./pages/FishMapPage";
 import HealthPage from "./pages/Health";
 
 export default function App() {
-  const [activePopup, setActivePopup] = useState<string | null>(null);
-  const [isHomePageVisible, setIsHomePageVisible] = useState<boolean>(false);
+  const [activePopup, setActivePopup] = useState<string | null>("homepage");
+  const [isHomePageVisible, setIsHomePageVisible] = useState<boolean>(true);
   const [isMapPageVisible, setIsMapPageVisible] = useState<boolean>(false);
   const [isHealthPageVisible, setIsHealthPageVisible] = useState<boolean>(false);
 

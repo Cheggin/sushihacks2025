@@ -34,11 +34,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ title, rightText, children }) =
       </div>
 
       {/* Section content with animation */}
-      <div
-        className={`transition-all duration-500 ease-in-out ${
-          activeSection ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
+      <div className="transition-all duration-500 ease-in-out opacity-100">
         {children}
       </div>
     </div>
