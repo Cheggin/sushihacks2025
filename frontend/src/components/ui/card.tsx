@@ -6,13 +6,11 @@ export function Card({ className, ...props }: CardProps) {
   return (
     <div
       className={clsx(
-        "rounded-2xl border-2 transition-all duration-300",
-        // No background - transparent to show liquid glass
-        "bg-transparent",
-        // Vibrant border with glow effect
-        "border-white/40 hover:border-white/60",
+        "rounded-2xl border transition-all duration-300 card-surface",
+        // Accessible surface and border
+        "bg-[color-mix(in_srgb,var(--color-surface)_70%,transparent)] border-[var(--color-border)]",
         // Subtle shadow for depth
-        "shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]",
+        "shadow-[0_6px_24px_rgba(0,0,0,0.25)] hover:shadow-[0_10px_32px_rgba(0,0,0,0.35)]",
         className
       )}
       {...props}

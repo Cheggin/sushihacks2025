@@ -97,7 +97,7 @@ export default function SearchPanel({ onFiltersChange, onClose, resultsCount = 0
   const hasActiveFilters = searchText || selectedCategories.length > 0 || selectedRegions.length > 0;
 
   return (
-    <div className="fixed top-20 left-6 w-96 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-40 max-h-[80vh] overflow-hidden flex flex-col">
+    <div className="fixed top-20 left-6 w-96 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl z-40 max-h-[80vh] overflow-hidden flex flex-col search-panel">
       {/* Header */}
       <div className="p-4 border-b border-white/20">
         <div className="flex items-center justify-between mb-3">

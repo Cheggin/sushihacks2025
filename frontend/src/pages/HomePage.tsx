@@ -82,6 +82,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
   const [fishingScore, setFishingScore] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [isAccessibleMode, setIsAccessibleMode] = useState(false);
 
   // Fetch CTS data
   const assessments = useQuery(api.ctsAssessments.getByUserId, { userId: USER_ID });
@@ -106,6 +107,21 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
     if (score >= 40) return "#f59e0b"; // Amber
     return "#ef4444"; // Red
   };
+
+  // Track accessible mode
+  useEffect(() => {
+    const checkAccessibleMode = () => {
+      setIsAccessibleMode(document.documentElement.getAttribute('data-theme') === 'accessible');
+    };
+    
+    checkAccessibleMode();
+    
+    // Listen for theme changes
+    const observer = new MutationObserver(checkAccessibleMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -158,22 +174,37 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
         <PageLayout
         title="Dashboard"
         rightText={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between w-full gap-6">
+            {/* AI Assistant - Left side for primary action */}
             <button
               onClick={() => setShowAIAssistant(true)}
-              className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-3 py-2 rounded-lg transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-2 text-sm"
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-4 py-2.5 rounded-lg transition-all shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 flex items-center gap-2 text-sm"
             >
               <MessageCircle className="w-4 h-4" />
               Ask AI Assistant
             </button>
-            <div>
-              {loading ? (
-                "Loading weather..."
-              ) : error ? (
-                <span className="text-red-300">{error}</span>
-              ) : (
-                weather
-              )}
+            
+            {/* Date & Weather - Right side for contextual info */}
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 font-medium">
+                <span className="text-white/90">
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
+                <span className="text-white/40">•</span>
+                <span className="text-white/90">
+                  {loading ? (
+                    "Loading..."
+                  ) : error ? (
+                    <span className="text-red-300">{error}</span>
+                  ) : (
+                    weather
+                  )}
+                </span>
+              </div>
             </div>
           </div>
         }
@@ -203,12 +234,12 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                 <span className="text-sm text-white/80 font-medium">24h</span>
               </div>
 
-              <div className="flex items-center bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 mb-4 border border-white/20 focus-within:border-cyan-400/60 focus-within:bg-white/10 transition-all">
+              <div className="flex items-center bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 mb-4 border border-white/20 focus-within:border-cyan-400/60 focus-within:bg-white/10 transition-all search-container">
                 <Search className="w-4 h-4 text-cyan-400/80" />
                 <input
                   type="text"
                   placeholder="Search fish..."
-                  className="bg-transparent w-full px-2 py-1 outline-none text-sm text-white placeholder-white/40"
+                  className="bg-transparent w-full px-2 py-1 outline-none focus:outline-none focus:ring-0 focus:border-none text-sm text-white placeholder-white/40"
                 />
               </div>
 
@@ -235,12 +266,12 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                   Fish Types
                 </h2>
                 <ResponsiveContainer width="100%" height={160}>
-                  <PieChart>
+                  <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
                     <Pie
                       data={onboardData}
-                      cx="50%"
+                      cx="40%"
                       cy="50%"
-                      outerRadius={70}
+                      outerRadius={50}
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       labelLine={{ stroke: 'rgba(255,255,255,0.5)', strokeWidth: 1 }}
@@ -259,23 +290,29 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                       align="right"
                       verticalAlign="middle"
                       iconType="circle"
-                      iconSize={10}
+                      iconSize={8}
                       wrapperStyle={{
-                        paddingLeft: '20px',
-                        fontSize: '13px',
+                        paddingLeft: '15px',
+                        fontSize: '12px',
+                        lineHeight: '1.2',
                       }}
-                      formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: '500' }}>{value}</span>}
+                      formatter={(value) => <span style={{ color: isAccessibleMode ? '#111827' : 'rgba(255,255,255,0.9)', fontWeight: '500' }}>{value}</span>}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        border: '1px solid rgba(59,130,246,0.4)',
+                        backgroundColor: isAccessibleMode ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
+                        border: isAccessibleMode ? '2px solid #e5e7eb' : '1px solid rgba(59,130,246,0.4)',
                         borderRadius: '12px',
                         backdropFilter: 'blur(16px)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                        boxShadow: isAccessibleMode ? '0 4px 12px rgba(0, 0, 0, 0.15)' : '0 8px 32px rgba(0,0,0,0.4)',
                       }}
-                      itemStyle={{ color: '#3b82f6' }}
-                      labelStyle={{ color: 'rgba(255,255,255,0.95)', fontWeight: 'bold' }}
+                      itemStyle={{ 
+                        color: isAccessibleMode ? '#111827' : '#3b82f6' 
+                      }}
+                      labelStyle={{ 
+                        color: isAccessibleMode ? '#111827' : 'rgba(255,255,255,0.95)', 
+                        fontWeight: 'bold' 
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>

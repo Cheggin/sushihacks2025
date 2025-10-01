@@ -26,11 +26,11 @@ const PageLayout: React.FC<PageLayoutProps> = ({ title, rightText, children }) =
   }, [location]);
 
   return (
-    <div className="rounded-3xl bg-white/5 backdrop-blur-xl border border-white/20 shadow-xl p-6 h-full flex flex-col overflow-hidden page-content">
+    <div className="rounded-3xl backdrop-blur-xl border border-[var(--color-border)] shadow-xl p-6 h-full flex flex-col overflow-hidden page-content bg-[color-mix(in_srgb,var(--color-surface)_70%,transparent)]">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 mb-6 border-b border-white/10 flex-shrink-0">
-        <h1 className="text-2xl font-bold text-white">{title}</h1>
-        <div className="text-white">{rightText}</div>
+      <div className="flex items-center justify-between pb-4 mb-6 border-b border-[var(--color-border)]/60 flex-shrink-0">
+        <h1 className="text-2xl font-bold text-[var(--color-foreground)]">{title}</h1>
+        <div className="text-[var(--color-foreground)]">{rightText}</div>
       </div>
 
       {/* Section content with animation */}

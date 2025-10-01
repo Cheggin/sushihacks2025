@@ -505,7 +505,7 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
               box-shadow: 0 4px 12px rgba(255, 215, 0, 0.6);
               animation: pulse 2s infinite;
             "></div>
-            <div style="
+            <div class="globe-user-marker-label" style="
               position: absolute;
               top: -30px;
               white-space: nowrap;

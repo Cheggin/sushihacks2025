@@ -1,43 +1,62 @@
 @import "tailwindcss";
 
 @theme {
-  /* Main Colors */
-  --color-primary: #5ecdbf;
-  --color-secondary: #a8e6a3;
-  --color-warning: #ffd93d;
-  --color-danger: #ff6b6b;
-  --color-success: #26de81;
+  /* Core brand & feedback colors (WCAG AA compliant on dark surfaces) */
+  --color-primary: #2563eb;            /* blue-600 */
+  --color-primary-hover: #1d4ed8;      /* blue-700 */
+  --color-secondary: #0ea5e9;          /* cyan-500 */
+  --color-success: #16a34a;            /* green-600 */
+  --color-warning: #f59e0b;            /* amber-500 */
+  --color-danger: #dc2626;             /* red-600 */
 
-  /* Background Colors */
-  --color-background: #f5f7fa;
-  --color-card: #ffffff;
+  /* Surfaces & backgrounds */
+  --color-background: #f8fafc;         /* slate-50 */
+  --color-background-muted: #eef2f7;   /* soft light */
+  --color-surface: #0f172a;            /* slate-900 */
+  --color-surface-elevated: #111827;   /* gray-900 */
+  --color-card: #111827;               /* used by bg-card */
 
-  /* Text Colors */
-  --color-text-primary: #2d3436;
-  --color-text-secondary: #636e72;
-  --color-text-light: #95a5a6;
+  /* Text/foreground on dark UI */
+  --color-foreground: #e5e7eb;         /* gray-200 */
+  --color-foreground-muted: #cbd5e1;   /* slate-300 */
+  --color-foreground-subtle: #94a3b8;  /* slate-400 */
 
-  /* Border & Shadow */
-  --color-border: #e1e4e8;
+  /* Text tokens for light contexts (compatibility for pages using text-text-*) */
+  --color-text-primary: #111827;       /* gray-900 */
+  --color-text-secondary: #374151;     /* gray-700 */
+  --color-text-light: #6b7280;         /* gray-500 */
 
-  /* Chart Colors */
-  --color-teal: #5ecdbf;
-  --color-light-teal: #a3e4db;
+  /* Borders */
+  --color-border: #334155;             /* slate-700 */
+  --color-border-weak: #475569;        /* slate-600 */
+  --color-border-strong: #1f2937;      /* gray-800 */
 
-  /* Risk Colors */
-  --color-risk-low: #a8e6a3;
-  --color-risk-moderate: #ffd93d;
-  --color-risk-high: #ff6b6b;
+  /* Focus ring */
+  --color-focus: #22d3ee;              /* cyan-400 */
+  --color-ring-offset: #0b1220;        /* base dark background for offset */
+
+  /* On-color tokens */
+  --color-on-primary: #ffffff;
+  --color-on-surface: #e5e7eb;
+
+  /* Chart palette (high contrast) */
+  --color-teal: #14b8a6;
+  --color-light-teal: #2dd4bf;
+
+  /* Risk colors (aligned with feedback colors) */
+  --color-risk-low: #16a34a;
+  --color-risk-moderate: #f59e0b;
+  --color-risk-high: #dc2626;
 
   /* Fish Zone Colors */
-  --color-zone-tuna: #ff6b6b;
-  --color-zone-eel: #45b7d1;
-  --color-zone-lanternfish: #4ecdc4;
-  --color-zone-reef: #ffd93d;
+  --color-zone-tuna: #ef4444;          /* red-500 */
+  --color-zone-eel: #06b6d4;           /* cyan-500 */
+  --color-zone-lanternfish: #10b981;   /* emerald-500 */
+  --color-zone-reef: #f59e0b;          /* amber-500 */
 
   /* Legacy for compatibility */
-  --color-light: #ffffff;
-  --color-dark: #171717;
+  --color-light: #f8fafc;              /* used as light foreground */
+  --color-dark: #0b1220;               /* deep ocean */
 }
 
 body {
@@ -59,14 +78,418 @@ body {
 
 @media (prefers-color-scheme: dark) {
   body {
-    color: var(--color-light);
+    color: var(--color-on-surface);
     background: var(--color-dark);
   }
 }
 
-/* Black & White Theme - Apply to all page content */
-[data-theme="bw"] .page-content,
-[data-theme="bw"] .dashboard-content,
-[data-theme="bw"] canvas {
-  filter: grayscale(100%);
+/* Accessible mode: solid white surfaces, larger type, no translucency */
+[data-theme="accessible"] body {
+  color: #111827; /* gray-900 */
+  background: #ffffff;
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+[data-theme="accessible"] .page-content,
+[data-theme="accessible"] .dashboard-content {
+  background: #ffffff !important;
+  color: #111827;
+  border-color: #e5e7eb !important; /* gray-200 */
+  overflow: hidden !important;
+  border-radius: 1.5rem !important; /* Force rounded-3xl */
+}
+
+[data-theme="accessible"] .card-surface,
+[data-theme="accessible"] .bg-card {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08) !important;
+  border-radius: 1rem !important; /* Ensure cards maintain rounded borders */
+  overflow: hidden !important;
+}
+
+[data-theme="accessible"] nav > div {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08) !important;
+}
+
+[data-theme="accessible"] .backdrop-blur-xl,
+[data-theme="accessible"] .backdrop-blur-sm {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+[data-theme="accessible"] button[aria-label="Open search filters"] {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08) !important;
+}
+
+[data-theme="accessible"] input,
+[data-theme="accessible"] select,
+[data-theme="accessible"] textarea {
+  background: #ffffff !important;
+  color: #111827 !important;
+  border-color: #e5e7eb !important;
+}
+
+[data-theme="accessible"] ::placeholder {
+  color: #6b7280 !important; /* gray-500 */
+}
+
+/* Ensure white surfaces force dark text even if components use text-white */
+[data-theme="accessible"] .text-white,
+[data-theme="accessible"] .text-white\/70,
+[data-theme="accessible"] .text-white\/80,
+[data-theme="accessible"] .text-white\/50,
+[data-theme="accessible"] .text-white\/40 {
+  color: #111827 !important;
+}
+
+/* Force all text to be dark in accessible mode */
+[data-theme="accessible"] * {
+  color: #111827 !important;
+}
+
+/* Override CSS custom property text colors in accessible mode */
+[data-theme="accessible"] .text-\[var\(--color-foreground\)\] {
+  color: #111827 !important;
+}
+
+/* Specific overrides for common text elements */
+[data-theme="accessible"] h1,
+[data-theme="accessible"] h2,
+[data-theme="accessible"] h3,
+[data-theme="accessible"] h4,
+[data-theme="accessible"] h5,
+[data-theme="accessible"] h6,
+[data-theme="accessible"] p,
+[data-theme="accessible"] span,
+[data-theme="accessible"] div,
+[data-theme="accessible"] label,
+[data-theme="accessible"] li {
+  color: #111827 !important;
+}
+
+/* Ensure cyan and other colored text becomes readable */
+[data-theme="accessible"] .text-cyan-400,
+[data-theme="accessible"] .text-cyan-300,
+[data-theme="accessible"] .text-cyan-500 {
+  color: #0891b2 !important; /* cyan-600 for better contrast on white */
+}
+
+/* Keep button text white on colored backgrounds */
+[data-theme="accessible"] button.bg-cyan-500,
+[data-theme="accessible"] button.bg-cyan-600,
+[data-theme="accessible"] .bg-cyan-500 *,
+[data-theme="accessible"] .bg-cyan-600 * {
+  color: #ffffff !important;
+}
+
+/* AI Assistant accessible mode styling */
+[data-theme="accessible"] .ai-assistant-modal {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .border-white\/10 {
+  border-color: #e5e7eb !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .border-white\/20 {
+  border-color: #e5e7eb !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .bg-white\/10 {
+  background: #f3f4f6 !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .bg-white\/5 {
+  background: #f9fafb !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .bg-cyan-500\/20 {
+  background: #e0f2fe !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .text-white {
+  color: #111827 !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .text-white\/60 {
+  color: #6b7280 !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .text-white\/40 {
+  color: #9ca3af !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .placeholder-white\/40::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Keep cyan elements readable but darker for contrast */
+[data-theme="accessible"] .ai-assistant-modal .text-cyan-400 {
+  color: #0891b2 !important;
+}
+
+[data-theme="accessible"] .ai-assistant-modal .bg-cyan-400 {
+  background-color: #0891b2 !important;
+}
+
+/* Search Panel accessible mode styling */
+[data-theme="accessible"] .search-panel {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+}
+
+[data-theme="accessible"] .search-panel .border-white\/10 {
+  border-color: #e5e7eb !important;
+}
+
+[data-theme="accessible"] .search-panel .border-white\/20 {
+  border-color: #e5e7eb !important;
+}
+
+[data-theme="accessible"] .search-panel .border-white\/30 {
+  border-color: #d1d5db !important;
+}
+
+[data-theme="accessible"] .search-panel .bg-white\/5 {
+  background: #f9fafb !important;
+}
+
+[data-theme="accessible"] .search-panel .bg-white\/10 {
+  background: #f3f4f6 !important;
+}
+
+[data-theme="accessible"] .search-panel .bg-white\/20 {
+  background: #e5e7eb !important;
+}
+
+[data-theme="accessible"] .search-panel .text-white {
+  color: #111827 !important;
+}
+
+[data-theme="accessible"] .search-panel .text-white\/60 {
+  color: #6b7280 !important;
+}
+
+[data-theme="accessible"] .search-panel .text-white\/70 {
+  color: #4b5563 !important;
+}
+
+[data-theme="accessible"] .search-panel .text-white\/40 {
+  color: #9ca3af !important;
+}
+
+[data-theme="accessible"] .search-panel .placeholder-white\/40::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Colored backgrounds for filter tags in accessible mode */
+[data-theme="accessible"] .search-panel .bg-blue-500\/30 {
+  background: #dbeafe !important;
+  border-color: #93c5fd !important;
+}
+
+[data-theme="accessible"] .search-panel .bg-green-500\/30 {
+  background: #dcfce7 !important;
+  border-color: #86efac !important;
+}
+
+[data-theme="accessible"] .search-panel .bg-purple-500\/30 {
+  background: #f3e8ff !important;
+  border-color: #c4b5fd !important;
+}
+
+[data-theme="accessible"] .search-panel .bg-blue-500\/10 {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+/* Colored text elements */
+[data-theme="accessible"] .search-panel .text-blue-400 {
+  color: #2563eb !important;
+}
+
+[data-theme="accessible"] .search-panel .text-blue-100 {
+  color: #1e40af !important;
+}
+
+[data-theme="accessible"] .search-panel .text-red-400 {
+  color: #dc2626 !important;
+}
+
+[data-theme="accessible"] .search-panel .text-red-300 {
+  color: #b91c1c !important;
+}
+
+/* Globe user marker text styling for accessible mode */
+[data-theme="accessible"] .globe-user-marker-label {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #111827 !important;
+  border: 1px solid #e5e7eb !important;
+}
+
+/* HomePage components accessible mode styling */
+[data-theme="accessible"] .dashboard-content {
+  background: #ffffff !important;
+  color: #111827 !important;
+}
+
+/* Ensure rounded borders are preserved in accessible mode */
+[data-theme="accessible"] .dashboard-content .rounded-lg {
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+[data-theme="accessible"] .dashboard-content .rounded-xl {
+  border-radius: 0.75rem !important;
+  overflow: hidden !important;
+}
+
+[data-theme="accessible"] .dashboard-content .rounded-2xl {
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+}
+
+[data-theme="accessible"] .dashboard-content .rounded-3xl {
+  border-radius: 1.5rem !important;
+  overflow: hidden !important;
+}
+
+/* Chart tooltips in accessible mode */
+[data-theme="accessible"] .recharts-tooltip-wrapper .recharts-default-tooltip {
+  background: #ffffff !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="accessible"] .recharts-tooltip-item {
+  color: #111827 !important;
+}
+
+[data-theme="accessible"] .recharts-tooltip-label {
+  color: #111827 !important;
+  font-weight: bold !important;
+}
+
+/* Search bar styling in accessible mode */
+[data-theme="accessible"] .dashboard-content .bg-white\/5 {
+  background: #f9fafb !important;
+  border-color: #d1d5db !important;
+}
+
+[data-theme="accessible"] .dashboard-content .border-white\/20 {
+  border-color: #d1d5db !important;
+}
+
+[data-theme="accessible"] .dashboard-content .focus-within\:border-cyan-400\/60:focus-within {
+  border-color: #0891b2 !important;
+}
+
+[data-theme="accessible"] .dashboard-content .bg-white\/10 {
+  background: #f3f4f6 !important;
+}
+
+/* Fish list items in accessible mode */
+[data-theme="accessible"] .dashboard-content .hover\:bg-white\/10:hover {
+  background: #f3f4f6 !important;
+}
+
+[data-theme="accessible"] .dashboard-content .group:hover .group-hover\:text-cyan-300 {
+  color: #0891b2 !important;
+}
+
+[data-theme="accessible"] .dashboard-content .group:hover .group-hover\:text-cyan-100 {
+  color: #0f172a !important;
+}
+
+[data-theme="accessible"] .dashboard-content .group:hover .group-hover\:text-white\/80 {
+  color: #374151 !important;
+}
+
+/* Legend text in charts */
+[data-theme="accessible"] .recharts-legend-item-text {
+  color: #111827 !important;
+}
+
+/* Search container focus styling */
+.search-container input {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+.search-container input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Ensure only container border changes on focus */
+.search-container:focus-within {
+  outline: none;
+}
+
+/* Accessible mode search container */
+[data-theme="accessible"] .search-container {
+  background: #f9fafb !important;
+  border-color: #d1d5db !important;
+}
+
+[data-theme="accessible"] .search-container:focus-within {
+  border-color: #0891b2 !important;
+  background: #f3f4f6 !important;
+}
+
+[data-theme="accessible"] .search-container input {
+  background: transparent !important;
+  color: #111827 !important;
+}
+
+[data-theme="accessible"] .search-container input::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Global focus styles for better keyboard accessibility */
+:where(a, button, [role="button"], input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Improve placeholder contrast on dark backgrounds */
+::placeholder {
+  color: var(--color-foreground-subtle);
+  opacity: 1;
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+}
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+/* Utility mappings for surfaces when using glassmorphism */
+.surface-panel {
+  background-color: color-mix(in srgb, var(--color-surface) 85%, transparent);
+  border-color: var(--color-border);
+}
+
+/* Selection */
+::selection {
+  background: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  color: var(--color-on-primary);
 }

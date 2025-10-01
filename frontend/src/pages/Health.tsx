@@ -15,7 +15,8 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Activity, Heart, TrendingUp, Hand } from 'lucide-react';
+import { Activity, Heart, TrendingUp, Hand, MessageCircle } from 'lucide-react';
+import AIAssistant from '../components/AIAssistant';
 
 // User ID - In production, this would come from authentication
 const USER_ID = 'user_001';
@@ -23,6 +24,26 @@ const USER_ID = 'user_001';
 // API endpoints
 const CTS_API_URL = 'http://localhost:8002';
 const SENSOR_API_URL = 'http://localhost:8003';
+
+// Weather constants
+const LATITUDE = 35.5311;
+const LONGITUDE = 139.8894;
+
+const weatherCodeToEmoji = (code: number) => {
+  switch (code) {
+    case 0: return "☀️";
+    case 1: return "🌤️";
+    case 2: return "⛅";
+    case 3: return "🌥️";
+    case 45: case 48: return "🌫️";
+    case 51: case 53: case 55: return "🌧️";
+    case 61: case 63: case 65: return "🌦️";
+    case 71: case 73: case 75: return "🌨️";
+    case 80: case 81: case 82: return "🌧️";
+    case 95: case 96: case 99: return "🌩️";
+    default: return "🌫️";
+  }
+};
 
 type ViewMode = 'onboarding' | 'riskTest' | 'dashboard';
 type RiskTestStep = 'intro' | 'painRating' | 'gripMeasurement' | 'pinchMeasurement' | 'summary' | 'results';
@@ -51,6 +72,12 @@ export default function Health() {
   const [viewMode, setViewMode] = useState<ViewMode>('onboarding');
   const [riskTestStep, setRiskTestStep] = useState<RiskTestStep>('intro');
   const [timeRange, setTimeRange] = useState<TimeRange>('week');
+  
+  // Weather and UI state
+  const [weather, setWeather] = useState<string | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(true);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
 
   // Onboarding form data
   const [onboardingData, setOnboardingData] = useState({
@@ -87,6 +114,32 @@ export default function Health() {
       setViewMode('onboarding');
     }
   }, [userProfile]);
+
+  // Fetch weather data
+  useEffect(() => {
+    const fetchWeather = async () => {
+      setWeatherLoading(true);
+      setWeatherError(null);
+      try {
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current_weather=true&timezone=Asia/Tokyo`
+        );
+        if (!res.ok) throw new Error("fetch failed");
+        const data = await res.json();
+        const cw = data.current_weather;
+        if (cw) {
+          setWeather(`${weatherCodeToEmoji(cw.weathercode)} ${cw.temperature}°C`);
+        } else {
+          setWeather("No weather");
+        }
+      } catch {
+        setWeatherError("Weather error");
+      } finally {
+        setWeatherLoading(false);
+      }
+    };
+    void fetchWeather();
+  }, []);
 
   // Calculate BMI
   const calculateBMI = (weight: number, height: number): number => {
@@ -1211,6 +1264,13 @@ export default function Health() {
     setIsEditingProfile(false);
   };
 
+  // Get latest CTS assessment for AI assistant
+  const latestAssessment = assessments && assessments.length > 0
+    ? assessments.reduce((latest: any, current: any) =>
+        current.timestamp > latest.timestamp ? current : latest
+      )
+    : null;
+
   // Render dashboard with historical data
   const renderDashboard = () => {
     const chartData = getChartData();
@@ -1218,12 +1278,42 @@ export default function Health() {
 
     return (
       <PageLayout
-        title="Carpal Tunnel Health Dashboard"
-        rightText={new Date().toLocaleDateString('en-US', {
-          weekday: 'long',
-          month: 'long',
-          day: 'numeric',
-        })}
+        title="Health"
+        rightText={
+          <div className="flex items-center justify-between w-full gap-6">
+            {/* AI Assistant - Left side for primary action */}
+            <button
+              onClick={() => setShowAIAssistant(true)}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-4 py-2.5 rounded-lg transition-all shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 flex items-center gap-2 text-sm"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Ask AI Assistant
+            </button>
+            
+            {/* Date & Weather - Right side for contextual info */}
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 font-medium">
+                <span className="text-white/90">
+                  {new Date().toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
+                <span className="text-white/40">•</span>
+                <span className="text-white/90">
+                  {weatherLoading ? (
+                    "Loading..."
+                  ) : weatherError ? (
+                    <span className="text-red-300">{weatherError}</span>
+                  ) : (
+                    weather
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+        }
       >
         <div className="space-y-6">
           {/* Action Buttons */}
@@ -1547,17 +1637,32 @@ export default function Health() {
   };
 
   // Main render
-  if (viewMode === 'onboarding') {
-    return renderOnboarding();
-  } else if (viewMode === 'riskTest') {
+  return (
+    <>
+      {showAIAssistant && (
+        <AIAssistant
+          onClose={() => setShowAIAssistant(false)}
+          ctsData={latestAssessment ? {
+            severity: latestAssessment.predictedClass,
+            gripStrength: latestAssessment.gripStrength,
+            pinchStrength: latestAssessment.pinchStrength,
+          } : null}
+        />
+      )}
+      {(() => {
+        if (viewMode === 'onboarding') {
+          return renderOnboarding();
+        } else if (viewMode === 'riskTest') {
     if (riskTestStep === 'intro') return renderRiskTestIntro();
     if (riskTestStep === 'painRating') return renderPainRating();
     if (riskTestStep === 'gripMeasurement') return renderGripMeasurement();
     if (riskTestStep === 'pinchMeasurement') return renderPinchMeasurement();
     if (riskTestStep === 'summary') return renderSummary();
-  } else if (viewMode === 'dashboard') {
-    return renderDashboard();
-  }
-
-  return null;
+        } else if (viewMode === 'dashboard') {
+          return renderDashboard();
+        }
+        return null;
+      })()}
+    </>
+  );
 }

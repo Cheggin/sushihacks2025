@@ -88,9 +88,10 @@ export default function App() {
       {userMarker && !showSearchPanel && !activePopup && (
         <button
           onClick={() => setShowSearchPanel(true)}
-          className="fixed top-6 left-6 z-40 p-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl hover:bg-white/20 transition-all shadow-lg"
+          className="fixed top-6 left-6 z-40 p-3 rounded-xl transition-all shadow-lg border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_70%,transparent)] hover:bg-[rgba(37,99,235,0.2)] focus-visible:outline-none"
+          aria-label="Open search filters"
         >
-          <Search className="w-5 h-5 text-white" />
+          <Search className="w-5 h-5 text-[var(--color-foreground)]" />
         </button>
       )}
 

@@ -50,29 +50,29 @@ export default function Landing({ onSubmit }: LandingProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black/40 backdrop-blur-sm relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-[rgba(0,0,0,0.5)] backdrop-blur-sm relative overflow-hidden">
 
       <div className="relative z-10 w-full max-w-md px-6">
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="mb-6 flex justify-center">
-            <div className="w-24 h-24 bg-white/10 backdrop-blur-xl border-2 border-white/20 rounded-2xl flex items-center justify-center">
+            <div className="w-24 h-24 bg-[color-mix(in_srgb,var(--color-surface)_70%,transparent)] backdrop-blur-xl border border-[var(--color-border)] rounded-2xl flex items-center justify-center">
               <div className="text-4xl">🐟</div>
             </div>
           </div>
 
-          <h1 className="text-6xl font-bold text-white mb-4">CARP</h1>
-          <p className="text-xl text-white/70 mb-2">Collaborative Aquatic Resource Platform</p>
-          <p className="text-sm text-white/50">Track, analyze, and trade fish occurrences globally</p>
+          <h1 className="text-6xl font-bold text-[var(--color-foreground)] mb-4">CARP</h1>
+          <p className="text-xl text-[var(--color-foreground-muted)] mb-2">Collaborative Aquatic Resource Platform</p>
+          <p className="text-sm text-[var(--color-foreground-subtle)]">Track, analyze, and trade fish occurrences globally</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-8">
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">Mark Your Location</h2>
+        <div className="backdrop-blur-xl border border-[var(--color-border)] rounded-3xl shadow-2xl p-8 bg-[color-mix(in_srgb,var(--color-surface)_70%,transparent)]">
+          <h2 className="text-2xl font-bold text-[var(--color-foreground)] mb-6 text-center">Mark Your Location</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-white/80 mb-2">
+              <label htmlFor="name" className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
                 Your Name
               </label>
               <input
@@ -81,12 +81,12 @@ export default function Landing({ onSubmit }: LandingProps) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/40 transition-colors"
+                className="w-full px-4 py-3 bg-[rgba(255,255,255,0.04)] border border-[var(--color-border)] rounded-xl text-[var(--color-foreground)] placeholder-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="latitude" className="block text-sm font-medium text-white/80 mb-2">
+              <label htmlFor="latitude" className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
                 Latitude
               </label>
               <input
@@ -95,12 +95,12 @@ export default function Landing({ onSubmit }: LandingProps) {
                 value={latitude}
                 onChange={(e) => setLatitude(e.target.value)}
                 placeholder="e.g., 35.6762"
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/40 transition-colors"
+                className="w-full px-4 py-3 bg-[rgba(255,255,255,0.04)] border border-[var(--color-border)] rounded-xl text-[var(--color-foreground)] placeholder-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
               />
             </div>
 
             <div>
-              <label htmlFor="longitude" className="block text-sm font-medium text-white/80 mb-2">
+              <label htmlFor="longitude" className="block text-sm font-medium text-[var(--color-foreground)] mb-2">
                 Longitude
               </label>
               <input
@@ -109,28 +109,28 @@ export default function Landing({ onSubmit }: LandingProps) {
                 value={longitude}
                 onChange={(e) => setLongitude(e.target.value)}
                 placeholder="e.g., 139.6503"
-                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/40 transition-colors"
+                className="w-full px-4 py-3 bg-[rgba(255,255,255,0.04)] border border-[var(--color-border)] rounded-xl text-[var(--color-foreground)] placeholder-[var(--color-foreground-subtle)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
               />
             </div>
 
             <button
               type="button"
               onClick={getCurrentLocation}
-              className="w-full px-4 py-2 bg-white/5 border border-white/20 rounded-xl text-white/70 hover:bg-white/10 hover:text-white transition-colors text-sm"
+              className="w-full px-4 py-2 border border-[var(--color-border)] rounded-xl text-[var(--color-foreground)] hover:bg-[rgba(148,163,184,0.08)] transition-colors text-sm"
             >
               📍 Use My Current Location
             </button>
 
             <button
               type="submit"
-              className="w-full px-4 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 rounded-xl text-white font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02]"
+              className="w-full px-4 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-[1.02] bg-[var(--color-primary)] text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]"
             >
               Enter CARP
             </button>
           </form>
         </div>
 
-        <p className="text-center text-white/40 text-xs mt-6">
+        <p className="text-center text-[var(--color-foreground-subtle)] text-xs mt-6">
           Your location will be marked on the global fish occurrence map
         </p>
       </div>

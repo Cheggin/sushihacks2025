@@ -11,15 +11,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const getVariantClasses = () => {
       switch (variant) {
         case 'primary':
-          return 'bg-blue-600 text-white hover:bg-blue-700'
+          return 'bg-[var(--color-primary)] text-[var(--color-on-primary)] hover:bg-[var(--color-primary-hover)]'
         case 'secondary':
-          return 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+          return 'border border-[var(--color-border)] bg-transparent text-[var(--color-foreground)] hover:bg-[rgba(148,163,184,0.08)]'
         case 'outline':
-          return 'border border-slate-200 bg-white hover:bg-slate-100'
+          return 'border border-[var(--color-border)] bg-[var(--color-surface-elevated)] text-[var(--color-foreground)] hover:bg-[rgba(255,255,255,0.04)]'
         case 'ghost':
-          return 'hover:bg-slate-100'
+          return 'bg-transparent text-[var(--color-foreground)] hover:bg-[rgba(148,163,184,0.08)]'
         default:
-          return 'bg-slate-900 text-white hover:bg-slate-800'
+          return 'bg-[var(--color-surface-elevated)] text-[var(--color-foreground)] hover:bg-[rgba(17,24,39,0.9)]'
       }
     }
 
@@ -34,7 +34,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       }
     }
 
-    const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none'
+    const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-ring-offset)] disabled:opacity-50 disabled:pointer-events-none'
 
     return (
       <button
