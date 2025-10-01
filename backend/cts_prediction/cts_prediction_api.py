@@ -5,6 +5,7 @@ A minimal FastAPI that takes patient data and returns CTS severity predictions.
 """
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Dict
 import joblib
@@ -26,10 +27,10 @@ class PatientData(BaseModel):
     age: int = Field(..., ge=18, le=100, description="Patient age in years")
     bmi: float = Field(..., ge=15.0, le=50.0, description="Body Mass Index")
     sex: int = Field(..., ge=0, le=1, description="Sex (0=female, 1=male)")
-    duration: int = Field(..., ge=1, le=120, description="Symptom duration in months")
+    duration: int = Field(..., ge=0, le=120, description="Symptom duration in months (0 if no symptoms)")
     nrs: int = Field(..., ge=0, le=10, description="Numeric Rating Scale for pain (0-10)")
-    grip_strength: float = Field(..., ge=1.0, le=60.0, description="Grip strength in kg")
-    pinch_strength: float = Field(..., ge=0.5, le=15.0, description="Pinch strength in kg")
+    grip_strength: float = Field(..., ge=0.0, le=60.0, description="Grip strength in kg")
+    pinch_strength: float = Field(..., ge=0.0, le=15.0, description="Pinch strength in kg")
 
 class PredictionResponse(BaseModel):
     """Response model for predictions"""
@@ -73,6 +74,15 @@ app = FastAPI(
     description="Predict carpal tunnel syndrome severity using clinical data",
     version="1.0.0",
     lifespan=lifespan
+)
+
+# Add CORS middleware to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods including OPTIONS
+    allow_headers=["*"],  # Allows all headers
 )
 
 @app.get("/")

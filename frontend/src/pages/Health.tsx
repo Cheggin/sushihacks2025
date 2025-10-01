@@ -1,257 +1,1381 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from 'react';
+import { useMutation, useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
+import PageLayout from '../components/PageLayout';
+import { Card, CardContent } from '../components/ui/card';
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts';
+import { Activity, Heart, TrendingUp, Hand } from 'lucide-react';
 
-// Mock data for charts
-const dailyData = [
-  { time: '8AM', strength: 52 },
-  { time: '10AM', strength: 48 },
-  { time: '12PM', strength: 45 },
-  { time: '2PM', strength: 43 },
-  { time: '4PM', strength: 47 },
-  { time: '6PM', strength: 50 },
-];
+// User ID - In production, this would come from authentication
+const USER_ID = 'user_001';
 
-const weeklyData = [
-  { day: 'Mon', value: 48 },
-  { day: 'Tue', value: 52 },
-  { day: 'Wed', value: 47 },  { day: 'Thu', value: 51 },
-  { day: 'Fri', value: 49 },
-  { day: 'Sat', value: 53 },
-  { day: 'Sun', value: 50 },
-];
+// API endpoints
+const CTS_API_URL = 'http://localhost:8002';
+const SENSOR_API_URL = 'http://localhost:8003';
+
+type ViewMode = 'onboarding' | 'riskTest' | 'dashboard';
+type RiskTestStep = 'intro' | 'painRating' | 'gripMeasurement' | 'pinchMeasurement' | 'summary' | 'results';
+type TimeRange = 'week' | 'month' | 'year';
+
+interface SensorReading {
+  timestamp: number;
+  fsr_raw: number;
+  pinch_strength_kg: number;
+  grip_strength_kg: number;
+}
+
+interface CTSPrediction {
+  predicted_class: string;
+  predicted_class_numeric: number;
+  probabilities: {
+    mild: number;
+    moderate: number;
+    severe: number;
+  };
+  confidence: number;
+}
 
 export default function Health() {
-  const [formData, setFormData] = useState({
-    age: '',
-    bmi: '',
-    csa: '',
-    pb: '',
-    nrs: '',
-    sex: '0',
-  });
-  const [result, setResult] = useState<any>(null);
+  // View state
+  const [viewMode, setViewMode] = useState<ViewMode>('onboarding');
+  const [riskTestStep, setRiskTestStep] = useState<RiskTestStep>('intro');
+  const [timeRange, setTimeRange] = useState<TimeRange>('week');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Calculate risk score (simplified version)
-    const age = parseInt(formData.age);
-    const bmi = parseFloat(formData.bmi);
-    const csa = parseFloat(formData.csa);
-    const pb = parseFloat(formData.pb);
-    const nrs = parseInt(formData.nrs);
-    
-    let riskScore = 0;
-    
-    if (age > 60) riskScore += 0.15;
-    else if (age > 50) riskScore += 0.1;
-    
-    if (bmi < 18.5 || bmi > 30) riskScore += 0.2;
-    else if (bmi > 25) riskScore += 0.1;
-    
-    if (csa > 14) riskScore += 0.25;
-    else if (csa > 11) riskScore += 0.15;
-    
-    if (pb > 4.5) riskScore += 0.25;
-    else if (pb > 3.5) riskScore += 0.15;
-    
-    riskScore += (nrs / 10) * 0.15;
-    
-    const riskLevel = riskScore < 0.3 ? 'Low' : riskScore < 0.6 ? 'Moderate' : 'High';
-    const riskColor = riskScore < 0.3 ? 'risk-low' : riskScore < 0.6 ? 'risk-moderate' : 'risk-high';
-    
-    setResult({
-      prediction: riskScore,
-      riskLevel,
-      riskColor,
-      confidence: 0.85,
-    });
+  // Onboarding form data
+  const [onboardingData, setOnboardingData] = useState({
+    age: '',
+    sex: '0',
+    height: '',
+    weight: '',
+    ctsPainDuration: '',
+  });
+
+  // Risk test data
+  const [painRating, setPainRating] = useState<number>(0);
+  const [gripData, setGripData] = useState<SensorReading[]>([]);
+  const [pinchData, setPinchData] = useState<SensorReading[]>([]);
+  const [isCollectingGrip, setIsCollectingGrip] = useState(false);
+  const [isCollectingPinch, setIsCollectingPinch] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [prediction, setPrediction] = useState<CTSPrediction | null>(null);
+
+  // Convex queries and mutations
+  const userProfile = useQuery(api.userProfiles.getByUserId, { userId: USER_ID });
+  const assessments = useQuery(api.ctsAssessments.getByUserId, { userId: USER_ID });
+  const createProfile = useMutation(api.userProfiles.create);
+  const createAssessment = useMutation(api.ctsAssessments.create);
+
+  // Determine initial view based on user profile
+  useEffect(() => {
+    if (userProfile === undefined) return; // Loading
+    if (userProfile === null) {
+      setViewMode('onboarding');
+    } else if (userProfile.hasCompletedOnboarding) {
+      setViewMode('dashboard');
+    } else {
+      setViewMode('onboarding');
+    }
+  }, [userProfile]);
+
+  // Calculate BMI
+  const calculateBMI = (weight: number, height: number): number => {
+    const heightInMeters = height / 100;
+    return weight / (heightInMeters * heightInMeters);
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card border-b border-border p-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold text-text-primary">CTS Risk Dashboard</h1>
-            <p className="text-sm text-text-secondary">Carpal Tunnel Syndrome Assessment</p>
-          </div>
-          <Link
-            to="/"
-            className="px-4 py-2 border border-border hover:border-primary rounded-lg text-text-primary transition-colors text-sm"
-          >
-            ← Back
-          </Link>
-        </div>
-      </header>
+  // Handle onboarding submission
+  const handleOnboardingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-      <main className="max-w-7xl mx-auto p-8 space-y-8">
-        {/* Today's Date */}
-        <div className="text-text-secondary text-sm">
-          {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-        </div>
+    const age = parseInt(onboardingData.age);
+    const height = parseFloat(onboardingData.height);
+    const weight = parseFloat(onboardingData.weight);
+    const bmi = calculateBMI(weight, height);
+    const ctsPainDuration = parseInt(onboardingData.ctsPainDuration);
 
-        {/* Charts Row */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-card rounded-lg p-6 border border-border">
-            <h3 className="text-base font-semibold text-text-primary mb-4">Today's Grip Strength</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={dailyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
-                <XAxis dataKey="time" stroke="#636E72" fontSize={12} />
-                <YAxis stroke="#636E72" fontSize={12} />
-                <Tooltip />
-                <Line type="monotone" dataKey="strength" stroke="#5ECDBF" strokeWidth={2} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+    await createProfile({
+      userId: USER_ID,
+      age,
+      sex: parseInt(onboardingData.sex),
+      height,
+      weight,
+      bmi,
+      ctsPainDuration,
+      hasCompletedOnboarding: true,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
 
-          <div className="bg-card rounded-lg p-6 border border-border">
-            <h3 className="text-base font-semibold text-text-primary mb-4">Weekly Overview</h3>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={weeklyData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
-                <XAxis dataKey="day" stroke="#636E72" fontSize={12} />
-                <YAxis stroke="#636E72" fontSize={12} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#5ECDBF" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+    setViewMode('riskTest');
+    setRiskTestStep('intro');
+  };
 
-        {/* Risk Assessment Form */}
-        <div className="bg-card rounded-lg p-8 border border-border">
+  // Start risk test
+  const startRiskTest = () => {
+    setViewMode('riskTest');
+    setRiskTestStep('intro');
+    setGripData([]);
+    setPinchData([]);
+    setPrediction(null);
+    setPainRating(0);
+  };
+
+  // Continue to pain rating
+  const continueToPainRating = () => {
+    setRiskTestStep('painRating');
+  };
+
+  // Continue to grip measurement
+  const continueToGripMeasurement = () => {
+    setRiskTestStep('gripMeasurement');
+  };
+
+  // Continue to pinch measurement
+  const continueToPinchMeasurement = () => {
+    setRiskTestStep('pinchMeasurement');
+  };
+
+  // Continue to summary
+  const continueToSummary = async () => {
+    // Get prediction before showing summary
+    await getCTSPrediction();
+    setRiskTestStep('summary');
+  };
+
+  // Collect grip strength data with LIVE streaming
+  const collectGripData = async () => {
+    setIsCollectingGrip(true);
+    setGripData([]);
+
+    try {
+      // Start countdown at 7 seconds (will show while API connects and first data arrives)
+      setCountdown(7);
+      const countdownInterval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(countdownInterval);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Start API call immediately (parallel with countdown)
+      const response = await fetch(
+        `${SENSOR_API_URL}/sensors/stream?device_name=SensorNode&duration=10&poll_interval=0.1`
+      );
+
+      if (!response.ok) {
+        clearInterval(countdownInterval);
+        setCountdown(null);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        clearInterval(countdownInterval);
+        setCountdown(null);
+        throw new Error('No reader available');
+      }
+
+      const tempReadings: SensorReading[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const eventData = JSON.parse(line.slice(6));
+
+              if (eventData.event === 'reading' && eventData.data) {
+                tempReadings.push(eventData.data);
+                // Clear countdown when first data arrives
+                if (tempReadings.length === 1) {
+                  clearInterval(countdownInterval);
+                  setCountdown(null);
+                }
+                // Update state with new reading for LIVE visualization
+                setGripData([...tempReadings]);
+              } else if (eventData.event === 'error') {
+                clearInterval(countdownInterval);
+                setCountdown(null);
+                throw new Error(eventData.message);
+              } else if (eventData.event === 'complete') {
+                console.log('Grip collection complete');
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse SSE data:', parseError);
+            }
+          }
+        }
+      }
+
+      clearInterval(countdownInterval);
+      setCountdown(null);
+      setGripData(tempReadings);
+    } catch (error) {
+      console.error('Grip strength collection failed:', error);
+      alert(
+        `Failed to collect grip strength data: ${error}. Make sure the sensor API is running on port 8003.`
+      );
+    } finally {
+      setIsCollectingGrip(false);
+    }
+  };
+
+  // Collect pinch strength data with LIVE streaming
+  const collectPinchData = async () => {
+    setIsCollectingPinch(true);
+    setPinchData([]);
+
+    try {
+      // Start countdown at 7 seconds (will show while API connects and first data arrives)
+      setCountdown(7);
+      const countdownInterval = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            clearInterval(countdownInterval);
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      // Start API call immediately (parallel with countdown)
+      const response = await fetch(
+        `${SENSOR_API_URL}/sensors/stream?device_name=SensorNode&duration=10&poll_interval=0.1`
+      );
+
+      if (!response.ok) {
+        clearInterval(countdownInterval);
+        setCountdown(null);
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        clearInterval(countdownInterval);
+        setCountdown(null);
+        throw new Error('No reader available');
+      }
+
+      const tempReadings: SensorReading[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const eventData = JSON.parse(line.slice(6));
+
+              if (eventData.event === 'reading' && eventData.data) {
+                tempReadings.push(eventData.data);
+                // Clear countdown when first data arrives
+                if (tempReadings.length === 1) {
+                  clearInterval(countdownInterval);
+                  setCountdown(null);
+                }
+                // Update state with new reading for LIVE visualization
+                setPinchData([...tempReadings]);
+              } else if (eventData.event === 'error') {
+                clearInterval(countdownInterval);
+                setCountdown(null);
+                throw new Error(eventData.message);
+              } else if (eventData.event === 'complete') {
+                console.log('Pinch collection complete');
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse SSE data:', parseError);
+            }
+          }
+        }
+      }
+
+      clearInterval(countdownInterval);
+      setCountdown(null);
+      setPinchData(tempReadings);
+    } catch (error) {
+      console.error('Pinch strength collection failed:', error);
+      alert(
+        `Failed to collect pinch strength data: ${error}. Make sure the sensor API is running on port 8003.`
+      );
+    } finally {
+      setIsCollectingPinch(false);
+    }
+  };
+
+  // Get CTS prediction from API
+  const getCTSPrediction = async () => {
+    if (!userProfile || gripData.length === 0 || pinchData.length === 0) return;
+
+    const avgGrip =
+      gripData.reduce((sum, r) => sum + r.grip_strength_kg, 0) / gripData.length;
+    const avgPinch =
+      pinchData.reduce((sum, r) => sum + r.pinch_strength_kg, 0) / pinchData.length;
+
+    try {
+      const response = await fetch(`${CTS_API_URL}/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          age: userProfile.age,
+          bmi: userProfile.bmi,
+          sex: userProfile.sex,
+          duration: userProfile.ctsPainDuration,
+          nrs: painRating,
+          grip_strength: avgGrip,
+          pinch_strength: avgPinch,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const predictionData = await response.json();
+      setPrediction(predictionData);
+
+      // Save to database
+      await createAssessment({
+        userId: USER_ID,
+        timestamp: Date.now(),
+        age: userProfile.age,
+        bmi: userProfile.bmi,
+        sex: userProfile.sex,
+        duration: userProfile.ctsPainDuration,
+        nrs: painRating,
+        gripStrength: avgGrip,
+        pinchStrength: avgPinch,
+        predictedClass: predictionData.predicted_class,
+        predictedClassNumeric: predictionData.predicted_class_numeric,
+        probabilities: predictionData.probabilities,
+        confidence: predictionData.confidence,
+        sensorReadingsCount: gripData.length + pinchData.length,
+        sensorCollectionDuration: 20, // 10 seconds each for grip and pinch
+      });
+
+      setRiskTestStep('results');
+    } catch (error) {
+      console.error('Prediction failed:', error);
+      alert(`Failed to get CTS prediction: ${error}. Make sure the CTS API is running on port 8002.`);
+    }
+  };
+
+  // Return to dashboard
+  const returnToDashboard = () => {
+    setViewMode('dashboard');
+    setPainRating(0);
+    setGripData([]);
+    setPinchData([]);
+    setPrediction(null);
+    setRiskTestStep('intro');
+  };
+
+  // Convert medical severity to layman-friendly labels
+  const getSeverityLabel = (severity: string): string => {
+    const labels = {
+      mild: 'Mild or No Carpal Tunnel',
+      moderate: 'Moderate Carpal Tunnel',
+      severe: 'Severe Carpal Tunnel',
+    };
+    return labels[severity as keyof typeof labels] || severity;
+  };
+
+  // Filter assessments by time range
+  const getFilteredAssessments = () => {
+    if (!assessments) return [];
+
+    const now = Date.now();
+    const ranges = {
+      week: 7 * 24 * 60 * 60 * 1000,
+      month: 30 * 24 * 60 * 60 * 1000,
+      year: 365 * 24 * 60 * 60 * 1000,
+    };
+
+    return assessments.filter((a: any) => now - a.timestamp <= ranges[timeRange]);
+  };
+
+  // Prepare chart data
+  const getChartData = () => {
+    const filtered = getFilteredAssessments();
+    return filtered.map((a: any) => ({
+      date: new Date(a.timestamp).toLocaleDateString(),
+      severity: a.predictedClassNumeric,
+      severityLabel: a.predictedClass,
+      grip: a.gripStrength,
+      pinch: a.pinchStrength,
+      confidence: a.confidence * 100,
+    }));
+  };
+
+  // Render onboarding screen
+  const renderOnboarding = () => (
+    <PageLayout title="Welcome to Carpal Tunnel Monitoring" rightText="Let's get started">
+      <Card>
+        <CardContent>
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-text-primary mb-2">Carpal Tunnel Risk Test</h2>
-            <p className="text-sm text-text-secondary">Enter your health metrics for an instant risk assessment</p>
+            <h2 className="text-2xl font-bold text-black mb-2">Tell us about yourself</h2>
+            <p className="text-gray-600">
+              We need some basic information to provide you with personalized Carpal Tunnel risk assessments.
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-4">
+          <form onSubmit={handleOnboardingSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Age</label>
+                <label className="block text-sm font-medium text-black mb-1">Age</label>
                 <input
                   type="number"
                   required
-                  value={formData.age}
-                  onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-md focus:border-primary focus:outline-none"
-                  placeholder="Enter your age"
+                  min="18"
+                  max="100"
+                  value={onboardingData.age}
+                  onChange={(e) => setOnboardingData({ ...onboardingData, age: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
+                  placeholder="Your age"
                 />
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">BMI</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  required
-                  value={formData.bmi}
-                  onChange={(e) => setFormData({ ...formData, bmi: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-md focus:border-primary focus:outline-none"
-                  placeholder="Body Mass Index"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">CSA (mm²)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  required
-                  value={formData.csa}
-                  onChange={(e) => setFormData({ ...formData, csa: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-md focus:border-primary focus:outline-none"
-                  placeholder="Cross-Sectional Area"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">PB (mm)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  required
-                  value={formData.pb}
-                  onChange={(e) => setFormData({ ...formData, pb: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-md focus:border-primary focus:outline-none"
-                  placeholder="Palmar Bowing"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">NRS Pain (0-10)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  required
-                  value={formData.nrs}
-                  onChange={(e) => setFormData({ ...formData, nrs: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-md focus:border-primary focus:outline-none"
-                  placeholder="Pain level"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">Sex</label>
+                <label className="block text-sm font-medium text-black mb-1">Sex</label>
                 <select
-                  value={formData.sex}
-                  onChange={(e) => setFormData({ ...formData, sex: e.target.value })}
-                  className="w-full px-4 py-2 border border-border rounded-md focus:border-primary focus:outline-none"
+                  value={onboardingData.sex}
+                  onChange={(e) => setOnboardingData({ ...onboardingData, sex: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
                 >
                   <option value="0">Male</option>
                   <option value="1">Female</option>
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Height (cm)</label>
+                <input
+                  type="number"
+                  required
+                  min="100"
+                  max="250"
+                  step="0.1"
+                  value={onboardingData.height}
+                  onChange={(e) =>
+                    setOnboardingData({ ...onboardingData, height: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
+                  placeholder="e.g., 170"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-black mb-1">Weight (kg)</label>
+                <input
+                  type="number"
+                  required
+                  min="30"
+                  max="200"
+                  step="0.1"
+                  value={onboardingData.weight}
+                  onChange={(e) =>
+                    setOnboardingData({ ...onboardingData, weight: e.target.value })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
+                  placeholder="e.g., 70"
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-black mb-1">
+                  Carpal Tunnel Pain Duration (months)
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  max="120"
+                  value={onboardingData.ctsPainDuration}
+                  onChange={(e) =>
+                    setOnboardingData({
+                      ...onboardingData,
+                      ctsPainDuration: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
+                  placeholder="Enter 0 if you don't have Carpal Tunnel pain"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  If you experience numbness, tingling, or pain in your hand/wrist, how long have
+                  you had these symptoms?
+                </p>
+              </div>
             </div>
+
+            {onboardingData.height && onboardingData.weight && (
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm text-black">
+                  <strong>Your BMI:</strong>{' '}
+                  {calculateBMI(
+                    parseFloat(onboardingData.weight),
+                    parseFloat(onboardingData.height)
+                  ).toFixed(1)}
+                </p>
+              </div>
+            )}
 
             <button
               type="submit"
-              className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 rounded-md transition-colors"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
             >
-              Calculate Risk Score
+              Continue to Risk Assessment
             </button>
           </form>
+        </CardContent>
+      </Card>
+    </PageLayout>
+  );
 
-          {/* Results */}
-          {result && (
-            <div className="mt-8 max-w-2xl mx-auto border border-border rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-text-primary mb-4">Assessment Results</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-text-secondary">Risk Level:</span>
-                  <span className={`text-xl font-bold ${
-                    result.riskLevel === 'Low' ? 'text-secondary' :
-                    result.riskLevel === 'Moderate' ? 'text-warning' :
-                    'text-danger'
-                  }`}>{result.riskLevel}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-text-secondary">Risk Score:</span>
-                  <span className="text-lg font-semibold text-text-primary">
-                    {(result.prediction * 100).toFixed(1)}%
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-text-secondary">Confidence:</span>
-                  <span className="text-lg font-semibold text-text-primary">
-                    {(result.confidence * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <div className="w-full bg-border rounded-full h-2 mt-4">
-                  <div
-                    className={`h-2 rounded-full transition-all ${
-                      result.riskLevel === 'Low' ? 'bg-secondary' :
-                      result.riskLevel === 'Moderate' ? 'bg-warning' :
-                      'bg-danger'
-                    }`}
-                    style={{ width: `${result.prediction * 100}%` }}
-                  />
-                </div>
+  // Render risk test intro
+  const renderRiskTestIntro = () => (
+    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 1 of 5">
+      <Card>
+        <CardContent>
+          <div className="text-center py-8">
+            <div className="mb-6">
+              <Activity className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-black mb-3">Let's assess your Carpal Tunnel risk</h2>
+              <p className="text-gray-600 max-w-lg mx-auto">
+                This assessment will help us understand your current condition and provide
+                personalized recommendations. The process takes about 3 minutes.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-5 gap-3 mb-8 max-w-4xl mx-auto">
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-1 text-sm">Pain Rating</h3>
+                <p className="text-xs text-gray-600">Rate pain level</p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-1 text-sm">Grip Test</h3>
+                <p className="text-xs text-gray-600">Live measurement</p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-1 text-sm">Pinch Test</h3>
+                <p className="text-xs text-gray-600">Live measurement</p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-1 text-sm">Summary</h3>
+                <p className="text-xs text-gray-600">View results</p>
+              </div>
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-1 text-sm">Recommendations</h3>
+                <p className="text-xs text-gray-600">Action plan</p>
               </div>
             </div>
+
+            <button
+              onClick={continueToPainRating}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors"
+            >
+              Begin Assessment
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+    </PageLayout>
+  );
+
+  // Render pain rating screen
+  const renderPainRating = () => (
+    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 2 of 5">
+      <Card>
+        <CardContent>
+          <div className="max-w-2xl mx-auto py-8">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-black mb-3">
+                How would you rate your pain today?
+              </h2>
+              <p className="text-gray-600">
+                Please rate your current hand/wrist pain on a scale from 0 (no pain) to 10 (worst
+                pain imaginable).
+              </p>
+            </div>
+
+            <div className="mb-8">
+              <div className="flex justify-between mb-2">
+                <span className="text-sm text-gray-500">No pain</span>
+                <span className="text-sm text-gray-500">Worst pain</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                value={painRating}
+                onChange={(e) => setPainRating(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <div className="text-center mt-4">
+                <span className="text-4xl font-bold text-blue-600">{painRating}</span>
+                <span className="text-xl text-gray-500"> / 10</span>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setRiskTestStep('intro')}
+                className="flex-1 border border-gray-300 text-black font-medium py-3 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Back
+              </button>
+              <button
+                onClick={continueToGripMeasurement}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </PageLayout>
+  );
+
+  // Render grip measurement screen
+  const renderGripMeasurement = () => {
+    const chartData = gripData.map((reading, idx) => ({
+      index: idx,
+      strength: reading.grip_strength_kg,
+    }));
+
+    return (
+      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 3 of 5">
+        <Card>
+          <CardContent>
+            <div className="max-w-3xl mx-auto py-8">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-black mb-3">
+                  Measuring your grip strength
+                </h2>
+                <p className="text-gray-600">
+                  Please squeeze the sensor device firmly with your whole hand for 10 seconds.
+                  Maintain steady pressure throughout the measurement.
+                </p>
+              </div>
+
+              {!isCollectingGrip && gripData.length === 0 && (
+                <div className="text-center py-12">
+                  <Hand className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-6">Ready to measure grip strength</p>
+                  <button
+                    onClick={collectGripData}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors"
+                  >
+                    Start Grip Measurement
+                  </button>
+                </div>
+              )}
+
+              {isCollectingGrip && countdown !== null && (
+                <div className="text-center py-12">
+                  <div className="mb-4">
+                    <Hand className="w-16 h-16 text-blue-600 mx-auto" />
+                  </div>
+                  <p className="text-lg font-semibold text-black mb-2">Get ready...</p>
+                  <p className="text-gray-600 mb-4">Live data starting in</p>
+                  <p className="text-6xl font-bold text-blue-600 animate-pulse">{countdown}</p>
+                </div>
+              )}
+
+              {isCollectingGrip && countdown === null && gripData.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="animate-pulse mb-4">
+                    <Hand className="w-16 h-16 text-blue-600 mx-auto" />
+                  </div>
+                  <p className="text-lg font-semibold text-black mb-2">Collecting data...</p>
+                  <p className="text-gray-600">Keep squeezing firmly!</p>
+                </div>
+              )}
+
+              {gripData.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg text-black mb-4">
+                    Live Grip Strength Data
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
+                      <XAxis
+                        dataKey="index"
+                        stroke="#636E72"
+                        fontSize={12}
+                        label={{ value: 'Reading', position: 'insideBottom', offset: -5 }}
+                      />
+                      <YAxis
+                        stroke="#636E72"
+                        fontSize={12}
+                        label={{ value: 'Grip Strength (kg)', angle: -90, position: 'insideLeft' }}
+                      />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="strength"
+                        stroke="#4e79a7"
+                        strokeWidth={2}
+                        name="Grip Strength"
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-black">
+                      <strong>Average Grip Strength:</strong>{' '}
+                      {(gripData.reduce((sum, r) => sum + r.grip_strength_kg, 0) / gripData.length).toFixed(2)} kg
+                    </p>
+                  </div>
+
+                  {!isCollectingGrip && (
+                    <div className="mt-6 flex gap-4">
+                      <button
+                        onClick={() => setGripData([])}
+                        className="flex-1 border border-gray-300 text-black font-medium py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Retake Measurement
+                      </button>
+                      <button
+                        onClick={continueToPinchMeasurement}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+                      >
+                        Continue to Pinch Test
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </PageLayout>
+    );
+  };
+
+  // Render pinch measurement screen
+  const renderPinchMeasurement = () => {
+    const chartData = pinchData.map((reading, idx) => ({
+      index: idx,
+      strength: reading.pinch_strength_kg,
+    }));
+
+    return (
+      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 4 of 5">
+        <Card>
+          <CardContent>
+            <div className="max-w-3xl mx-auto py-8">
+              <div className="mb-8">
+                <h2 className="text-2xl font-bold text-black mb-3">
+                  Measuring your pinch strength
+                </h2>
+                <p className="text-gray-600">
+                  Please pinch the sensor with your thumb and index finger for 10 seconds. Use a
+                  firm, steady pinching motion.
+                </p>
+              </div>
+
+              {!isCollectingPinch && pinchData.length === 0 && (
+                <div className="text-center py-12">
+                  <Heart className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-6">Ready to measure pinch strength</p>
+                  <button
+                    onClick={collectPinchData}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors"
+                  >
+                    Start Pinch Measurement
+                  </button>
+                </div>
+              )}
+
+              {isCollectingPinch && countdown !== null && (
+                <div className="text-center py-12">
+                  <div className="mb-4">
+                    <Heart className="w-16 h-16 text-green-600 mx-auto" />
+                  </div>
+                  <p className="text-lg font-semibold text-black mb-2">Get ready...</p>
+                  <p className="text-gray-600 mb-4">Live data starting in</p>
+                  <p className="text-6xl font-bold text-green-600 animate-pulse">{countdown}</p>
+                </div>
+              )}
+
+              {isCollectingPinch && countdown === null && pinchData.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="animate-pulse mb-4">
+                    <Heart className="w-16 h-16 text-green-600 mx-auto" />
+                  </div>
+                  <p className="text-lg font-semibold text-black mb-2">Collecting data...</p>
+                  <p className="text-gray-600">Keep pinching firmly!</p>
+                </div>
+              )}
+
+              {pinchData.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg text-black mb-4">
+                    Live Pinch Strength Data
+                  </h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
+                      <XAxis
+                        dataKey="index"
+                        stroke="#636E72"
+                        fontSize={12}
+                        label={{ value: 'Reading', position: 'insideBottom', offset: -5 }}
+                      />
+                      <YAxis
+                        stroke="#636E72"
+                        fontSize={12}
+                        label={{
+                          value: 'Pinch Strength (kg)',
+                          angle: -90,
+                          position: 'insideLeft',
+                        }}
+                      />
+                      <Tooltip />
+                      <Line
+                        type="monotone"
+                        dataKey="strength"
+                        stroke="#82ca9d"
+                        strokeWidth={2}
+                        name="Pinch Strength"
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+
+                  <div className="mt-6 p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm text-black">
+                      <strong>Average Pinch Strength:</strong>{' '}
+                      {(
+                        pinchData.reduce((sum, r) => sum + r.pinch_strength_kg, 0) /
+                        pinchData.length
+                      ).toFixed(2)}{' '}
+                      kg
+                    </p>
+                  </div>
+
+                  {!isCollectingPinch && (
+                    <div className="mt-6 flex gap-4">
+                      <button
+                        onClick={() => setPinchData([])}
+                        className="flex-1 border border-gray-300 text-black font-medium py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Retake Measurement
+                      </button>
+                      <button
+                        onClick={continueToSummary}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+                      >
+                        View Assessment
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </PageLayout>
+    );
+  };
+
+  // Render summary screen (combines grip, pinch, and prediction)
+  const renderSummary = () => {
+    if (!prediction) {
+      return (
+        <PageLayout title="Calculating Assessment" rightText="Please wait">
+          <Card>
+            <CardContent>
+              <div className="text-center py-12">
+                <div className="animate-pulse mb-4">
+                  <Activity className="w-16 h-16 text-blue-600 mx-auto" />
+                </div>
+                <p className="text-lg font-semibold text-black mb-2">
+                  Analyzing your measurements...
+                </p>
+                <p className="text-gray-600">This will take just a moment</p>
+              </div>
+            </CardContent>
+          </Card>
+        </PageLayout>
+      );
+    }
+
+    const severityColor = {
+      mild: 'text-green-600',
+      moderate: 'text-yellow-600',
+      severe: 'text-red-600',
+    }[prediction.predicted_class];
+
+    const severityBg = {
+      mild: 'bg-green-100',
+      moderate: 'bg-yellow-100',
+      severe: 'bg-red-100',
+    }[prediction.predicted_class];
+
+    const avgGrip = gripData.reduce((sum, r) => sum + r.grip_strength_kg, 0) / gripData.length;
+    const avgPinch = pinchData.reduce((sum, r) => sum + r.pinch_strength_kg, 0) / pinchData.length;
+
+    return (
+      <PageLayout title="Assessment Summary" rightText="Complete">
+        <div className="space-y-6">
+          {/* CTS Risk Level - Large Card */}
+          <Card>
+            <CardContent>
+              <h3 className="font-semibold text-xl text-black mb-4 text-center">
+                Your Carpal Tunnel Risk Level
+              </h3>
+              <div className={`${severityBg} rounded-lg p-8 text-center mb-4`}>
+                <p className="text-sm text-gray-600 mb-2">Severity Classification</p>
+                <p className={`text-4xl font-bold ${severityColor} mb-4`}>
+                  {getSeverityLabel(prediction.predicted_class)}
+                </p>
+                <p className="text-sm text-gray-700">
+                  Model Confidence: {(prediction.confidence * 100).toFixed(0)}%
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Measurement Summary */}
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card>
+              <CardContent>
+                <h3 className="font-semibold text-lg text-black mb-4">Pain Rating</h3>
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-blue-600">{painRating}</p>
+                  <p className="text-sm text-gray-600 mt-1">out of 10</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent>
+                <h3 className="font-semibold text-lg text-black mb-4">Grip Strength</h3>
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-blue-600">{avgGrip.toFixed(2)}</p>
+                  <p className="text-sm text-gray-600 mt-1">kg</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent>
+                <h3 className="font-semibold text-lg text-black mb-4">Pinch Strength</h3>
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-green-600">{avgPinch.toFixed(2)}</p>
+                  <p className="text-sm text-gray-600 mt-1">kg</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Combined Strength Chart */}
+          <Card>
+            <CardContent>
+              <h3 className="font-semibold text-lg text-black mb-4">
+                Strength Measurement Timeline
+              </h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart
+                  data={[
+                    ...gripData.map((r, idx) => ({
+                      index: idx,
+                      grip: r.grip_strength_kg,
+                      pinch: null,
+                      type: 'grip',
+                    })),
+                    ...pinchData.map((r, idx) => ({
+                      index: gripData.length + idx,
+                      grip: null,
+                      pinch: r.pinch_strength_kg,
+                      type: 'pinch',
+                    })),
+                  ]}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
+                  <XAxis
+                    dataKey="index"
+                    stroke="#636E72"
+                    fontSize={12}
+                    label={{ value: 'Reading', position: 'insideBottom', offset: -5 }}
+                  />
+                  <YAxis
+                    stroke="#636E72"
+                    fontSize={12}
+                    label={{ value: 'Strength (kg)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="grip"
+                    stroke="#4e79a7"
+                    strokeWidth={2}
+                    name="Grip Strength"
+                    connectNulls={false}
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="pinch"
+                    stroke="#82ca9d"
+                    strokeWidth={2}
+                    name="Pinch Strength"
+                    connectNulls={false}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4">
+            <button
+              onClick={() => setRiskTestStep('results')}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+            >
+              View Detailed Recommendations
+            </button>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  };
+
+  // Render results screen
+  const renderResults = () => {
+    if (!prediction) return null;
+
+    const severityColor = {
+      mild: 'text-green-600',
+      moderate: 'text-yellow-600',
+      severe: 'text-red-600',
+    }[prediction.predicted_class];
+
+    const severityBg = {
+      mild: 'bg-green-100',
+      moderate: 'bg-yellow-100',
+      severe: 'bg-red-100',
+    }[prediction.predicted_class];
+
+    const avgGrip = gripData.reduce((sum, r) => sum + r.grip_strength_kg, 0) / gripData.length;
+    const avgPinch =
+      pinchData.reduce((sum, r) => sum + r.pinch_strength_kg, 0) / pinchData.length;
+
+    return (
+      <PageLayout title="Your Carpal Tunnel Risk Assessment" rightText="Results">
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card>
+            <CardContent>
+              <h3 className="font-semibold text-lg text-black mb-4">Risk Level</h3>
+              <div className={`${severityBg} rounded-lg p-6 text-center mb-4`}>
+                <p className="text-sm text-gray-600 mb-1">Your Carpal Tunnel Severity</p>
+                <p className={`text-3xl font-bold ${severityColor}`}>
+                  {getSeverityLabel(prediction.predicted_class)}
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Confidence</span>
+                  <span className="font-semibold text-black">
+                    {(prediction.confidence * 100).toFixed(0)}%
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Pain Rating</span>
+                  <span className="font-semibold text-black">{painRating} / 10</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Grip Strength</span>
+                  <span className="font-semibold text-black">{avgGrip.toFixed(2)} kg</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Pinch Strength</span>
+                  <span className="font-semibold text-black">{avgPinch.toFixed(2)} kg</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <h3 className="font-semibold text-lg text-black mb-4">What this means for you</h3>
+              {prediction.predicted_class === 'mild' && (
+                <div className="space-y-3 text-sm text-gray-700">
+                  <p>
+                    Your assessment indicates <strong>mild or no Carpal Tunnel symptoms</strong>. This is good
+                    news! Your hand strength and pain levels suggest minimal to no nerve compression at this time.
+                  </p>
+                  <p className="font-semibold mt-4">Recommendations:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Take regular breaks during repetitive hand activities</li>
+                    <li>Practice wrist stretches and exercises</li>
+                    <li>Monitor your symptoms and track changes</li>
+                    <li>Consider ergonomic adjustments to your workspace</li>
+                  </ul>
+                </div>
+              )}
+              {prediction.predicted_class === 'moderate' && (
+                <div className="space-y-3 text-sm text-gray-700">
+                  <p>
+                    Your assessment indicates <strong>moderate Carpal Tunnel symptoms</strong>. It's
+                    important to take action now to prevent progression to more severe symptoms.
+                  </p>
+                  <p className="font-semibold mt-4">Recommendations:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Consider scheduling a consultation with a healthcare provider</li>
+                    <li>Use a wrist splint, especially at night</li>
+                    <li>Reduce repetitive hand movements when possible</li>
+                    <li>Apply ice to reduce inflammation</li>
+                    <li>Continue regular monitoring with this app</li>
+                  </ul>
+                </div>
+              )}
+              {prediction.predicted_class === 'severe' && (
+                <div className="space-y-3 text-sm text-gray-700">
+                  <p>
+                    Your assessment indicates <strong>severe Carpal Tunnel symptoms</strong>. We strongly
+                    recommend seeking medical attention to discuss treatment options and prevent
+                    permanent nerve damage.
+                  </p>
+                  <p className="font-semibold mt-4">Recommendations:</p>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>
+                      <strong>Schedule an appointment with a doctor as soon as possible</strong>
+                    </li>
+                    <li>Discuss treatment options including splinting, medication, or surgery</li>
+                    <li>Avoid activities that aggravate your symptoms</li>
+                    <li>Keep track of symptom progression</li>
+                    <li>Don't delay seeking professional medical care</li>
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-6">
+          <button
+            onClick={returnToDashboard}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+          >
+            View Dashboard
+          </button>
+        </div>
+      </PageLayout>
+    );
+  };
+
+  // Render dashboard with historical data
+  const renderDashboard = () => {
+    const chartData = getChartData();
+    const hasAssessments = chartData.length > 0;
+
+    return (
+      <PageLayout
+        title="Carpal Tunnel Health Dashboard"
+        rightText={new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+        })}
+      >
+        <div className="space-y-6">
+          {/* Risk Test Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={startRiskTest}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <Activity className="w-5 h-5" />
+              Take New Risk Assessment
+            </button>
+          </div>
+
+          {!hasAssessments ? (
+            <Card>
+              <CardContent>
+                <div className="text-center py-12">
+                  <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-black mb-2">No assessments yet</h3>
+                  <p className="text-gray-600 mb-6">
+                    Take your first risk assessment to start tracking your Carpal Tunnel health over time.
+                  </p>
+                  <button
+                    onClick={startRiskTest}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
+                  >
+                    Take Your First Assessment
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Time Range Selector */}
+              <div className="flex justify-center gap-2">
+                {(['week', 'month', 'year'] as TimeRange[]).map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setTimeRange(range)}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      timeRange === range
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-black hover:bg-gray-300'
+                    }`}
+                  >
+                    {range.charAt(0).toUpperCase() + range.slice(1)}
+                  </button>
+                ))}
+              </div>
+
+              {/* Charts */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <Card>
+                  <CardContent>
+                    <h3 className="font-semibold text-lg text-black mb-4">
+                      Carpal Tunnel Severity Over Time
+                    </h3>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
+                        <XAxis dataKey="date" stroke="#636E72" fontSize={12} />
+                        <YAxis
+                          stroke="#636E72"
+                          fontSize={10}
+                          domain={[0, 2]}
+                          ticks={[0, 1, 2]}
+                          tickFormatter={(value) => ['Mild/None', 'Moderate', 'Severe'][value]}
+                          width={80}
+                        />
+                        <Tooltip
+                          formatter={(value: any) => ['Mild or No Carpal Tunnel', 'Moderate Carpal Tunnel', 'Severe Carpal Tunnel'][value]}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="severity"
+                          stroke="#4e79a7"
+                          strokeWidth={2}
+                          name="Severity"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent>
+                    <h3 className="font-semibold text-lg text-black mb-4">
+                      Strength Measurements
+                    </h3>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
+                        <XAxis dataKey="date" stroke="#636E72" fontSize={12} />
+                        <YAxis stroke="#636E72" fontSize={12} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="grip" fill="#4e79a7" name="Grip (kg)" />
+                        <Bar dataKey="pinch" fill="#82ca9d" name="Pinch (kg)" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Recent Assessments */}
+              <Card>
+                <CardContent>
+                  <h3 className="font-semibold text-lg text-black mb-4">Recent Assessments</h3>
+                  <div className="space-y-3">
+                    {chartData
+                      .slice(-5)
+                      .reverse()
+                      .map((assessment, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        >
+                          <div>
+                            <p className="font-medium text-black">{assessment.date}</p>
+                            <p className="text-sm text-gray-600">
+                              Grip: {assessment.grip.toFixed(2)} kg | Pinch:{' '}
+                              {assessment.pinch.toFixed(2)} kg
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p
+                              className={`font-semibold text-sm ${
+                                assessment.severityLabel === 'mild'
+                                  ? 'text-green-600'
+                                  : assessment.severityLabel === 'moderate'
+                                  ? 'text-yellow-600'
+                                  : 'text-red-600'
+                              }`}
+                            >
+                              {getSeverityLabel(assessment.severityLabel)}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {assessment.confidence.toFixed(0)}% confidence
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
           )}
         </div>
-      </main>
-    </div>
-  );
+      </PageLayout>
+    );
+  };
+
+  // Main render
+  if (viewMode === 'onboarding') {
+    return renderOnboarding();
+  } else if (viewMode === 'riskTest') {
+    if (riskTestStep === 'intro') return renderRiskTestIntro();
+    if (riskTestStep === 'painRating') return renderPainRating();
+    if (riskTestStep === 'gripMeasurement') return renderGripMeasurement();
+    if (riskTestStep === 'pinchMeasurement') return renderPinchMeasurement();
+    if (riskTestStep === 'summary') return renderSummary();
+    if (riskTestStep === 'results') return renderResults();
+  } else if (viewMode === 'dashboard') {
+    return renderDashboard();
+  }
+
+  return null;
 }
