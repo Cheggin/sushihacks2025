@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
 import PageLayout from "../components/PageLayout"; // Import the new PageLayout component
 import { Card, CardContent } from "../components/ui/card";
 import {
@@ -18,7 +17,7 @@ import {
 } from "recharts";
 import { Search, Fish } from "lucide-react";
 
-/* --- dummy data (same as before) --- */
+// Dummy data
 const fishData = [
   { id: "#F-001", fish: "Tuna", date: "31/01/2025" },
   { id: "#F-002", fish: "Salmon", date: "31/01/2025" },
@@ -76,7 +75,7 @@ const weatherCodeToEmoji = (code: number) => {
   }
 };
 
-export default function HomePage() {
+export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boolean }) {
   const [weather, setWeather] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,8 +106,13 @@ export default function HomePage() {
   }, []);
 
   return (
-    <>
-      {/* <Navbar /> */}
+    <div
+      className={`${
+        isHomePageVisible
+          ? "opacity-100 translate-y-0" // Visible and slide down
+          : "opacity-0 translate-y-10" // Hidden and slide up
+      } transition-all duration-500 ease-in-out`}
+    >
       <PageLayout
         title="Dashboard"
         rightText={
@@ -202,6 +206,6 @@ export default function HomePage() {
           </div>
         </div>
       </PageLayout>
-    </>
+    </div>
   );
 }
