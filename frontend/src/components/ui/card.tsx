@@ -22,5 +22,5 @@ export function Card({ className, ...props }: CardProps) {
 
 interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {}
 export function CardContent({ className, ...props }: CardContentProps) {
-  return <div className={clsx("p-6", className)} {...props} />;
+  return <div className={clsx("p-5", className)} {...props} />;
 }

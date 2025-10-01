@@ -61,7 +61,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col relative">
+    <div className="h-screen flex flex-col relative overflow-hidden">
       {/* Globe background */}
       <GlobeBackground
         onFishClick={setSelectedFish}
@@ -104,7 +104,7 @@ export default function App() {
       <FishSidebar fish={selectedFish} onClose={() => setSelectedFish(null)} />
 
       {/* Main content area */}
-      <main className="flex-1 p-6 relative" style={{ zIndex: activePopup ? 20 : 5 }}>
+      <main className="flex-1 p-6 relative overflow-y-auto" style={{ zIndex: activePopup ? 20 : 5 }}>
         {/* Home Page Popup */}
         {activePopup === "homepage" && (
           <div
@@ -140,7 +140,7 @@ export default function App() {
       </main>
 
       {/* Navbar - at bottom */}
-      <div className="relative z-30">
+      <div className="relative z-30 flex-shrink-0">
         <Navbar togglePopup={togglePopup} />
       </div>
     </div>

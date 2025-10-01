@@ -143,7 +143,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
         isHomePageVisible
           ? "opacity-100 translate-y-0" // Visible and slide down
           : "opacity-0 translate-y-10" // Hidden and slide up
-      } transition-all duration-500 ease-in-out`}
+      } transition-all duration-500 ease-in-out h-full dashboard-content`}
     >
       <PageLayout
         title="Dashboard"
@@ -158,7 +158,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
         }
       >
         {/* Page content */}
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-12 gap-4">
           {/* Left list */}
           <Card className="col-span-3">
             <CardContent>
@@ -195,10 +195,10 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
           </Card>
 
           {/* Right chart area */}
-          <div className="col-span-9 grid grid-cols-12 gap-6">
+          <div className="col-span-9 grid grid-cols-12 gap-4">
             <Card className="col-span-12">
               <CardContent>
-                <h2 className="font-semibold text-lg mb-4 text-white">
+                <h2 className="font-semibold text-lg mb-3 text-white">
                   Number of Fish Caught per Month
                 </h2>
                 <ResponsiveContainer width="100%" height={200}>
@@ -243,16 +243,16 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
 
             <Card className="col-span-6">
               <CardContent>
-                <h2 className="font-semibold text-lg mb-4 text-white">
+                <h2 className="font-semibold text-lg mb-3 text-white">
                   Fish Types
                 </h2>
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
                       data={onboardData}
                       cx="50%"
                       cy="50%"
-                      outerRadius={80}
+                      outerRadius={70}
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       labelLine={{ stroke: 'rgba(255,255,255,0.5)', strokeWidth: 1 }}
@@ -296,10 +296,10 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
 
             <Card className="col-span-6">
               <CardContent>
-                <h2 className="font-semibold text-lg mb-4 text-white">
+                <h2 className="font-semibold text-lg mb-3 text-white">
                   Fishing Conditions
                 </h2>
-                <div className="relative h-[200px] flex items-center justify-center">
+                <div className="relative h-[180px] flex items-center justify-center">
                   {loading ? (
                     <div className="text-white/60">Loading...</div>
                   ) : (
@@ -326,8 +326,8 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
 
                       {/* Center text overlay */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <div className="text-5xl font-bold text-white mb-1">{fishingScore}</div>
-                        <div className="text-lg font-semibold" style={{ color: getConditionColor(fishingScore) }}>
+                        <div className="text-4xl font-bold text-white mb-1">{fishingScore}</div>
+                        <div className="text-base font-semibold" style={{ color: getConditionColor(fishingScore) }}>
                           {getConditionLabel(fishingScore)}
                         </div>
                         <div className="text-xs text-white/60 mt-1">{temperature}°C</div>
@@ -337,7 +337,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                 </div>
 
                 {/* Legend */}
-                <div className="grid grid-cols-4 gap-2 mt-4 text-xs text-white/70">
+                <div className="grid grid-cols-4 gap-2 mt-3 text-xs text-white/70">
                   <div className="flex items-center gap-1">
                     <div className="w-3 h-3 rounded-full bg-[#06b6d4]"></div>
                     <span>Excellent</span>

@@ -63,3 +63,8 @@ body {
     background: var(--color-dark);
   }
 }
+
+/* Black & White Theme - Only for dashboard content */
+[data-theme="bw"] .dashboard-content {
+  filter: grayscale(100%);
+}

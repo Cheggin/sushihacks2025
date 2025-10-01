@@ -6,7 +6,8 @@
       "Bash(grep:*)",
       "WebSearch",
       "Read(//private/tmp/**)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_6Y1XXt/**)"
     ],
     "deny": [],
     "ask": []
