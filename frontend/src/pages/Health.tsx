@@ -423,14 +423,16 @@ export default function Health() {
   // Prepare chart data
   const getChartData = () => {
     const filtered = getFilteredAssessments();
-    return filtered.map((a: any) => ({
-      date: new Date(a.timestamp).toLocaleDateString(),
-      severity: a.predictedClassNumeric,
-      severityLabel: a.predictedClass,
-      grip: a.gripStrength,
-      pinch: a.pinchStrength,
-      confidence: a.confidence * 100,
-    }));
+    return filtered
+      .sort((a: any, b: any) => a.timestamp - b.timestamp) // Sort by timestamp ascending
+      .map((a: any) => ({
+        date: new Date(a.timestamp).toLocaleDateString(),
+        severity: a.predictedClassNumeric,
+        severityLabel: a.predictedClass,
+        grip: a.gripStrength,
+        pinch: a.pinchStrength,
+        confidence: a.confidence * 100,
+      }));
   };
 
   // Render onboarding screen
