@@ -559,7 +559,7 @@ export default function Health() {
 
   // Render risk test intro
   const renderRiskTestIntro = () => (
-    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 1 of 5">
+    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 1 of 4">
       <Card>
         <CardContent>
           <div className="text-center py-8">
@@ -572,26 +572,22 @@ export default function Health() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-5 gap-3 mb-8 max-w-4xl mx-auto">
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-black mb-1 text-sm">Pain Rating</h3>
-                <p className="text-xs text-gray-600">Rate pain level</p>
+            <div className="grid md:grid-cols-4 gap-4 mb-8 max-w-3xl mx-auto">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-1">Pain Rating</h3>
+                <p className="text-sm text-gray-600">Rate pain level</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-black mb-1 text-sm">Grip Test</h3>
-                <p className="text-xs text-gray-600">Live measurement</p>
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-1">Grip Test</h3>
+                <p className="text-sm text-gray-600">Live measurement</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-black mb-1 text-sm">Pinch Test</h3>
-                <p className="text-xs text-gray-600">Live measurement</p>
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-1">Pinch Test</h3>
+                <p className="text-sm text-gray-600">Live measurement</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-black mb-1 text-sm">Summary</h3>
-                <p className="text-xs text-gray-600">View results</p>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-black mb-1 text-sm">Recommendations</h3>
-                <p className="text-xs text-gray-600">Action plan</p>
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-black mb-1">Results</h3>
+                <p className="text-sm text-gray-600">Full assessment</p>
               </div>
             </div>
 
@@ -609,7 +605,7 @@ export default function Health() {
 
   // Render pain rating screen
   const renderPainRating = () => (
-    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 2 of 5">
+    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 2 of 4">
       <Card>
         <CardContent>
           <div className="max-w-2xl mx-auto py-8">
@@ -670,7 +666,7 @@ export default function Health() {
     }));
 
     return (
-      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 3 of 5">
+      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 3 of 4">
         <Card>
           <CardContent>
             <div className="max-w-3xl mx-auto py-8">
@@ -789,7 +785,7 @@ export default function Health() {
     }));
 
     return (
-      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 4 of 5">
+      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 4 of 4">
         <Card>
           <CardContent>
             <div className="max-w-3xl mx-auto py-8">
@@ -946,7 +942,7 @@ export default function Health() {
     const avgPinch = pinchData.reduce((sum, r) => sum + r.pinch_strength_kg, 0) / pinchData.length;
 
     return (
-      <PageLayout title="Assessment Summary" rightText="Complete">
+      <PageLayout title="Your Complete Assessment" rightText="Results">
         <div className="space-y-6">
           {/* CTS Risk Level - Large Card */}
           <Card>
@@ -1059,76 +1055,7 @@ export default function Health() {
             </CardContent>
           </Card>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4">
-            <button
-              onClick={() => setRiskTestStep('results')}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
-            >
-              View Detailed Recommendations
-            </button>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  };
-
-  // Render results screen
-  const renderResults = () => {
-    if (!prediction) return null;
-
-    const severityColor = {
-      mild: 'text-green-600',
-      moderate: 'text-yellow-600',
-      severe: 'text-red-600',
-    }[prediction.predicted_class];
-
-    const severityBg = {
-      mild: 'bg-green-100',
-      moderate: 'bg-yellow-100',
-      severe: 'bg-red-100',
-    }[prediction.predicted_class];
-
-    const avgGrip = gripData.reduce((sum, r) => sum + r.grip_strength_kg, 0) / gripData.length;
-    const avgPinch =
-      pinchData.reduce((sum, r) => sum + r.pinch_strength_kg, 0) / pinchData.length;
-
-    return (
-      <PageLayout title="Your Carpal Tunnel Risk Assessment" rightText="Results">
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardContent>
-              <h3 className="font-semibold text-lg text-black mb-4">Risk Level</h3>
-              <div className={`${severityBg} rounded-lg p-6 text-center mb-4`}>
-                <p className="text-sm text-gray-600 mb-1">Your Carpal Tunnel Severity</p>
-                <p className={`text-3xl font-bold ${severityColor}`}>
-                  {getSeverityLabel(prediction.predicted_class)}
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Confidence</span>
-                  <span className="font-semibold text-black">
-                    {(prediction.confidence * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Pain Rating</span>
-                  <span className="font-semibold text-black">{painRating} / 10</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Grip Strength</span>
-                  <span className="font-semibold text-black">{avgGrip.toFixed(2)} kg</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Pinch Strength</span>
-                  <span className="font-semibold text-black">{avgPinch.toFixed(2)} kg</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
+          {/* Recommendations Section */}
           <Card>
             <CardContent>
               <h3 className="font-semibold text-lg text-black mb-4">What this means for you</h3>
@@ -1184,15 +1111,16 @@ export default function Health() {
               )}
             </CardContent>
           </Card>
-        </div>
 
-        <div className="mt-6">
-          <button
-            onClick={returnToDashboard}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
-          >
-            View Dashboard
-          </button>
+          {/* Action Button */}
+          <div className="mt-6">
+            <button
+              onClick={returnToDashboard}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+            >
+              Return to Dashboard
+            </button>
+          </div>
         </div>
       </PageLayout>
     );
@@ -1372,7 +1300,6 @@ export default function Health() {
     if (riskTestStep === 'gripMeasurement') return renderGripMeasurement();
     if (riskTestStep === 'pinchMeasurement') return renderPinchMeasurement();
     if (riskTestStep === 'summary') return renderSummary();
-    if (riskTestStep === 'results') return renderResults();
   } else if (viewMode === 'dashboard') {
     return renderDashboard();
   }
