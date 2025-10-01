@@ -10,7 +10,9 @@ interface PointData {
   name: string;
   genus: string;
   occurrence: FishOccurrence;
-  hovered?: boolean;
+  id?: string;
+  altitudeOffset: number; // Deterministic altitude to prevent z-fighting
+  renderOrder: number; // Stable render order
 }
 
 interface RingData {
@@ -28,29 +30,40 @@ interface UserMarker {
   lng: number;
 }
 
+interface SearchFilters {
+  searchText: string;
+  fishTypes: string[];
+  locations: string[];
+  priceRange: [number, number];
+}
+
 interface GlobeBackgroundProps {
   onFishClick: (fish: FishOccurrence) => void;
   userMarker: UserMarker | null;
+  filters?: SearchFilters | null;
+  onCountsUpdate?: (filtered: number, total: number) => void;
 }
 
-export default function GlobeBackground({ onFishClick, userMarker }: GlobeBackgroundProps) {
+export default function GlobeBackground({ onFishClick, userMarker, filters, onCountsUpdate }: GlobeBackgroundProps) {
   const globeEl = useRef<HTMLDivElement>(null);
   const globeInstance = useRef<any>(null);
   const [fishData, setFishData] = useState<FishOccurrence[]>([]);
   const [countries, setCountries] = useState<any>([]);
+  const hoveredPointRef = useRef<PointData | null>(null);
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load and parse CSV data
   useEffect(() => {
     const loadFishData = async () => {
       try {
-        const response = await fetch('/occurrence_parsed.csv');
+        const response = await fetch('/all_fish.csv');
         const csvText = await response.text();
         const lines = csvText.split('\n');
         const headers = lines[0].split(',');
 
-        // Sample the data to avoid too many points (take every 50th point)
+        // Load all fish data (no sampling)
         const sampledData: FishOccurrence[] = [];
-        for (let i = 1; i < lines.length; i += 50) {
+        for (let i = 1; i < lines.length; i++) {
           const line = lines[i];
           if (!line.trim()) continue;
 
@@ -79,6 +92,8 @@ export default function GlobeBackground({ onFishClick, userMarker }: GlobeBackgr
               individualCount: row.individualCount ? parseInt(row.individualCount) : undefined,
               genus: row.genus || '',
               family: row.family || '',
+              class: row.class || '',
+              phylum: row.phylum || '',
             });
           }
         }
@@ -173,71 +188,271 @@ export default function GlobeBackground({ onFishClick, userMarker }: GlobeBackgr
     };
   }, []);
 
-  // Update points when fish data is loaded
+  // Generate deterministic hash from string for stable rendering
+  const generateHash = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+  };
+
+  // Generate deterministic altitude offset to prevent z-fighting
+  const getAltitudeOffset = (fish: FishOccurrence): number => {
+    // Use ID + scientific name for unique hash
+    const uniqueKey = `${fish.id}_${fish.scientificName}_${fish.catalogNumber}`;
+    const hash = generateHash(uniqueKey);
+    // Generate small altitude offset (0.001 to 0.020)
+    // This ensures overlapping points render at different altitudes
+    return 0.001 + (hash % 20) * 0.001;
+  };
+
+  // Generate deterministic position offset to spread overlapping points
+  const getPositionOffset = (fish: FishOccurrence): { latOffset: number; lngOffset: number } => {
+    const uniqueKey = `${fish.id}_${fish.scientificName}`;
+    const hash = generateHash(uniqueKey);
+
+    // Generate tiny offsets (-0.05 to +0.05 degrees, roughly 5km)
+    const latOffset = ((hash % 100) - 50) * 0.001;
+    const lngOffset = (((hash >> 8) % 100) - 50) * 0.001;
+
+    return { latOffset, lngOffset };
+  };
+
+  // Get stable render order for consistent z-fighting resolution
+  const getRenderOrder = (fish: FishOccurrence): number => {
+    const uniqueKey = `${fish.id}_${fish.scientificName}`;
+    return generateHash(uniqueKey);
+  };
+
+  // Helper function to get common name
+  const getCommonName = (scientificName: string, genus?: string, family?: string): string => {
+    const commonNames: Record<string, string> = {
+      'Thunnus albacares': 'Yellowfin Tuna', 'Thunnus': 'Tuna', 'Katsuwonus': 'Skipjack Tuna',
+      'Euthynnus': 'Little Tunny', 'Gymnosarda unicolor': 'Dogtooth Tuna', 'Scombridae': 'Tuna/Mackerel',
+      'Acanthurus': 'Surgeonfish', 'Abudefduf': 'Sergeant Major', 'Amphiprion': 'Clownfish',
+      'Chromis': 'Chromis', 'Dascyllus': 'Dascyllus', 'Cephalopholis': 'Grouper',
+      'Epinephelus': 'Grouper', 'Chaetodon': 'Butterflyfish', 'Centropyge': 'Dwarf Angelfish',
+      'Caesio': 'Fusilier', 'Caranx': 'Jack', 'Arothron': 'Pufferfish', 'Canthigaster': 'Sharpnose Puffer',
+      'Amblygobius': 'Sand Goby', 'Amblyeleotris': 'Shrimp Goby', 'Salarias': 'Algae Blenny',
+      'Ecsenius': 'Blenny', 'Acropora': 'Staghorn Coral', 'Porites': 'Finger Coral',
+      'Fungia': 'Mushroom Coral', 'Copepoda': 'Copepod', 'Calanus': 'Copepod',
+      'Acartia': 'Copepod', 'Holothuria': 'Sea Cucumber', 'Acanthaster planci': 'Crown-of-Thorns Starfish',
+    };
+    if (commonNames[scientificName]) return commonNames[scientificName];
+    if (genus && commonNames[genus]) return commonNames[genus];
+    if (family && commonNames[family]) return commonNames[family];
+    return scientificName.split(' ')[0];
+  };
+
+  // Helper function to match fish against category filters
+  const matchesFishType = (fish: FishOccurrence, fishTypes: string[]): boolean => {
+    if (fishTypes.length === 0 || fishTypes.includes('All Fish')) return true;
+
+    const categoryMap: Record<string, string[]> = {
+      'Tuna & Mackerel': ['Scombridae', 'Thunnus', 'Katsuwonus', 'Euthynnus', 'Gymnosarda'],
+      'Surgeonfish': ['Acanthuridae', 'Acanthurus'],
+      'Damselfish': ['Pomacentridae', 'Abudefduf', 'Chromis', 'Dascyllus'],
+      'Clownfish': ['Amphiprion'],
+      'Groupers': ['Serranidae', 'Epinephelus', 'Cephalopholis'],
+      'Wrasses': ['Labridae', 'Anampses', 'Cheilinus'],
+      'Angelfish': ['Pomacanthidae', 'Centropyge'],
+      'Gobies': ['Gobiidae', 'Amblygobius'],
+      'Pufferfish': ['Tetraodontidae', 'Arothron', 'Canthigaster'],
+      'Triggerfish': ['Balistidae', 'Balistoides'],
+      'Sharks & Rays': ['Carcharhinidae', 'Carcharhinus', 'Dasyatidae'],
+      'Corals': ['Scleractinia', 'Acropora', 'Fungia', 'Porites'],
+      'Copepods': ['Copepoda', 'Calanus', 'Acartia'],
+      'Invertebrates': ['Echinoidea', 'Holothuroidea', 'Asteroidea'],
+    };
+
+    return fishTypes.some(type => {
+      const families = categoryMap[type] || [];
+      return families.some(f =>
+        fish.family?.includes(f) ||
+        fish.genus?.includes(f) ||
+        fish.scientificName?.includes(f)
+      );
+    });
+  };
+
+  // Generate consistent price for a fish based on its scientific name
+  const getFishPrice = (scientificName: string): number => {
+    // Use hash of scientific name to generate consistent price
+    let hash = 0;
+    for (let i = 0; i < scientificName.length; i++) {
+      hash = ((hash << 5) - hash) + scientificName.charCodeAt(i);
+      hash = hash & hash;
+    }
+    const basePrice = 20 + Math.abs(hash % 50); // $20-70
+    return parseFloat(basePrice.toFixed(2));
+  };
+
+  // Filter fish data based on search filters (all fish in CSV are already edible)
+  const getFilteredFishData = (): FishOccurrence[] => {
+    if (!filters) return fishData;
+
+    return fishData.filter(fish => {
+      // Text search filter
+      if (filters.searchText) {
+        const searchLower = filters.searchText.toLowerCase();
+        const commonName = getCommonName(fish.scientificName, fish.genus, fish.family).toLowerCase();
+        const scientificName = fish.scientificName?.toLowerCase() || '';
+        const genus = fish.genus?.toLowerCase() || '';
+
+        if (!scientificName.includes(searchLower) &&
+            !commonName.includes(searchLower) &&
+            !genus.includes(searchLower)) {
+          return false;
+        }
+      }
+
+      // Fish type filter
+      if (!matchesFishType(fish, filters.fishTypes)) {
+        return false;
+      }
+
+      // Location filter
+      if (filters.locations.length > 0 && !filters.locations.includes('All Regions')) {
+        const location = fish.waterBody || fish.locality || '';
+        const hasMatch = filters.locations.some(loc =>
+          location.toLowerCase().includes(loc.toLowerCase())
+        );
+        if (!hasMatch) return false;
+      }
+
+      // Price range filter
+      const price = getFishPrice(fish.scientificName);
+      if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
+        return false;
+      }
+
+      return true;
+    });
+  };
+
+  // Update points when fish data is loaded or filters change
   useEffect(() => {
     if (!globeInstance.current || fishData.length === 0) return;
 
-    const pointsData = fishData.map((fish) => ({
-      lat: fish.decimalLatitude,
-      lng: fish.decimalLongitude,
-      size: 0.15,
-      color: getColorFromFishType(fish.scientificName, fish.genus, fish.family),
-      name: fish.scientificName || 'Unknown',
-      genus: fish.genus || fish.family || 'Unknown',
-      occurrence: fish
-    }));
+    const filteredFish = getFilteredFishData();
+
+    // Update counts for search panel
+    if (onCountsUpdate) {
+      onCountsUpdate(filteredFish.length, fishData.length);
+    }
+
+    // Create individual points with deterministic offsets to prevent z-fighting
+    const pointsData: PointData[] = filteredFish.map(fish => {
+      const posOffset = getPositionOffset(fish);
+      const altitudeOffset = getAltitudeOffset(fish);
+      const renderOrder = getRenderOrder(fish);
+
+      return {
+        lat: fish.decimalLatitude + posOffset.latOffset,
+        lng: fish.decimalLongitude + posOffset.lngOffset,
+        size: 0.15,
+        color: getColorFromFishType(fish.scientificName, fish.genus, fish.family),
+        name: fish.scientificName,
+        genus: fish.genus || fish.family || 'Unknown',
+        occurrence: fish,
+        id: fish.id,
+        altitudeOffset,
+        renderOrder,
+      };
+    });
+
+    // Sort by render order to ensure stable, consistent rendering
+    // Points with lower render order will be drawn first (appear behind)
+    pointsData.sort((a, b) => a.renderOrder - b.renderOrder);
 
     globeInstance.current
       .pointsData(pointsData)
-      .pointAltitude((d: PointData) => d.hovered ? 0.08 : 0.01)
-      .pointRadius((d: PointData) => d.hovered ? d.size * 2.5 : d.size)
-      .pointColor((d: PointData) => d.hovered ? '#ffffff' : d.color)
-      .pointLabel((d: PointData) => `
-        <div style="background: rgba(0,0,0,0.9); padding: 10px; border-radius: 6px; color: white; text-align: center; border: 2px solid ${d.color};">
-          <div style="font-weight: bold; margin-bottom: 4px; font-size: 1.1em;">${d.name}</div>
-          <div style="font-size: 0.85em; color: #aaa;">Genus: ${d.genus}</div>
-          <div style="font-size: 0.85em; color: #aaa;">${d.occurrence.waterBody || 'Western Pacific'}</div>
-          <div style="font-size: 0.75em; color: ${d.color}; margin-top: 6px; font-weight: bold;">🖱️ CLICK FOR DETAILS</div>
-        </div>
-      `)
+      .pointAltitude((d: PointData) => {
+        // Use deterministic altitude offset to prevent z-fighting
+        // Boost altitude on hover for visual feedback
+        const baseAltitude = d.altitudeOffset;
+        return hoveredPointRef.current?.id === d.id ? baseAltitude + 0.1 : baseAltitude;
+      })
+      .pointRadius((d: PointData) => {
+        // Increase size on hover
+        return hoveredPointRef.current?.id === d.id ? d.size * 2 : d.size;
+      })
+      .pointColor((d: PointData) => {
+        // Highlight on hover
+        return hoveredPointRef.current?.id === d.id ? '#ffffff' : d.color;
+      })
+      .pointLabel((d: PointData) => {
+        // Tooltip for individual fish
+        return `
+          <div style="background: rgba(0,0,0,0.95); padding: 12px 16px; border-radius: 8px; color: white; text-align: center; border: 2px solid ${d.color}; box-shadow: 0 4px 12px rgba(0,0,0,0.5); max-width: 300px;">
+            <div style="font-weight: bold; margin-bottom: 6px; font-size: 1.15em; line-height: 1.3;">${d.occurrence.scientificName}</div>
+            <div style="font-size: 0.9em; color: #ccc; margin-bottom: 2px;">Genus: ${d.genus}</div>
+            <div style="font-size: 0.9em; color: #ccc; margin-bottom: 8px;">${d.occurrence.waterBody || 'Western Pacific'}</div>
+            <div style="font-size: 0.8em; color: ${d.color}; font-weight: bold; padding: 4px 8px; background: rgba(255,255,255,0.1); border-radius: 4px;">🖱️ CLICK FOR DETAILS</div>
+          </div>
+        `;
+      })
       .onPointHover((point: PointData | null) => {
-        // Update hovered state
-        pointsData.forEach(p => p.hovered = false);
-        if (point) {
-          point.hovered = true;
+        // Clear any existing timeout
+        if (hoverTimeoutRef.current) {
+          clearTimeout(hoverTimeoutRef.current);
         }
-        // Re-render points
-        globeInstance.current.pointsData([...pointsData]);
+
+        // Add slight delay to stabilize hover
+        hoverTimeoutRef.current = setTimeout(() => {
+          const previousHovered = hoveredPointRef.current;
+          hoveredPointRef.current = point;
+
+          // Only update if hover state actually changed
+          if (previousHovered?.id !== point?.id) {
+            globeInstance.current
+              .pointAltitude(globeInstance.current.pointAltitude())
+              .pointRadius(globeInstance.current.pointRadius())
+              .pointColor(globeInstance.current.pointColor());
+          }
+        }, 50); // 50ms delay for stability
       })
       .onPointClick((point: PointData) => {
         console.log('Fish occurrence clicked:', point.occurrence);
 
-        // Create a visual pulse effect
-        const originalSize = point.size;
-        point.size = originalSize * 3;
-        globeInstance.current.pointsData([...pointsData]);
+        // Show the fish details in sidebar
+        onFishClick(point.occurrence);
+
+        // Visual feedback - brief highlight
+        const originalColor = point.color;
+        point.color = '#ffffff';
+        globeInstance.current.pointColor(globeInstance.current.pointColor());
 
         setTimeout(() => {
-          point.size = originalSize;
-          globeInstance.current.pointsData([...pointsData]);
-        }, 200);
-
-        // Open sidebar with fish details
-        onFishClick(point.occurrence);
+          point.color = originalColor;
+          globeInstance.current.pointColor(globeInstance.current.pointColor());
+        }, 150);
       })
-      .pointsMerge(false);
+      .pointsMerge(false) // Disable merging to maintain individual points
+      .pointsTransitionDuration(0); // Disable transitions for stable rendering
 
     // Add subtle rings for visual effect (only for a subset)
-    const ringsData = fishData
-      .filter((_, i) => i % 100 === 0) // Only add rings to every 100th point
-      .map((fish) => ({
-        lat: fish.decimalLatitude,
-        lng: fish.decimalLongitude,
-        maxR: 2,
-        propagationSpeed: 1,
-        repeatPeriod: 3000,
-        color: getColorFromFishType(fish.scientificName, fish.genus, fish.family)
-      }));
+    // Use deterministic selection based on fish ID to ensure consistent ring placement
+    const ringsData = filteredFish
+      .filter(fish => {
+        const hash = generateHash(fish.id);
+        return hash % 100 === 0; // Deterministic selection
+      })
+      .slice(0, 50) // Limit to 50 rings for performance
+      .map((fish) => {
+        const posOffset = getPositionOffset(fish);
+        return {
+          lat: fish.decimalLatitude + posOffset.latOffset,
+          lng: fish.decimalLongitude + posOffset.lngOffset,
+          maxR: 2,
+          propagationSpeed: 1,
+          repeatPeriod: 3000,
+          color: getColorFromFishType(fish.scientificName, fish.genus, fish.family)
+        };
+      });
 
     globeInstance.current
       .ringsData(ringsData)
@@ -246,7 +461,13 @@ export default function GlobeBackground({ onFishClick, userMarker }: GlobeBackgr
       .ringPropagationSpeed('propagationSpeed')
       .ringRepeatPeriod('repeatPeriod');
 
-  }, [fishData, onFishClick]);
+    return () => {
+      // Cleanup hover timeout
+      if (hoverTimeoutRef.current) {
+        clearTimeout(hoverTimeoutRef.current);
+      }
+    };
+  }, [fishData, filters, onFishClick, onCountsUpdate]);
 
   // Add user marker when available
   useEffect(() => {
@@ -353,6 +574,14 @@ export default function GlobeBackground({ onFishClick, userMarker }: GlobeBackgr
   const getColorFromFishType = (scientificName: string, genus?: string, family?: string) => {
     // Color mapping based on scientific names and taxonomy
     const colors: Record<string, string> = {
+      // Tuna species - Dark blue/grey shades
+      'Thunnus albacares': '#2c3e50',
+      'Thunnus': '#34495e',
+      'Katsuwonus': '#1a252f',
+      'Euthynnus': '#2c3e50',
+      'Gymnosarda unicolor': '#34495e',
+      'Scombridae': '#2c3e50',
+
       // Pleuromamma species - Blue shades
       'Pleuromamma xiphias': '#4a90e2',
       'Pleuromamma': '#5B9BD5',

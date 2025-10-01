@@ -13,4 +13,6 @@ export interface FishOccurrence {
   individualCount?: number;
   genus?: string;
   family?: string;
+  class?: string;
+  phylum?: string;
 }

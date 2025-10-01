@@ -6,12 +6,21 @@ import HealthPage from "./pages/Health";
 import Landing from "./pages/Landing";
 import GlobeBackground from "./components/GlobeBackground";
 import FishSidebar from "./components/FishSidebar";
+import SearchPanel from "./components/SearchPanel";
+import { Search } from "lucide-react";
 import type { FishOccurrence } from "./types/fish";
 
 interface UserMarker {
   name: string;
   lat: number;
   lng: number;
+}
+
+interface SearchFilters {
+  searchText: string;
+  fishTypes: string[];
+  locations: string[];
+  priceRange: [number, number];
 }
 
 export default function App() {
@@ -21,6 +30,10 @@ export default function App() {
   const [isMapPageVisible, setIsMapPageVisible] = useState<boolean>(false);
   const [isHealthPageVisible, setIsHealthPageVisible] = useState<boolean>(false);
   const [selectedFish, setSelectedFish] = useState<FishOccurrence | null>(null);
+  const [showSearchPanel, setShowSearchPanel] = useState<boolean>(false);
+  const [searchFilters, setSearchFilters] = useState<SearchFilters | null>(null);
+  const [filteredCount, setFilteredCount] = useState<number>(0);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   const handleLandingSubmit = (name: string, lat: number, lng: number) => {
     setUserMarker({ name, lat, lng });
@@ -50,13 +63,41 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* Globe background */}
-      <GlobeBackground onFishClick={setSelectedFish} userMarker={userMarker} />
+      <GlobeBackground
+        onFishClick={setSelectedFish}
+        userMarker={userMarker}
+        filters={searchFilters}
+        onCountsUpdate={(filtered, total) => {
+          setFilteredCount(filtered);
+          setTotalCount(total);
+        }}
+      />
 
       {/* Landing Page Overlay */}
       {!userMarker && (
         <div className="fixed inset-0 z-40">
           <Landing onSubmit={handleLandingSubmit} />
         </div>
+      )}
+
+      {/* Search Panel */}
+      {showSearchPanel && userMarker && (
+        <SearchPanel
+          onFiltersChange={setSearchFilters}
+          onClose={() => setShowSearchPanel(false)}
+          resultsCount={filteredCount}
+          totalCount={totalCount}
+        />
+      )}
+
+      {/* Search Toggle Button */}
+      {userMarker && !showSearchPanel && (
+        <button
+          onClick={() => setShowSearchPanel(true)}
+          className="fixed top-6 left-6 z-40 p-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl hover:bg-white/20 transition-all shadow-lg"
+        >
+          <Search className="w-5 h-5 text-white" />
+        </button>
       )}
 
       {/* Fish Details Sidebar */}

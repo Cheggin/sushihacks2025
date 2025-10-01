@@ -7,19 +7,392 @@ interface FishSidebarProps {
   onClose: () => void;
 }
 
-// Generate mock price data
+// Generate mock price data with consistent base price
 const generatePriceHistory = (fishName: string) => {
-  const basePrice = Math.random() * 50 + 20; // $20-70 base price
+  // Generate consistent base price based on scientific name hash
+  let hash = 0;
+  for (let i = 0; i < fishName.length; i++) {
+    hash = ((hash << 5) - hash) + fishName.charCodeAt(i);
+    hash = hash & hash;
+  }
+  const basePrice = 20 + Math.abs(hash % 50); // $20-70 base price
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  return months.map((month, index) => ({
-    month,
-    price: parseFloat((basePrice + (Math.random() - 0.5) * 20).toFixed(2))
-  }));
+  return months.map((month, index) => {
+    // Use hash + index for consistent variations per month
+    const monthHash = Math.abs((hash + index * 7) % 20);
+    const variation = (monthHash / 20 - 0.5) * 20; // -10 to +10 variation
+    return {
+      month,
+      price: parseFloat((basePrice + variation).toFixed(2))
+    };
+  });
 };
 
 const getLastPrice = (fishName: string) => {
-  return parseFloat((Math.random() * 50 + 20).toFixed(2));
+  // Generate consistent price based on scientific name hash
+  let hash = 0;
+  for (let i = 0; i < fishName.length; i++) {
+    hash = ((hash << 5) - hash) + fishName.charCodeAt(i);
+    hash = hash & hash;
+  }
+  const basePrice = 20 + Math.abs(hash % 50); // $20-70
+  return parseFloat(basePrice.toFixed(2));
+};
+
+// Generate common name from scientific name
+const getCommonName = (scientificName: string, genus?: string): string => {
+  const commonNames: Record<string, string> = {
+    // FISH - TUNA & MACKEREL (SCOMBRIDAE)
+    'Scombridae': 'Tuna/Mackerel Family',
+    'Thunnus': 'Tuna',
+    'Thunnus albacares': 'Yellowfin Tuna',
+    'Thunnus obesus': 'Bigeye Tuna',
+    'Thunnus thynnus': 'Bluefin Tuna',
+    'Thunnus alalunga': 'Albacore Tuna',
+    'Katsuwonus': 'Skipjack Tuna',
+    'Katsuwonus pelamis': 'Skipjack Tuna',
+    'Euthynnus': 'Little Tunny',
+    'Euthynnus affinis': 'Kawakawa',
+    'Gymnosarda unicolor': 'Dogtooth Tuna',
+    'Auxis': 'Frigate Tuna',
+    'Sarda': 'Bonito',
+
+    // FISH - SURGEONFISH (ACANTHURIDAE)
+    'Acanthuridae': 'Surgeonfish Family',
+    'Acanthurus': 'Surgeonfish/Tang',
+    'Acanthurus auranticavus': 'Ringtail Surgeonfish',
+    'Acanthurus bariene': 'Black-spot Surgeonfish',
+    'Acanthurus bleekeri': 'Bleeker\'s Surgeonfish',
+    'Acanthurus dussumieri': 'Eyestripe Surgeonfish',
+    'Acanthurus fowleri': 'Fowler\'s Surgeonfish',
+    'Acanthurus gahhm': 'Black Surgeonfish',
+    'Acanthurus guttatus': 'Spotted Surgeonfish',
+    'Acanthurus leucocheilus': 'Pale-lipped Surgeonfish',
+    'Acanthurus leucopareius': 'Whitebar Surgeonfish',
+    'Acanthurus leucosternon': 'Powderblue Surgeonfish',
+    'Acanthurus lineatus': 'Lined Surgeonfish',
+    'Acanthurus mata': 'Elongate Surgeonfish',
+    'Acanthurus nigricauda': 'Epaulette Surgeonfish',
+    'Acanthurus nigrofuscus': 'Brown Surgeonfish',
+    'Acanthurus olivaceus': 'Orangeband Surgeonfish',
+    'Acanthurus pyroferus': 'Chocolate Surgeonfish',
+    'Acanthurus triostegus': 'Convict Surgeonfish',
+    'Acanthurus xanthopterus': 'Yellowfin Surgeonfish',
+
+    // FISH - DAMSELFISH (POMACENTRIDAE)
+    'Pomacentridae': 'Damselfish Family',
+    'Abudefduf': 'Sergeant Major',
+    'Abudefduf bengalensis': 'Bengal Sergeant',
+    'Abudefduf saxatilis': 'Sergeant Major',
+    'Abudefduf septemfasciatus': 'Banded Sergeant',
+    'Abudefduf sexfasciatus': 'Scissortail Sergeant',
+    'Abudefduf sordidus': 'Blackspot Sergeant',
+    'Abudefduf vaigiensis': 'Indo-Pacific Sergeant',
+    'Chromis': 'Chromis Damselfish',
+    'Chromis viridis': 'Blue-Green Chromis',
+    'Chromis atripectoralis': 'Black-axil Chromis',
+    'Chromis margaritifer': 'Bicolor Chromis',
+    'Chromis retrofasciata': 'Blackbar Chromis',
+    'Chromis xanthura': 'Yellow-tail Chromis',
+    'Dascyllus': 'Dascyllus Damselfish',
+    'Dascyllus aruanus': 'Humbug Dascyllus',
+    'Dascyllus carneus': 'Cloudy Dascyllus',
+    'Dascyllus melanurus': 'Four-stripe Damselfish',
+    'Dascyllus reticulatus': 'Reticulated Dascyllus',
+    'Dascyllus trimaculatus': 'Domino Damselfish',
+    'Amblyglyphidodon aureus': 'Golden Damselfish',
+    'Amblyglyphidodon curacao': 'Staghorn Damselfish',
+    'Amblyglyphidodon leucogaster': 'Yellow-belly Damselfish',
+
+    // FISH - CLOWNFISH/ANEMONEFISH
+    'Amphiprion': 'Clownfish',
+    'Amphiprion akallopisos': 'Skunk Clownfish',
+    'Amphiprion clarkii': 'Clark\'s Clownfish',
+    'Amphiprion ephippium': 'Saddle Clownfish',
+    'Amphiprion frenatus': 'Tomato Clownfish',
+    'Amphiprion ocellaris': 'Common Clownfish',
+    'Amphiprion perideraion': 'Pink Skunk Clownfish',
+    'Amphiprion polymnus': 'Saddleback Clownfish',
+    'Amphiprion sandaracinos': 'Orange Skunk Clownfish',
+
+    // FISH - CARDINALFISH (APOGONIDAE)
+    'Apogonidae': 'Cardinalfish Family',
+    'Apogon': 'Cardinalfish',
+    'Archamia': 'Cardinalfish',
+    'Archamia fucata': 'Orangelined Cardinalfish',
+
+    // FISH - TRIGGERFISH (BALISTIDAE)
+    'Balistidae': 'Triggerfish Family',
+    'Abalistes stellaris': 'Starry Triggerfish',
+    'Balistapus': 'Triggerfish',
+    'Balistapus undulatus': 'Orange-lined Triggerfish',
+    'Balistes': 'Triggerfish',
+    'Balistoides conspicillum': 'Clown Triggerfish',
+    'Balistoides viridescens': 'Titan Triggerfish',
+
+    // FISH - WRASSES (LABRIDAE)
+    'Labridae': 'Wrasse Family',
+    'Anampses': 'Tamarin Wrasse',
+    'Anampses caeruleopunctatus': 'Blue-spotted Wrasse',
+    'Anampses geographicus': 'Geographic Wrasse',
+    'Cheilinus': 'Wrasse',
+    'Cheilinus undulatus': 'Humphead Wrasse',
+    'Halichoeres': 'Wrasse',
+
+    // FISH - PUFFERFISH
+    'Tetraodontidae': 'Pufferfish Family',
+    'Arothron': 'Pufferfish',
+    'Arothron hispidus': 'White-spotted Puffer',
+    'Arothron mappa': 'Mappa Puffer',
+    'Arothron nigropunctatus': 'Dog-faced Puffer',
+    'Arothron stellatus': 'Starry Puffer',
+    'Canthigaster': 'Sharpnose Puffer',
+    'Canthigaster valentini': 'Valentine\'s Puffer',
+
+    // FISH - GOBIES (GOBIIDAE)
+    'Gobiidae': 'Goby Family',
+    'Amblygobius': 'Sand Goby',
+    'Amblyeleotris': 'Shrimp Goby',
+    'Acentrogobius': 'Goby',
+
+    // FISH - BLENNIES
+    'Blenniidae': 'Blenny Family',
+    'Salarias': 'Algae Blenny',
+    'Salarias fasciatus': 'Lawnmower Blenny',
+    'Ecsenius': 'Blenny',
+    'Ecsenius bicolor': 'Bicolor Blenny',
+    'Meiacanthus': 'Fang Blenny',
+
+    // FISH - GROUPERS (SERRANIDAE)
+    'Serranidae': 'Grouper Family',
+    'Cephalopholis': 'Grouper',
+    'Cephalopholis argus': 'Peacock Grouper',
+    'Cephalopholis miniata': 'Coral Grouper',
+    'Epinephelus': 'Grouper',
+    'Plectropomus': 'Coral Trout',
+
+    // FISH - BUTTERFLYFISH
+    'Chaetodontidae': 'Butterflyfish Family',
+    'Chaetodon': 'Butterflyfish',
+
+    // FISH - ANGELFISH
+    'Pomacanthidae': 'Angelfish Family',
+    'Centropyge': 'Dwarf Angelfish',
+    'Centropyge bicolor': 'Bicolor Angelfish',
+    'Centropyge bispinosus': 'Coral Beauty',
+    'Centropyge loriculus': 'Flame Angelfish',
+
+    // FISH - FUSILIERS
+    'Caesionidae': 'Fusilier Family',
+    'Caesio': 'Fusilier',
+
+    // FISH - JACKS/TREVALLIES
+    'Carangidae': 'Jack Family',
+    'Carangoides': 'Trevally',
+    'Caranx': 'Jack',
+    'Caranx ignobilis': 'Giant Trevally',
+
+    // FISH - SNAPPERS
+    'Lutjanidae': 'Snapper Family',
+
+    // FISH - SHARKS & RAYS
+    'Carcharhinidae': 'Requiem Shark',
+    'Carcharhinus': 'Reef Shark',
+    'Carcharhinus melanopterus': 'Blacktip Reef Shark',
+    'Dasyatidae': 'Stingray',
+    'Myliobatidae': 'Eagle Ray',
+    'Aetobatus narinari': 'Spotted Eagle Ray',
+
+    // CORALS - HARD CORALS
+    'Scleractinia': 'Hard Coral',
+    'Acroporidae': 'Staghorn Coral Family',
+    'Acropora': 'Staghorn Coral',
+    'Acanthastrea': 'Brain Coral',
+    'Fungiidae': 'Mushroom Coral Family',
+    'Fungia': 'Mushroom Coral',
+    'Galaxea': 'Galaxy Coral',
+    'Goniopora': 'Flowerpot Coral',
+    'Montipora': 'Velvet Coral',
+    'Pocillopora': 'Cauliflower Coral',
+    'Porites': 'Finger Coral',
+
+    // CORALS - SOFT CORALS
+    'Alcyonacea': 'Soft Coral',
+    'Alcyoniidae': 'Soft Coral',
+
+    // ANEMONES & JELLYFISH
+    'Actiniaria': 'Sea Anemone',
+    'Scyphozoa': 'Jellyfish',
+    'Hydrozoa': 'Hydromedusa',
+
+    // ECHINODERMS
+    'Asteroidea': 'Starfish',
+    'Acanthaster planci': 'Crown-of-Thorns Starfish',
+    'Ophiuroidea': 'Brittle Star',
+    'Echinoidea': 'Sea Urchin',
+    'Holothuroidea': 'Sea Cucumber',
+    'Holothuria': 'Sea Cucumber',
+    'Holothuria atra': 'Black Sea Cucumber',
+    'Actinopyga': 'Sea Cucumber',
+    'Stichopus': 'Sea Cucumber',
+    'Crinoidea': 'Feather Star',
+
+    // MOLLUSKS
+    'Cephalopoda': 'Cephalopod',
+    'Octopoda': 'Octopus',
+    'Teuthida': 'Squid',
+    'Sepiida': 'Cuttlefish',
+    'Bivalvia': 'Clam',
+    'Tridacna': 'Giant Clam',
+    'Gastropoda': 'Snail',
+
+    // CRUSTACEANS
+    'Decapoda': 'Decapod',
+    'Caridea': 'Shrimp',
+    'Alpheus': 'Pistol Shrimp',
+    'Lysmata': 'Cleaner Shrimp',
+    'Paguroidea': 'Hermit Crab',
+    'Brachyura': 'Crab',
+    'Stomatopoda': 'Mantis Shrimp',
+    'Cirripedia': 'Barnacle',
+    'Balanus': 'Barnacle',
+    'Copepoda': 'Copepod',
+    'Calanoida': 'Calanoid Copepod',
+    'Acartia': 'Acartia Copepod',
+    'Calanus': 'Calanus Copepod',
+    'Eucalanus': 'Eucalanus Copepod',
+    'Amphipoda': 'Amphipod',
+
+    // WORMS
+    'Polychaeta': 'Polychaete Worm',
+    'Sabellidae': 'Feather Duster Worm',
+    'Platyhelminthes': 'Flatworm',
+
+    // TUNICATES & SPONGES
+    'Ascidiacea': 'Sea Squirt',
+    'Porifera': 'Sponge',
+
+    // MARINE ALGAE
+    'Chlorophyta': 'Green Algae',
+    'Caulerpa': 'Caulerpa',
+    'Caulerpa racemosa': 'Sea Grapes',
+    'Halimeda': 'Halimeda',
+    'Ulva': 'Sea Lettuce',
+    'Rhodophyta': 'Red Algae',
+    'Phaeophyceae': 'Brown Algae',
+    'Sargassum': 'Sargassum',
+  };
+
+  // Try exact match
+  if (commonNames[scientificName]) {
+    return commonNames[scientificName];
+  }
+
+  // Try genus match
+  if (genus && commonNames[genus]) {
+    return commonNames[genus];
+  }
+
+  // Try partial match
+  for (const key in commonNames) {
+    if (scientificName.includes(key)) {
+      return commonNames[key];
+    }
+  }
+
+  // Generate from scientific name
+  const parts = scientificName.split(' ');
+  if (parts.length >= 2) {
+    return `${parts[0]} ${parts[1]}`;
+  }
+
+  return scientificName;
+};
+
+// Get badge color for category
+const getCategoryColor = (category: string): string => {
+  if (category.includes('Fish')) return 'bg-blue-500/30 border-blue-400/50';
+  if (category === 'Copepod' || category === 'Crustacean' || category === 'Barnacle') return 'bg-orange-500/30 border-orange-400/50';
+  if (category === 'Coral' || category === 'Hydrozoan' || category === 'Jellyfish') return 'bg-pink-500/30 border-pink-400/50';
+  if (category.includes('Snail') || category.includes('Clam') || category.includes('Octopus') || category.includes('Squid')) return 'bg-purple-500/30 border-purple-400/50';
+  if (category.includes('Sea') || category.includes('Starfish') || category.includes('Urchin') || category.includes('Brittle')) return 'bg-yellow-500/30 border-yellow-400/50';
+  if (category.includes('Algae') || category.includes('Diatom') || category.includes('Plant')) return 'bg-green-500/30 border-green-400/50';
+  if (category.includes('Sponge') || category.includes('Squirt')) return 'bg-cyan-500/30 border-cyan-400/50';
+  if (category.includes('Worm')) return 'bg-red-500/30 border-red-400/50';
+  return 'bg-gray-500/30 border-gray-400/50';
+};
+
+// Get general category from class/phylum
+const getCategory = (className?: string, phylum?: string): string => {
+  if (!className) return 'Unknown';
+
+  const categoryMap: Record<string, string> = {
+    // Fish
+    'Actinopteri': 'Fish',
+    'Actinopterygii': 'Fish',
+    'Chondrichthyes': 'Fish (Cartilaginous)',
+    'Myxini': 'Fish (Hagfish)',
+    'Petromyzonti': 'Fish (Lamprey)',
+
+    // Crustaceans
+    'Maxillopoda': 'Copepod',
+    'Malacostraca': 'Crustacean',
+    'Branchiopoda': 'Crustacean',
+    'Ostracoda': 'Crustacean',
+    'Cirripedia': 'Barnacle',
+
+    // Corals & Anemones
+    'Anthozoa': 'Coral',
+    'Hydrozoa': 'Hydrozoan',
+    'Scyphozoa': 'Jellyfish',
+
+    // Mollusks
+    'Gastropoda': 'Snail/Slug',
+    'Bivalvia': 'Clam/Mussel',
+    'Cephalopoda': 'Octopus/Squid',
+    'Polyplacophora': 'Chiton',
+    'Scaphopoda': 'Tusk Shell',
+
+    // Echinoderms
+    'Holothuroidea': 'Sea Cucumber',
+    'Asteroidea': 'Starfish',
+    'Ophiuroidea': 'Brittle Star',
+    'Echinoidea': 'Sea Urchin',
+    'Crinoidea': 'Feather Star',
+
+    // Worms
+    'Polychaeta': 'Marine Worm',
+    'Clitellata': 'Worm',
+    'Turbellaria': 'Flatworm',
+
+    // Algae
+    'Ulvophyceae': 'Green Algae',
+    'Florideophyceae': 'Red Algae',
+    'Phaeophyceae': 'Brown Algae',
+    'Bacillariophyceae': 'Diatom',
+    'Dinophyceae': 'Dinoflagellate',
+    'Cyanophyceae': 'Blue-green Algae',
+
+    // Plants
+    'Equisetopsida': 'Marine Plant',
+    'Magnoliopsida': 'Flowering Plant',
+
+    // Sponges & Others
+    'Demospongiae': 'Sponge',
+    'Calcarea': 'Sponge',
+    'Hexactinellida': 'Glass Sponge',
+    'Ascidiacea': 'Sea Squirt',
+    'Appendicularia': 'Larvacean',
+    'Thaliacea': 'Salp',
+
+    // Protists
+    'Acantharia': 'Acantharian',
+    'Phaeodaria': 'Phaeodarian',
+    'Foraminifera': 'Foraminiferan',
+  };
+
+  return categoryMap[className] || className;
 };
 
 export default function FishSidebar({ fish, onClose }: FishSidebarProps) {
@@ -38,10 +411,13 @@ export default function FishSidebar({ fish, onClose }: FishSidebarProps) {
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className={`px-2 py-1 text-xs font-semibold border rounded-md text-white ${getCategoryColor(getCategory(fish.class, fish.phylum))}`}>
+                {getCategory(fish.class, fish.phylum)}
+              </span>
+            </div>
             <h2 className="text-xl font-bold text-white mb-1">{fish.scientificName}</h2>
-            {fish.vernacularName && (
-              <p className="text-base text-white/80 mb-1">{fish.vernacularName}</p>
-            )}
+            <p className="text-base text-white/80 mb-1">{getCommonName(fish.scientificName, fish.genus)}</p>
             <p className="text-sm text-white/60">{fish.genus || 'Unknown Genus'}</p>
           </div>
           <button

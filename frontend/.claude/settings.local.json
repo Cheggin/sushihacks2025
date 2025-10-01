@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Read(//Users/reagan/Documents/GitHub/sushihacks2025/backend/**)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(grep:*)",
+      "WebSearch",
+      "Read(//private/tmp/**)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
