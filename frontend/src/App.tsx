@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
-import FishMapPage from "./pages/FishMapPage";
 import HealthPage from "./pages/Health";
 import Landing from "./pages/Landing";
 import GlobeBackground from "./components/GlobeBackground";
@@ -27,7 +26,6 @@ export default function App() {
   const [userMarker, setUserMarker] = useState<UserMarker | null>(null);
   const [activePopup, setActivePopup] = useState<string | null>(null);
   const [isHomePageVisible, setIsHomePageVisible] = useState<boolean>(false);
-  const [isMapPageVisible, setIsMapPageVisible] = useState<boolean>(false);
   const [isHealthPageVisible, setIsHealthPageVisible] = useState<boolean>(false);
   const [selectedFish, setSelectedFish] = useState<FishOccurrence | null>(null);
   const [showSearchPanel, setShowSearchPanel] = useState<boolean>(false);
@@ -44,9 +42,6 @@ export default function App() {
       if (page === "homepage") {
         setIsHomePageVisible(false);
         setTimeout(() => setActivePopup(null), 1000);
-      } else if (page === "map") {
-        setIsMapPageVisible(false);
-        setTimeout(() => setActivePopup(null), 1000);
       } else if (page === "health") {
         setIsHealthPageVisible(false);
         setTimeout(() => setActivePopup(null), 1000);
@@ -55,7 +50,6 @@ export default function App() {
       // Show the new popup
       setActivePopup(page);
       if (page === "homepage") setIsHomePageVisible(true);
-      else if (page === "map") setIsMapPageVisible(true);
       else if (page === "health") setIsHealthPageVisible(true);
     }
   };
@@ -104,35 +98,25 @@ export default function App() {
       <FishSidebar fish={selectedFish} onClose={() => setSelectedFish(null)} />
 
       {/* Main content area */}
-      <main className="flex-1 p-6 relative overflow-y-auto" style={{ zIndex: activePopup ? 20 : 5 }}>
+      <main className="flex-1 px-0 pt-6 pb-0 relative overflow-y-auto" style={{ zIndex: activePopup ? 20 : 5 }}>
         {/* Home Page Popup */}
         {activePopup === "homepage" && (
           <div
             className={`${
               isHomePageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
-            } transition-all duration-1000 ease-in-out`}
+            } transition-all duration-1000 ease-in-out h-full px-6`}
           >
             <HomePage isHomePageVisible={isHomePageVisible} />
           </div>
         )}
 
-        {/* Map Page Popup for now; will delete */}
-        {activePopup === "map" && (
-          <div
-            className={`${
-              isMapPageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-            } transition-all duration-1000 ease-in-out`}
-          >
-            <FishMapPage />
-          </div>
-        )}
 
         {/* Health Page Popup */}
         {activePopup === "health" && (
           <div
             className={`${
               isHealthPageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-            } transition-all duration-1000 ease-in-out`}
+            } transition-all duration-1000 ease-in-out h-full px-6`}
           >
             <HealthPage />
           </div>

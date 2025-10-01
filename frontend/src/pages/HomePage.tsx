@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import PageLayout from "../components/PageLayout"; // Import the new PageLayout component
 import { Card, CardContent } from "../components/ui/card";
+import AIAssistant from "../components/AIAssistant";
+import PricePrediction from "../components/PricePrediction";
+import DashboardSummary from "../components/DashboardSummary";
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
   Tooltip,
   ResponsiveContainer,
   PieChart,
@@ -16,7 +17,7 @@ import {
   RadialBar,
   PolarAngleAxis,
 } from "recharts";
-import { Search, Fish } from "lucide-react";
+import { Search, Fish, MessageCircle } from "lucide-react";
 
 // Dummy data
 const fishData = [
@@ -24,21 +25,6 @@ const fishData = [
   { id: "#F-002", fish: "Salmon", date: "31/01/2025" },
   { id: "#F-003", fish: "Mackerel", date: "31/01/2025" },
   { id: "#F-004", fish: "Sardine", date: "31/01/2025" },
-];
-
-const catchData = [
-  { month: "Jan", caught: 145 },
-  { month: "Feb", caught: 132 },
-  { month: "Mar", caught: 178 },
-  { month: "Apr", caught: 203 },
-  { month: "May", caught: 245 },
-  { month: "Jun", caught: 267 },
-  { month: "Jul", caught: 289 },
-  { month: "Aug", caught: 312 },
-  { month: "Sep", caught: 198 },
-  { month: "Oct", caught: 167 },
-  { month: "Nov", caught: 143 },
-  { month: "Dec", caught: 156 },
 ];
 
 const onboardData = [
@@ -87,12 +73,25 @@ const weatherCodeToEmoji = (code: number) => {
   }
 };
 
+const USER_ID = 'user_001';
+
 export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boolean }) {
   const [weather, setWeather] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fishingScore, setFishingScore] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+
+  // Fetch CTS data
+  const assessments = useQuery(api.ctsAssessments.getByUserId, { userId: USER_ID });
+
+  // Get latest CTS assessment
+  const latestAssessment = assessments && assessments.length > 0
+    ? assessments.reduce((latest: any, current: any) =>
+        current.timestamp > latest.timestamp ? current : latest
+      )
+    : null;
 
   const getConditionLabel = (score: number): string => {
     if (score >= 80) return "Excellent";
@@ -134,33 +133,67 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
         setLoading(false);
       }
     };
-    fetchWeather();
+    void fetchWeather();
   }, []);
 
   return (
-    <div
-      className={`${
-        isHomePageVisible
-          ? "opacity-100 translate-y-0" // Visible and slide down
-          : "opacity-0 translate-y-10" // Hidden and slide up
-      } transition-all duration-500 ease-in-out h-full dashboard-content`}
-    >
-      <PageLayout
+    <>
+      {showAIAssistant && (
+        <AIAssistant
+          onClose={() => setShowAIAssistant(false)}
+          ctsData={latestAssessment ? {
+            severity: latestAssessment.predictedClass,
+            gripStrength: latestAssessment.gripStrength,
+            pinchStrength: latestAssessment.pinchStrength,
+          } : null}
+        />
+      )}
+      <div
+        className={`${
+          isHomePageVisible
+            ? "opacity-100 translate-y-0" // Visible and slide down
+            : "opacity-0 translate-y-10" // Hidden and slide up
+        } transition-all duration-500 ease-in-out h-full dashboard-content`}
+      >
+        <PageLayout
         title="Dashboard"
         rightText={
-          loading ? (
-            "Loading weather..."
-          ) : error ? (
-            <span className="text-red-300">{error}</span>
-          ) : (
-            weather
-          )
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowAIAssistant(true)}
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-3 py-2 rounded-lg transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-2 text-sm"
+            >
+              <MessageCircle className="w-4 h-4" />
+              Ask AI Assistant
+            </button>
+            <div>
+              {loading ? (
+                "Loading weather..."
+              ) : error ? (
+                <span className="text-red-300">{error}</span>
+              ) : (
+                weather
+              )}
+            </div>
+          </div>
         }
       >
         {/* Page content */}
-        <div className="grid grid-cols-12 gap-4">
+        <div className="grid grid-cols-12 gap-3">
+          {/* Dashboard Summary */}
+          <DashboardSummary
+            ctsData={latestAssessment ? {
+              severity: latestAssessment.predictedClass,
+              gripStrength: latestAssessment.gripStrength,
+              pinchStrength: latestAssessment.pinchStrength,
+              lastAssessment: new Date(latestAssessment.timestamp)
+            } : null}
+            fishingScore={fishingScore}
+            temperature={temperature}
+          />
+
           {/* Left list */}
-          <Card className="col-span-3">
+          <Card className="col-span-4">
             <CardContent>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold text-lg flex items-center gap-2 text-white">
@@ -195,58 +228,13 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
           </Card>
 
           {/* Right chart area */}
-          <div className="col-span-9 grid grid-cols-12 gap-4">
-            <Card className="col-span-12">
-              <CardContent>
-                <h2 className="font-semibold text-lg mb-3 text-white">
-                  Number of Fish Caught per Month
-                </h2>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={catchData}>
-                    <XAxis
-                      dataKey="month"
-                      stroke="rgba(255,255,255,0.3)"
-                      tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
-                      axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
-                    />
-                    <YAxis
-                      stroke="rgba(255,255,255,0.3)"
-                      tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
-                      axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
-                      gridLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                      label={{ value: 'Fish Caught', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.7)' }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        border: '1px solid rgba(6,182,212,0.4)',
-                        borderRadius: '12px',
-                        backdropFilter: 'blur(16px)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-                      }}
-                      itemStyle={{ color: '#06b6d4' }}
-                      labelStyle={{ color: 'rgba(255,255,255,0.95)', fontWeight: 'bold' }}
-                      formatter={(value) => [`${value} fish`, 'Caught']}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="caught"
-                      stroke="#06b6d4"
-                      strokeWidth={3}
-                      dot={{ fill: '#06b6d4', r: 5, strokeWidth: 2, stroke: '#0891b2' }}
-                      activeDot={{ r: 7, fill: '#06b6d4', stroke: '#fff', strokeWidth: 2 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
+          <div className="col-span-8 grid grid-cols-12 gap-3">
             <Card className="col-span-6">
               <CardContent>
-                <h2 className="font-semibold text-lg mb-3 text-white">
+                <h2 className="font-semibold text-base mb-2 text-white">
                   Fish Types
                 </h2>
-                <ResponsiveContainer width="100%" height={180}>
+                <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie
                       data={onboardData}
@@ -296,10 +284,10 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
 
             <Card className="col-span-6">
               <CardContent>
-                <h2 className="font-semibold text-lg mb-3 text-white">
+                <h2 className="font-semibold text-base mb-2 text-white">
                   Fishing Conditions
                 </h2>
-                <div className="relative h-[180px] flex items-center justify-center">
+                <div className="relative h-[160px] flex items-center justify-center">
                   {loading ? (
                     <div className="text-white/60">Loading...</div>
                   ) : (
@@ -357,9 +345,14 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="col-span-12">
+              <PricePrediction />
+            </Card>
           </div>
         </div>
       </PageLayout>
-    </div>
+      </div>
+    </>
   );
 }

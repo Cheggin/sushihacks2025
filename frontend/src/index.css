@@ -64,7 +64,9 @@ body {
   }
 }
 
-/* Black & White Theme - Only for dashboard content */
-[data-theme="bw"] .dashboard-content {
+/* Black & White Theme - Apply to all page content */
+[data-theme="bw"] .page-content,
+[data-theme="bw"] .dashboard-content,
+[data-theme="bw"] canvas {
   filter: grayscale(100%);
 }

@@ -61,9 +61,11 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
         const lines = csvText.split('\n');
         const headers = lines[0].split(',');
 
-        // Load all fish data (no sampling)
+        // Sample data for performance (show ~2000 points instead of all)
         const sampledData: FishOccurrence[] = [];
-        for (let i = 1; i < lines.length; i++) {
+        const sampleRate = Math.max(1, Math.floor(lines.length / 2000)); // Sample to ~2000 points
+
+        for (let i = 1; i < lines.length; i += sampleRate) {
           const line = lines[i];
           if (!line.trim()) continue;
 

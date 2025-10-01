@@ -35,12 +35,6 @@ export default function Navbar({ togglePopup }: NavbarProps) {
           Dashboard
         </button>
         <button
-          onClick={() => togglePopup("map")}
-          className="hover:text-blue-100"
-        >
-          Map
-        </button>
-        <button
           onClick={() => togglePopup("health")}
           className="hover:text-blue-100"
         >

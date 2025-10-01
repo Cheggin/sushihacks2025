@@ -1162,6 +1162,55 @@ export default function Health() {
     );
   };
 
+  // State for editing profile
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editedProfile, setEditedProfile] = useState({
+    age: '',
+    sex: '0',
+    height: '',
+    weight: '',
+    ctsPainDuration: '',
+  });
+
+  // Update profile mutation
+  const updateProfile = useMutation(api.userProfiles.update);
+
+  // Load profile data into editor
+  useEffect(() => {
+    if (userProfile && isEditingProfile) {
+      setEditedProfile({
+        age: userProfile.age.toString(),
+        sex: userProfile.sex.toString(),
+        height: userProfile.height.toString(),
+        weight: userProfile.weight.toString(),
+        ctsPainDuration: userProfile.ctsPainDuration.toString(),
+      });
+    }
+  }, [userProfile, isEditingProfile]);
+
+  // Save profile edits
+  const handleSaveProfile = async () => {
+    if (!userProfile) return;
+
+    const age = parseInt(editedProfile.age);
+    const height = parseFloat(editedProfile.height);
+    const weight = parseFloat(editedProfile.weight);
+    const bmi = calculateBMI(weight, height);
+    const ctsPainDuration = parseInt(editedProfile.ctsPainDuration);
+
+    await updateProfile({
+      userId: USER_ID,
+      age,
+      sex: parseInt(editedProfile.sex),
+      height,
+      weight,
+      bmi,
+      ctsPainDuration,
+    });
+
+    setIsEditingProfile(false);
+  };
+
   // Render dashboard with historical data
   const renderDashboard = () => {
     const chartData = getChartData();
@@ -1177,8 +1226,15 @@ export default function Health() {
         })}
       >
         <div className="space-y-6">
-          {/* Risk Test Button */}
-          <div className="flex justify-end">
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setIsEditingProfile(!isEditingProfile)}
+              className="bg-white/10 hover:bg-white/20 text-white font-medium px-6 py-3 rounded-lg transition-all border border-white/20 flex items-center gap-2"
+            >
+              <Activity className="w-5 h-5" />
+              {isEditingProfile ? 'Cancel Edit' : 'Edit Profile'}
+            </button>
             <button
               onClick={startRiskTest}
               className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-6 py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-2"
@@ -1187,6 +1243,138 @@ export default function Health() {
               Take New Risk Assessment
             </button>
           </div>
+
+          {/* Profile Editor */}
+          {isEditingProfile && userProfile && (
+            <Card>
+              <CardContent>
+                <h2 className="text-lg font-bold text-white mb-3">Edit Your Health Profile</h2>
+                <div className="grid md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">Age</label>
+                    <input
+                      type="number"
+                      required
+                      min="18"
+                      max="100"
+                      value={editedProfile.age}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, age: e.target.value })}
+                      className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">Sex</label>
+                    <select
+                      value={editedProfile.sex}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, sex: e.target.value })}
+                      className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white transition-all"
+                    >
+                      <option value="0" className="bg-slate-800">Male</option>
+                      <option value="1" className="bg-slate-800">Female</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">Height (cm)</label>
+                    <input
+                      type="number"
+                      required
+                      min="100"
+                      max="250"
+                      step="0.1"
+                      value={editedProfile.height}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, height: e.target.value })}
+                      className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-white mb-1">Weight (kg)</label>
+                    <input
+                      type="number"
+                      required
+                      min="30"
+                      max="200"
+                      step="0.1"
+                      value={editedProfile.weight}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, weight: e.target.value })}
+                      className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-white mb-1">
+                      Carpal Tunnel Pain Duration (months)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      max="120"
+                      value={editedProfile.ctsPainDuration}
+                      onChange={(e) => setEditedProfile({ ...editedProfile, ctsPainDuration: e.target.value })}
+                      className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
+                    />
+                  </div>
+                </div>
+
+                {editedProfile.height && editedProfile.weight && (
+                  <div className="mt-4 p-4 bg-cyan-400/10 border border-cyan-400/30 rounded-lg backdrop-blur-sm">
+                    <p className="text-sm text-white">
+                      <strong>Your BMI:</strong>{' '}
+                      {calculateBMI(
+                        parseFloat(editedProfile.weight),
+                        parseFloat(editedProfile.height)
+                      ).toFixed(1)}
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={handleSaveProfile}
+                  className="w-full mt-4 bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
+                >
+                  Save Changes
+                </button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Current Profile Display */}
+          {!isEditingProfile && userProfile && (
+            <Card>
+              <CardContent>
+                <h2 className="text-lg font-bold text-white mb-3">Your Health Profile</h2>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                    <p className="text-sm text-white/60">Age</p>
+                    <p className="text-lg font-semibold text-white">{userProfile.age} years</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                    <p className="text-sm text-white/60">Sex</p>
+                    <p className="text-lg font-semibold text-white">{userProfile.sex === 0 ? 'Male' : 'Female'}</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                    <p className="text-sm text-white/60">BMI</p>
+                    <p className="text-lg font-semibold text-white">{userProfile.bmi.toFixed(1)}</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                    <p className="text-sm text-white/60">Height</p>
+                    <p className="text-lg font-semibold text-white">{userProfile.height} cm</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                    <p className="text-sm text-white/60">Weight</p>
+                    <p className="text-lg font-semibold text-white">{userProfile.weight} kg</p>
+                  </div>
+                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                    <p className="text-sm text-white/60">Pain Duration</p>
+                    <p className="text-lg font-semibold text-white">{userProfile.ctsPainDuration} months</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {!hasAssessments ? (
             <Card>
@@ -1226,13 +1414,13 @@ export default function Health() {
               </div>
 
               {/* Charts */}
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-4">
                 <Card>
                   <CardContent>
-                    <h3 className="font-semibold text-lg text-white mb-4">
+                    <h3 className="font-semibold text-base text-white mb-3">
                       Carpal Tunnel Severity Over Time
                     </h3>
-                    <ResponsiveContainer width="100%" height={250}>
+                    <ResponsiveContainer width="100%" height={200}>
                       <LineChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                         <XAxis
@@ -1273,10 +1461,10 @@ export default function Health() {
 
                 <Card>
                   <CardContent>
-                    <h3 className="font-semibold text-lg text-white mb-4">
+                    <h3 className="font-semibold text-base text-white mb-3">
                       Strength Measurements
                     </h3>
-                    <ResponsiveContainer width="100%" height={250}>
+                    <ResponsiveContainer width="100%" height={200}>
                       <BarChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                         <XAxis
@@ -1313,8 +1501,8 @@ export default function Health() {
               {/* Recent Assessments */}
               <Card>
                 <CardContent>
-                  <h3 className="font-semibold text-lg text-white mb-4">Recent Assessments</h3>
-                  <div className="space-y-3">
+                  <h3 className="font-semibold text-base text-white mb-3">Recent Assessments</h3>
+                  <div className="space-y-2">
                     {chartData
                       .slice(-5)
                       .reverse()
