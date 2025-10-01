@@ -439,8 +439,8 @@ export default function Health() {
       <Card>
         <CardContent>
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-black mb-2">Tell us about yourself</h2>
-            <p className="text-gray-600">
+            <h2 className="text-2xl font-bold text-white mb-2">Tell us about yourself</h2>
+            <p className="text-white/70">
               We need some basic information to provide you with personalized Carpal Tunnel risk assessments.
             </p>
           </div>
@@ -448,7 +448,7 @@ export default function Health() {
           <form onSubmit={handleOnboardingSubmit} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-black mb-1">Age</label>
+                <label className="block text-sm font-medium text-white mb-1">Age</label>
                 <input
                   type="number"
                   required
@@ -456,25 +456,25 @@ export default function Health() {
                   max="100"
                   value={onboardingData.age}
                   onChange={(e) => setOnboardingData({ ...onboardingData, age: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
+                  className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
                   placeholder="Your age"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-black mb-1">Sex</label>
+                <label className="block text-sm font-medium text-white mb-1">Sex</label>
                 <select
                   value={onboardingData.sex}
                   onChange={(e) => setOnboardingData({ ...onboardingData, sex: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
+                  className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white transition-all"
                 >
-                  <option value="0">Male</option>
-                  <option value="1">Female</option>
+                  <option value="0" className="bg-slate-800">Male</option>
+                  <option value="1" className="bg-slate-800">Female</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-black mb-1">Height (cm)</label>
+                <label className="block text-sm font-medium text-white mb-1">Height (cm)</label>
                 <input
                   type="number"
                   required
@@ -485,13 +485,13 @@ export default function Health() {
                   onChange={(e) =>
                     setOnboardingData({ ...onboardingData, height: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
+                  className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
                   placeholder="e.g., 170"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-black mb-1">Weight (kg)</label>
+                <label className="block text-sm font-medium text-white mb-1">Weight (kg)</label>
                 <input
                   type="number"
                   required
@@ -502,13 +502,13 @@ export default function Health() {
                   onChange={(e) =>
                     setOnboardingData({ ...onboardingData, weight: e.target.value })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
+                  className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
                   placeholder="e.g., 70"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-black mb-1">
+                <label className="block text-sm font-medium text-white mb-1">
                   Carpal Tunnel Pain Duration (months)
                 </label>
                 <input
@@ -523,10 +523,10 @@ export default function Health() {
                       ctsPainDuration: e.target.value,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:border-blue-600 focus:outline-none bg-white text-black"
+                  className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
                   placeholder="Enter 0 if you don't have Carpal Tunnel pain"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-white/60 mt-1">
                   If you experience numbness, tingling, or pain in your hand/wrist, how long have
                   you had these symptoms?
                 </p>
@@ -534,8 +534,8 @@ export default function Health() {
             </div>
 
             {onboardingData.height && onboardingData.weight && (
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-black">
+              <div className="p-4 bg-cyan-400/10 border border-cyan-400/30 rounded-lg backdrop-blur-sm">
+                <p className="text-sm text-white">
                   <strong>Your BMI:</strong>{' '}
                   {calculateBMI(
                     parseFloat(onboardingData.weight),
@@ -547,7 +547,7 @@ export default function Health() {
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30"
             >
               Continue to Risk Assessment
             </button>
@@ -564,36 +564,36 @@ export default function Health() {
         <CardContent>
           <div className="text-center py-8">
             <div className="mb-6">
-              <Activity className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-black mb-3">Let's assess your Carpal Tunnel risk</h2>
-              <p className="text-gray-600 max-w-lg mx-auto">
+              <Activity className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-3">Let's assess your Carpal Tunnel risk</h2>
+              <p className="text-white/70 max-w-lg mx-auto">
                 This assessment will help us understand your current condition and provide
                 personalized recommendations. The process takes about 3 minutes.
               </p>
             </div>
 
             <div className="grid md:grid-cols-4 gap-4 mb-8 max-w-3xl mx-auto">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-black mb-1">Pain Rating</h3>
-                <p className="text-sm text-gray-600">Rate pain level</p>
+              <div className="p-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg hover:border-cyan-400/40 transition-all">
+                <h3 className="font-semibold text-white mb-1">Pain Rating</h3>
+                <p className="text-sm text-white/60">Rate pain level</p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-black mb-1">Grip Test</h3>
-                <p className="text-sm text-gray-600">Live measurement</p>
+              <div className="p-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg hover:border-cyan-400/40 transition-all">
+                <h3 className="font-semibold text-white mb-1">Grip Test</h3>
+                <p className="text-sm text-white/60">Live measurement</p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-black mb-1">Pinch Test</h3>
-                <p className="text-sm text-gray-600">Live measurement</p>
+              <div className="p-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg hover:border-cyan-400/40 transition-all">
+                <h3 className="font-semibold text-white mb-1">Pinch Test</h3>
+                <p className="text-sm text-white/60">Live measurement</p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-black mb-1">Results</h3>
-                <p className="text-sm text-gray-600">Full assessment</p>
+              <div className="p-4 bg-white/5 backdrop-blur-sm border border-white/20 rounded-lg hover:border-cyan-400/40 transition-all">
+                <h3 className="font-semibold text-white mb-1">Results</h3>
+                <p className="text-sm text-white/60">Full assessment</p>
               </div>
             </div>
 
             <button
               onClick={continueToPainRating}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors"
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-8 py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30"
             >
               Begin Assessment
             </button>
@@ -610,10 +610,10 @@ export default function Health() {
         <CardContent>
           <div className="max-w-2xl mx-auto py-8">
             <div className="mb-8">
-              <h2 className="text-2xl font-bold text-black mb-3">
+              <h2 className="text-2xl font-bold text-white mb-3">
                 How would you rate your pain today?
               </h2>
-              <p className="text-gray-600">
+              <p className="text-white/70">
                 Please rate your current hand/wrist pain on a scale from 0 (no pain) to 10 (worst
                 pain imaginable).
               </p>
@@ -621,8 +621,8 @@ export default function Health() {
 
             <div className="mb-8">
               <div className="flex justify-between mb-2">
-                <span className="text-sm text-gray-500">No pain</span>
-                <span className="text-sm text-gray-500">Worst pain</span>
+                <span className="text-sm text-white/60">No pain</span>
+                <span className="text-sm text-white/60">Worst pain</span>
               </div>
               <input
                 type="range"
@@ -630,24 +630,24 @@ export default function Health() {
                 max="10"
                 value={painRating}
                 onChange={(e) => setPainRating(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer"
               />
               <div className="text-center mt-4">
-                <span className="text-4xl font-bold text-blue-600">{painRating}</span>
-                <span className="text-xl text-gray-500"> / 10</span>
+                <span className="text-4xl font-bold text-cyan-400">{painRating}</span>
+                <span className="text-xl text-white/60"> / 10</span>
               </div>
             </div>
 
             <div className="flex gap-4">
               <button
                 onClick={() => setRiskTestStep('intro')}
-                className="flex-1 border border-gray-300 text-black font-medium py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex-1 border border-white/20 text-white font-medium py-3 rounded-lg hover:bg-white/10 transition-all"
               >
                 Back
               </button>
               <button
                 onClick={continueToGripMeasurement}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+                className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
               >
                 Continue
               </button>
@@ -671,10 +671,10 @@ export default function Health() {
           <CardContent>
             <div className="max-w-3xl mx-auto py-8">
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-black mb-3">
+                <h2 className="text-2xl font-bold text-white mb-3">
                   Measuring your grip strength
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-white/70">
                   Please squeeze the sensor device firmly with your whole hand for 10 seconds.
                   Maintain steady pressure throughout the measurement.
                 </p>
@@ -682,11 +682,11 @@ export default function Health() {
 
               {!isCollectingGrip && gripData.length === 0 && (
                 <div className="text-center py-12">
-                  <Hand className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-6">Ready to measure grip strength</p>
+                  <Hand className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
+                  <p className="text-white/70 mb-6">Ready to measure grip strength</p>
                   <button
                     onClick={collectGripData}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors"
+                    className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-8 py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
                   >
                     Start Grip Measurement
                   </button>
@@ -696,57 +696,66 @@ export default function Health() {
               {isCollectingGrip && countdown !== null && (
                 <div className="text-center py-12">
                   <div className="mb-4">
-                    <Hand className="w-16 h-16 text-blue-600 mx-auto" />
+                    <Hand className="w-16 h-16 text-cyan-400 mx-auto" />
                   </div>
-                  <p className="text-lg font-semibold text-black mb-2">Get ready...</p>
-                  <p className="text-gray-600 mb-4">Live data starting in</p>
-                  <p className="text-6xl font-bold text-blue-600 animate-pulse">{countdown}</p>
+                  <p className="text-lg font-semibold text-white mb-2">Get ready...</p>
+                  <p className="text-white/70 mb-4">Live data starting in</p>
+                  <p className="text-6xl font-bold text-cyan-400 animate-pulse">{countdown}</p>
                 </div>
               )}
 
               {isCollectingGrip && countdown === null && gripData.length === 0 && (
                 <div className="text-center py-12">
                   <div className="animate-pulse mb-4">
-                    <Hand className="w-16 h-16 text-blue-600 mx-auto" />
+                    <Hand className="w-16 h-16 text-cyan-400 mx-auto" />
                   </div>
-                  <p className="text-lg font-semibold text-black mb-2">Collecting data...</p>
-                  <p className="text-gray-600">Keep squeezing firmly!</p>
+                  <p className="text-lg font-semibold text-white mb-2">Collecting data...</p>
+                  <p className="text-white/70">Keep squeezing firmly!</p>
                 </div>
               )}
 
               {gripData.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-lg text-black mb-4">
+                  <h3 className="font-semibold text-lg text-white mb-4">
                     Live Grip Strength Data
                   </h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                       <XAxis
                         dataKey="index"
-                        stroke="#636E72"
-                        fontSize={12}
-                        label={{ value: 'Reading', position: 'insideBottom', offset: -5 }}
+                        stroke="rgba(255,255,255,0.3)"
+                        tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        label={{ value: 'Reading', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.7)' }}
                       />
                       <YAxis
-                        stroke="#636E72"
-                        fontSize={12}
-                        label={{ value: 'Grip Strength (kg)', angle: -90, position: 'insideLeft' }}
+                        stroke="rgba(255,255,255,0.3)"
+                        tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        label={{ value: 'Grip Strength (kg)', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.7)' }}
                       />
-                      <Tooltip />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                          border: '1px solid rgba(6,182,212,0.4)',
+                          borderRadius: '12px',
+                          backdropFilter: 'blur(16px)',
+                        }}
+                        itemStyle={{ color: '#06b6d4' }}
+                        labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+                      />
                       <Line
                         type="monotone"
                         dataKey="strength"
-                        stroke="#4e79a7"
-                        strokeWidth={2}
+                        stroke="#06b6d4"
+                        strokeWidth={3}
                         name="Grip Strength"
                         dot={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>
 
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-black">
+                  <div className="mt-6 p-4 bg-cyan-400/10 border border-cyan-400/30 rounded-lg backdrop-blur-sm">
+                    <p className="text-sm text-white">
                       <strong>Average Grip Strength:</strong>{' '}
                       {(gripData.reduce((sum, r) => sum + r.grip_strength_kg, 0) / gripData.length).toFixed(2)} kg
                     </p>
@@ -756,13 +765,13 @@ export default function Health() {
                     <div className="mt-6 flex gap-4">
                       <button
                         onClick={() => setGripData([])}
-                        className="flex-1 border border-gray-300 text-black font-medium py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex-1 border border-white/20 text-white font-medium py-3 rounded-lg hover:bg-white/10 transition-all"
                       >
                         Retake Measurement
                       </button>
                       <button
                         onClick={continueToPinchMeasurement}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+                        className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
                       >
                         Continue to Pinch Test
                       </button>
@@ -790,10 +799,10 @@ export default function Health() {
           <CardContent>
             <div className="max-w-3xl mx-auto py-8">
               <div className="mb-8">
-                <h2 className="text-2xl font-bold text-black mb-3">
+                <h2 className="text-2xl font-bold text-white mb-3">
                   Measuring your pinch strength
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-white/70">
                   Please pinch the sensor with your thumb and index finger for 10 seconds. Use a
                   firm, steady pinching motion.
                 </p>
@@ -801,11 +810,11 @@ export default function Health() {
 
               {!isCollectingPinch && pinchData.length === 0 && (
                 <div className="text-center py-12">
-                  <Heart className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-6">Ready to measure pinch strength</p>
+                  <Heart className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
+                  <p className="text-white/70 mb-6">Ready to measure pinch strength</p>
                   <button
                     onClick={collectPinchData}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-8 py-3 rounded-lg transition-colors"
+                    className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-8 py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
                   >
                     Start Pinch Measurement
                   </button>
@@ -815,61 +824,71 @@ export default function Health() {
               {isCollectingPinch && countdown !== null && (
                 <div className="text-center py-12">
                   <div className="mb-4">
-                    <Heart className="w-16 h-16 text-green-600 mx-auto" />
+                    <Heart className="w-16 h-16 text-cyan-400 mx-auto" />
                   </div>
-                  <p className="text-lg font-semibold text-black mb-2">Get ready...</p>
-                  <p className="text-gray-600 mb-4">Live data starting in</p>
-                  <p className="text-6xl font-bold text-green-600 animate-pulse">{countdown}</p>
+                  <p className="text-lg font-semibold text-white mb-2">Get ready...</p>
+                  <p className="text-white/70 mb-4">Live data starting in</p>
+                  <p className="text-6xl font-bold text-cyan-400 animate-pulse">{countdown}</p>
                 </div>
               )}
 
               {isCollectingPinch && countdown === null && pinchData.length === 0 && (
                 <div className="text-center py-12">
                   <div className="animate-pulse mb-4">
-                    <Heart className="w-16 h-16 text-green-600 mx-auto" />
+                    <Heart className="w-16 h-16 text-cyan-400 mx-auto" />
                   </div>
-                  <p className="text-lg font-semibold text-black mb-2">Collecting data...</p>
-                  <p className="text-gray-600">Keep pinching firmly!</p>
+                  <p className="text-lg font-semibold text-white mb-2">Collecting data...</p>
+                  <p className="text-white/70">Keep pinching firmly!</p>
                 </div>
               )}
 
               {pinchData.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-lg text-black mb-4">
+                  <h3 className="font-semibold text-lg text-white mb-4">
                     Live Pinch Strength Data
                   </h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                       <XAxis
                         dataKey="index"
-                        stroke="#636E72"
-                        fontSize={12}
-                        label={{ value: 'Reading', position: 'insideBottom', offset: -5 }}
+                        stroke="rgba(255,255,255,0.3)"
+                        tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        label={{ value: 'Reading', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.7)' }}
                       />
                       <YAxis
-                        stroke="#636E72"
-                        fontSize={12}
+                        stroke="rgba(255,255,255,0.3)"
+                        tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
                         label={{
                           value: 'Pinch Strength (kg)',
                           angle: -90,
                           position: 'insideLeft',
+                          fill: 'rgba(255,255,255,0.7)'
                         }}
                       />
-                      <Tooltip />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                          border: '1px solid rgba(6,182,212,0.4)',
+                          borderRadius: '12px',
+                          backdropFilter: 'blur(16px)',
+                        }}
+                        itemStyle={{ color: '#06b6d4' }}
+                        labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+                      />
                       <Line
                         type="monotone"
                         dataKey="strength"
-                        stroke="#82ca9d"
-                        strokeWidth={2}
+                        stroke="#10b981"
+                        strokeWidth={3}
                         name="Pinch Strength"
                         dot={false}
                       />
                     </LineChart>
                   </ResponsiveContainer>
 
-                  <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                    <p className="text-sm text-black">
+                  <div className="mt-6 p-4 bg-green-400/10 border border-green-400/30 rounded-lg backdrop-blur-sm">
+                    <p className="text-sm text-white">
                       <strong>Average Pinch Strength:</strong>{' '}
                       {(
                         pinchData.reduce((sum, r) => sum + r.pinch_strength_kg, 0) /
@@ -883,13 +902,13 @@ export default function Health() {
                     <div className="mt-6 flex gap-4">
                       <button
                         onClick={() => setPinchData([])}
-                        className="flex-1 border border-gray-300 text-black font-medium py-3 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex-1 border border-white/20 text-white font-medium py-3 rounded-lg hover:bg-white/10 transition-all"
                       >
                         Retake Measurement
                       </button>
                       <button
                         onClick={continueToSummary}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+                        className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
                       >
                         View Assessment
                       </button>
@@ -913,12 +932,12 @@ export default function Health() {
             <CardContent>
               <div className="text-center py-12">
                 <div className="animate-pulse mb-4">
-                  <Activity className="w-16 h-16 text-blue-600 mx-auto" />
+                  <Activity className="w-16 h-16 text-cyan-400 mx-auto" />
                 </div>
-                <p className="text-lg font-semibold text-black mb-2">
+                <p className="text-lg font-semibold text-white mb-2">
                   Analyzing your measurements...
                 </p>
-                <p className="text-gray-600">This will take just a moment</p>
+                <p className="text-white/70">This will take just a moment</p>
               </div>
             </CardContent>
           </Card>
@@ -927,15 +946,15 @@ export default function Health() {
     }
 
     const severityColor = {
-      mild: 'text-green-600',
-      moderate: 'text-yellow-600',
-      severe: 'text-red-600',
+      mild: 'text-green-400',
+      moderate: 'text-yellow-400',
+      severe: 'text-red-400',
     }[prediction.predicted_class];
 
     const severityBg = {
-      mild: 'bg-green-100',
-      moderate: 'bg-yellow-100',
-      severe: 'bg-red-100',
+      mild: 'bg-green-400/10 border-green-400/30',
+      moderate: 'bg-yellow-400/10 border-yellow-400/30',
+      severe: 'bg-red-400/10 border-red-400/30',
     }[prediction.predicted_class];
 
     const avgGrip = gripData.reduce((sum, r) => sum + r.grip_strength_kg, 0) / gripData.length;
@@ -947,15 +966,15 @@ export default function Health() {
           {/* CTS Risk Level - Large Card */}
           <Card>
             <CardContent>
-              <h3 className="font-semibold text-xl text-black mb-4 text-center">
+              <h3 className="font-semibold text-xl text-white mb-4 text-center">
                 Your Carpal Tunnel Risk Level
               </h3>
-              <div className={`${severityBg} rounded-lg p-8 text-center mb-4`}>
-                <p className="text-sm text-gray-600 mb-2">Severity Classification</p>
+              <div className={`${severityBg} border rounded-lg p-8 text-center mb-4 backdrop-blur-sm`}>
+                <p className="text-sm text-white/60 mb-2">Severity Classification</p>
                 <p className={`text-4xl font-bold ${severityColor} mb-4`}>
                   {getSeverityLabel(prediction.predicted_class)}
                 </p>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-white/70">
                   Model Confidence: {(prediction.confidence * 100).toFixed(0)}%
                 </p>
               </div>
@@ -966,30 +985,30 @@ export default function Health() {
           <div className="grid md:grid-cols-3 gap-6">
             <Card>
               <CardContent>
-                <h3 className="font-semibold text-lg text-black mb-4">Pain Rating</h3>
+                <h3 className="font-semibold text-lg text-white mb-4">Pain Rating</h3>
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-blue-600">{painRating}</p>
-                  <p className="text-sm text-gray-600 mt-1">out of 10</p>
+                  <p className="text-4xl font-bold text-cyan-400">{painRating}</p>
+                  <p className="text-sm text-white/60 mt-1">out of 10</p>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent>
-                <h3 className="font-semibold text-lg text-black mb-4">Grip Strength</h3>
+                <h3 className="font-semibold text-lg text-white mb-4">Grip Strength</h3>
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-blue-600">{avgGrip.toFixed(2)}</p>
-                  <p className="text-sm text-gray-600 mt-1">kg</p>
+                  <p className="text-4xl font-bold text-cyan-400">{avgGrip.toFixed(2)}</p>
+                  <p className="text-sm text-white/60 mt-1">kg</p>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardContent>
-                <h3 className="font-semibold text-lg text-black mb-4">Pinch Strength</h3>
+                <h3 className="font-semibold text-lg text-white mb-4">Pinch Strength</h3>
                 <div className="text-center">
-                  <p className="text-4xl font-bold text-green-600">{avgPinch.toFixed(2)}</p>
-                  <p className="text-sm text-gray-600 mt-1">kg</p>
+                  <p className="text-4xl font-bold text-green-400">{avgPinch.toFixed(2)}</p>
+                  <p className="text-sm text-white/60 mt-1">kg</p>
                 </div>
               </CardContent>
             </Card>
@@ -998,7 +1017,7 @@ export default function Health() {
           {/* Combined Strength Chart */}
           <Card>
             <CardContent>
-              <h3 className="font-semibold text-lg text-black mb-4">
+              <h3 className="font-semibold text-lg text-white mb-4">
                 Strength Measurement Timeline
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -1018,25 +1037,40 @@ export default function Health() {
                     })),
                   ]}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                   <XAxis
                     dataKey="index"
-                    stroke="#636E72"
-                    fontSize={12}
-                    label={{ value: 'Reading', position: 'insideBottom', offset: -5 }}
+                    stroke="rgba(255,255,255,0.3)"
+                    tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                    label={{ value: 'Reading', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.7)' }}
                   />
                   <YAxis
-                    stroke="#636E72"
-                    fontSize={12}
-                    label={{ value: 'Strength (kg)', angle: -90, position: 'insideLeft' }}
+                    stroke="rgba(255,255,255,0.3)"
+                    tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                    label={{ value: 'Strength (kg)', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.7)' }}
                   />
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                      border: '1px solid rgba(6,182,212,0.4)',
+                      borderRadius: '12px',
+                      backdropFilter: 'blur(16px)',
+                    }}
+                    itemStyle={{ color: '#06b6d4' }}
+                    labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+                  />
+                  <Legend
+                    wrapperStyle={{
+                      paddingTop: '20px',
+                    }}
+                    iconType="line"
+                    formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.9)' }}>{value}</span>}
+                  />
                   <Line
                     type="monotone"
                     dataKey="grip"
-                    stroke="#4e79a7"
-                    strokeWidth={2}
+                    stroke="#06b6d4"
+                    strokeWidth={3}
                     name="Grip Strength"
                     connectNulls={false}
                     dot={false}
@@ -1044,8 +1078,8 @@ export default function Health() {
                   <Line
                     type="monotone"
                     dataKey="pinch"
-                    stroke="#82ca9d"
-                    strokeWidth={2}
+                    stroke="#10b981"
+                    strokeWidth={3}
                     name="Pinch Strength"
                     connectNulls={false}
                     dot={false}
@@ -1058,14 +1092,14 @@ export default function Health() {
           {/* Recommendations Section */}
           <Card>
             <CardContent>
-              <h3 className="font-semibold text-lg text-black mb-4">What this means for you</h3>
+              <h3 className="font-semibold text-lg text-white mb-4">What this means for you</h3>
               {prediction.predicted_class === 'mild' && (
-                <div className="space-y-3 text-sm text-gray-700">
+                <div className="space-y-3 text-sm text-white/80">
                   <p>
-                    Your assessment indicates <strong>mild or no Carpal Tunnel symptoms</strong>. This is good
+                    Your assessment indicates <strong className="text-white">mild or no Carpal Tunnel symptoms</strong>. This is good
                     news! Your hand strength and pain levels suggest minimal to no nerve compression at this time.
                   </p>
-                  <p className="font-semibold mt-4">Recommendations:</p>
+                  <p className="font-semibold mt-4 text-white">Recommendations:</p>
                   <ul className="list-disc pl-5 space-y-1">
                     <li>Take regular breaks during repetitive hand activities</li>
                     <li>Practice wrist stretches and exercises</li>
@@ -1075,12 +1109,12 @@ export default function Health() {
                 </div>
               )}
               {prediction.predicted_class === 'moderate' && (
-                <div className="space-y-3 text-sm text-gray-700">
+                <div className="space-y-3 text-sm text-white/80">
                   <p>
-                    Your assessment indicates <strong>moderate Carpal Tunnel symptoms</strong>. It's
+                    Your assessment indicates <strong className="text-white">moderate Carpal Tunnel symptoms</strong>. It's
                     important to take action now to prevent progression to more severe symptoms.
                   </p>
-                  <p className="font-semibold mt-4">Recommendations:</p>
+                  <p className="font-semibold mt-4 text-white">Recommendations:</p>
                   <ul className="list-disc pl-5 space-y-1">
                     <li>Consider scheduling a consultation with a healthcare provider</li>
                     <li>Use a wrist splint, especially at night</li>
@@ -1091,16 +1125,16 @@ export default function Health() {
                 </div>
               )}
               {prediction.predicted_class === 'severe' && (
-                <div className="space-y-3 text-sm text-gray-700">
+                <div className="space-y-3 text-sm text-white/80">
                   <p>
-                    Your assessment indicates <strong>severe Carpal Tunnel symptoms</strong>. We strongly
+                    Your assessment indicates <strong className="text-white">severe Carpal Tunnel symptoms</strong>. We strongly
                     recommend seeking medical attention to discuss treatment options and prevent
                     permanent nerve damage.
                   </p>
-                  <p className="font-semibold mt-4">Recommendations:</p>
+                  <p className="font-semibold mt-4 text-white">Recommendations:</p>
                   <ul className="list-disc pl-5 space-y-1">
                     <li>
-                      <strong>Schedule an appointment with a doctor as soon as possible</strong>
+                      <strong className="text-white">Schedule an appointment with a doctor as soon as possible</strong>
                     </li>
                     <li>Discuss treatment options including splinting, medication, or surgery</li>
                     <li>Avoid activities that aggravate your symptoms</li>
@@ -1116,7 +1150,7 @@ export default function Health() {
           <div className="mt-6">
             <button
               onClick={returnToDashboard}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
             >
               Return to Dashboard
             </button>
@@ -1145,7 +1179,7 @@ export default function Health() {
           <div className="flex justify-end">
             <button
               onClick={startRiskTest}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors flex items-center gap-2"
+              className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-6 py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-2"
             >
               <Activity className="w-5 h-5" />
               Take New Risk Assessment
@@ -1156,14 +1190,14 @@ export default function Health() {
             <Card>
               <CardContent>
                 <div className="text-center py-12">
-                  <TrendingUp className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-black mb-2">No assessments yet</h3>
-                  <p className="text-gray-600 mb-6">
+                  <TrendingUp className="w-16 h-16 text-white/40 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-2">No assessments yet</h3>
+                  <p className="text-white/70 mb-6">
                     Take your first risk assessment to start tracking your Carpal Tunnel health over time.
                   </p>
                   <button
                     onClick={startRiskTest}
-                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
+                    className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-6 py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
                   >
                     Take Your First Assessment
                   </button>
@@ -1178,10 +1212,10 @@ export default function Health() {
                   <button
                     key={range}
                     onClick={() => setTimeRange(range)}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-lg font-medium transition-all ${
                       timeRange === range
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-black hover:bg-gray-300'
+                        ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/20'
+                        : 'bg-white/5 border border-white/20 text-white hover:bg-white/10'
                     }`}
                   >
                     {range.charAt(0).toUpperCase() + range.slice(1)}
@@ -1193,29 +1227,41 @@ export default function Health() {
               <div className="grid md:grid-cols-2 gap-6">
                 <Card>
                   <CardContent>
-                    <h3 className="font-semibold text-lg text-black mb-4">
+                    <h3 className="font-semibold text-lg text-white mb-4">
                       Carpal Tunnel Severity Over Time
                     </h3>
                     <ResponsiveContainer width="100%" height={250}>
                       <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
-                        <XAxis dataKey="date" stroke="#636E72" fontSize={12} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        />
                         <YAxis
-                          stroke="#636E72"
-                          fontSize={10}
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 10 }}
                           domain={[0, 2]}
                           ticks={[0, 1, 2]}
                           tickFormatter={(value) => ['Mild/None', 'Moderate', 'Severe'][value]}
                           width={80}
                         />
                         <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            border: '1px solid rgba(6,182,212,0.4)',
+                            borderRadius: '12px',
+                            backdropFilter: 'blur(16px)',
+                          }}
+                          itemStyle={{ color: '#06b6d4' }}
+                          labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
                           formatter={(value: any) => ['Mild or No Carpal Tunnel', 'Moderate Carpal Tunnel', 'Severe Carpal Tunnel'][value]}
                         />
                         <Line
                           type="monotone"
                           dataKey="severity"
-                          stroke="#4e79a7"
-                          strokeWidth={2}
+                          stroke="#06b6d4"
+                          strokeWidth={3}
                           name="Severity"
                         />
                       </LineChart>
@@ -1225,18 +1271,37 @@ export default function Health() {
 
                 <Card>
                   <CardContent>
-                    <h3 className="font-semibold text-lg text-black mb-4">
+                    <h3 className="font-semibold text-lg text-white mb-4">
                       Strength Measurements
                     </h3>
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#E1E4E8" />
-                        <XAxis dataKey="date" stroke="#636E72" fontSize={12} />
-                        <YAxis stroke="#636E72" fontSize={12} />
-                        <Tooltip />
-                        <Legend />
-                        <Bar dataKey="grip" fill="#4e79a7" name="Grip (kg)" />
-                        <Bar dataKey="pinch" fill="#82ca9d" name="Pinch (kg)" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <XAxis
+                          dataKey="date"
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        />
+                        <YAxis
+                          stroke="rgba(255,255,255,0.3)"
+                          tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            border: '1px solid rgba(6,182,212,0.4)',
+                            borderRadius: '12px',
+                            backdropFilter: 'blur(16px)',
+                          }}
+                          itemStyle={{ color: '#06b6d4' }}
+                          labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+                        />
+                        <Legend
+                          iconType="square"
+                          formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.9)' }}>{value}</span>}
+                        />
+                        <Bar dataKey="grip" fill="#06b6d4" name="Grip (kg)" />
+                        <Bar dataKey="pinch" fill="#10b981" name="Pinch (kg)" />
                       </BarChart>
                     </ResponsiveContainer>
                   </CardContent>
@@ -1246,7 +1311,7 @@ export default function Health() {
               {/* Recent Assessments */}
               <Card>
                 <CardContent>
-                  <h3 className="font-semibold text-lg text-black mb-4">Recent Assessments</h3>
+                  <h3 className="font-semibold text-lg text-white mb-4">Recent Assessments</h3>
                   <div className="space-y-3">
                     {chartData
                       .slice(-5)
@@ -1254,11 +1319,11 @@ export default function Health() {
                       .map((assessment, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          className="flex items-center justify-between p-3 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 hover:border-cyan-400/40 transition-all"
                         >
                           <div>
-                            <p className="font-medium text-black">{assessment.date}</p>
-                            <p className="text-sm text-gray-600">
+                            <p className="font-medium text-white">{assessment.date}</p>
+                            <p className="text-sm text-white/60">
                               Grip: {assessment.grip.toFixed(2)} kg | Pinch:{' '}
                               {assessment.pinch.toFixed(2)} kg
                             </p>
@@ -1267,15 +1332,15 @@ export default function Health() {
                             <p
                               className={`font-semibold text-sm ${
                                 assessment.severityLabel === 'mild'
-                                  ? 'text-green-600'
+                                  ? 'text-green-400'
                                   : assessment.severityLabel === 'moderate'
-                                  ? 'text-yellow-600'
-                                  : 'text-red-600'
+                                  ? 'text-yellow-400'
+                                  : 'text-red-400'
                               }`}
                             >
                               {getSeverityLabel(assessment.severityLabel)}
                             </p>
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-white/60">
                               {assessment.confidence.toFixed(0)}% confidence
                             </p>
                           </div>
