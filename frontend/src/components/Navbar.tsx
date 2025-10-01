@@ -7,7 +7,7 @@ interface NavbarProps {
 
 export default function Navbar({ togglePopup }: NavbarProps) {
   return (
-    <nav className="mx-6 flex items-center justify-between px-2 py-6 z-20">
+    <nav className="mx-6 flex items-center justify-between px-2 py-6 relative">
       <div className="flex items-center gap-3 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-md px-4 py-2 mr-16 h-[50px]">
         <img src="/logo.png" alt="logo" className="h-8 w-8" />
         <span className="text-white font-bold">CARP</span>

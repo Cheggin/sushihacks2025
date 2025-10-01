@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import FishMapPage from "./pages/FishMapPage";
 import HealthPage from "./pages/Health";
+import GlobeBackground from "./components/GlobeBackground";
 
 export default function App() {
   const [activePopup, setActivePopup] = useState<string | null>("homepage");
@@ -32,8 +33,12 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1d3f8b] via-[#2b6cb0] to-[#2563eb] flex flex-col">
-      <main className="flex-1 p-6">
+    <div className="min-h-screen flex flex-col relative">
+      {/* Globe background */}
+      <GlobeBackground />
+
+      {/* Main content area */}
+      <main className="flex-1 p-6 relative" style={{ zIndex: activePopup ? 20 : 5 }}>
         {/* Home Page Popup */}
         {activePopup === "homepage" && (
           <div
@@ -68,7 +73,10 @@ export default function App() {
         )}
       </main>
 
-      <Navbar togglePopup={togglePopup} />
+      {/* Navbar - at bottom */}
+      <div className="relative z-30">
+        <Navbar togglePopup={togglePopup} />
+      </div>
     </div>
   );
 }
