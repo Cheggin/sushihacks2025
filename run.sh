@@ -91,41 +91,54 @@ echo ""
 print_info "🚀 Starting backend services..."
 echo ""
 
-# Start Fish Occurrence API (port 8000)
-print_info "Starting Fish Occurrence API on port 8000..."
-cd backend
-python3 fish_api.py > ../logs/fish_api.log 2>&1 &
-PIDS+=($!)
-cd ..
-sleep 1
-print_success "Fish Occurrence API started (PID: ${PIDS[-1]})"
+# Create logs directory if it doesn't exist
+if [ ! -d "logs" ]; then
+    print_info "Creating logs directory..."
+    mkdir -p logs
+    print_success "Logs directory created"
+fi
 
-# Start Fish Markets API (port 8001)
-print_info "Starting Fish Markets API on port 8001..."
+# Start Fish & Places API (port 8000)
+print_info "Starting Fish & Places API on port 8000..."
 cd backend/fish_market
-python3 places_api.py > ../../logs/markets_api.log 2>&1 &
-PIDS+=($!)
+python3 fish_api.py > ../../logs/fish_api.log 2>&1 &
+PID=$!
+PIDS+=($PID)
 cd ../..
 sleep 1
-print_success "Fish Markets API started (PID: ${PIDS[-1]})"
+if ps -p $PID > /dev/null 2>&1; then
+    print_success "Fish & Places API started (PID: $PID)"
+else
+    print_error "Fish & Places API failed to start. Check logs/fish_api.log"
+fi
 
 # Start CTS Prediction API (port 8002)
 print_info "Starting CTS Prediction API on port 8002..."
 cd backend/cts_prediction
 python3 cts_prediction_api.py > ../../logs/cts_api.log 2>&1 &
-PIDS+=($!)
+PID=$!
+PIDS+=($PID)
 cd ../..
 sleep 1
-print_success "CTS Prediction API started (PID: ${PIDS[-1]})"
+if ps -p $PID > /dev/null 2>&1; then
+    print_success "CTS Prediction API started (PID: $PID)"
+else
+    print_error "CTS Prediction API failed to start. Check logs/cts_api.log"
+fi
 
 # Start Demo Sensor API (port 8004)
 print_info "Starting Demo Sensor API on port 8004..."
 cd backend/sensor_api
 python3 demo_sensor_api.py > ../../logs/sensor_api.log 2>&1 &
-PIDS+=($!)
+PID=$!
+PIDS+=($PID)
 cd ../..
 sleep 1
-print_success "Demo Sensor API started (PID: ${PIDS[-1]})"
+if ps -p $PID > /dev/null 2>&1; then
+    print_success "Demo Sensor API started (PID: $PID)"
+else
+    print_error "Demo Sensor API failed to start. Check logs/sensor_api.log"
+fi
 
 echo ""
 print_info "🌐 Starting frontend (Vite + Convex)..."
@@ -133,19 +146,23 @@ echo ""
 
 # Start frontend (includes Convex)
 cd frontend
-npm run dev &
-PIDS+=($!)
+npm run dev > ../logs/frontend.log 2>&1 &
+PID=$!
+PIDS+=($PID)
 cd ..
 sleep 2
-print_success "Frontend started (PID: ${PIDS[-1]})"
+if ps -p $PID > /dev/null 2>&1; then
+    print_success "Frontend started (PID: $PID)"
+else
+    print_error "Frontend failed to start. Check logs/frontend.log"
+fi
 
 echo ""
 print_success "🎉 All services are running!"
 echo ""
 print_info "📊 Service URLs:"
 echo "  - Frontend:           http://localhost:5173"
-echo "  - Fish API:           http://localhost:8000/docs"
-echo "  - Markets API:        http://localhost:8001/docs"
+echo "  - Fish & Places API:  http://localhost:8000/docs"
 echo "  - CTS Prediction:     http://localhost:8002/docs"
 echo "  - Sensor API:         http://localhost:8004/docs"
 echo ""
