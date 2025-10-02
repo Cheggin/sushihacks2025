@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { MapPin, Phone, Star, Navigation } from "lucide-react";
+import { MapPin, Phone, Star, Navigation, Palette } from "lucide-react";
 import PageLayout from "../components/PageLayout";
 import axios from "axios";
 
@@ -35,6 +35,10 @@ const MarketsPage = ({
   const [error, setError] = useState<string | null>(null);
   const [showCallOverlay, setShowCallOverlay] = useState(false);
   const [sortType, setSortType] = useState<SortType>("rating");
+  const [colorMode, setColorMode] = useState<"color" | "bw">(() => {
+    const saved = localStorage.getItem("theme");
+    return (saved as "color" | "bw") || "color";
+  });
 
   // Calculate distance between two coordinates using Haversine formula
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
@@ -66,6 +70,17 @@ const MarketsPage = ({
         return a.distance - b.distance;
       }
     });
+  };
+
+  const toggleColorMode = () => {
+    const newMode = colorMode === "color" ? "bw" : "color";
+    setColorMode(newMode);
+    localStorage.setItem("theme", newMode);
+    document.documentElement.setAttribute("data-theme", newMode);
+  };
+
+  const getColorLabel = () => {
+    return colorMode === "color" ? "Dark" : "Light";
   };
 
   useEffect(() => {
@@ -144,7 +159,18 @@ const MarketsPage = ({
         isMarketsPageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
       } transition-all duration-500 ease-in-out`}
     >
-      <PageLayout title="Fish Markets" rightText={<span style={{ color: "var(--text-secondary)" }}>Find local markets</span>} togglePopup={togglePopup}>
+      <PageLayout title="Fish Markets" rightText={
+          <div className="flex items-center gap-4">
+            <button
+              onClick={toggleColorMode}
+              className="flex items-center gap-2 transition-colors hover:opacity-80"
+              style={{ color: "white" }}
+            >
+              <Palette className="w-4 h-4" />
+              <span className="text-sm">{getColorLabel()}</span>
+            </button>
+          </div>
+        } togglePopup={togglePopup}>
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-white text-lg">Loading fish markets...</div>
