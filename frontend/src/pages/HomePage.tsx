@@ -18,7 +18,7 @@ import {
   RadialBar,
   PolarAngleAxis,
 } from "recharts";
-import { Search, Fish, MessageCircle, Palette } from "lucide-react";
+import { Fish, MessageCircle, Palette } from "lucide-react";
 
 interface RankedFish {
   scientific_name: string;
@@ -420,7 +420,7 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
               <CardContent>
                 <h2 style={{ fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Number of Fish Caught per Month</h2>
                 <ResponsiveContainer width="100%" height={130}>
-                  <LineChart data={catchData}>
+                  <LineChart data={catchData} margin={{ left: 20, right: 10, top: 5, bottom: 5 }}>
                     <defs>
                       <linearGradient id="colorCaught" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
@@ -437,7 +437,7 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
                       stroke="var(--text-secondary)"
                       tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
                       axisLine={{ stroke: "rgba(0,0,0,0.08)" }}
-                      label={{ value: "Fish Caught", angle: -90, position: "insideLeft", fill: "var(--text-secondary)" }}
+                      label={{ value: "Fish Caught", angle: -90, position: "insideLeft", fill: "var(--text-secondary)", offset: -5 }}
                     />
                     <Tooltip
                       contentStyle={{
@@ -511,9 +511,9 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
                         <RadialBarChart
                           cx="50%"
                           cy="50%"
-                          innerRadius="70%"
-                          outerRadius="90%"
-                          barSize={20}
+                          innerRadius="75%"
+                          outerRadius="95%"
+                          barSize={16}
                           data={[{ name: "Score", value: fishingScore, fill: getConditionColor(fishingScore) }]}
                           startAngle={180}
                           endAngle={0}

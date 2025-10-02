@@ -78,7 +78,7 @@ const MarketsPage = ({
         const lat = userLocation?.lat || 35.6762;
         const lng = userLocation?.lng || 139.6503;
 
-        const response = await axios.get(`http://localhost:8001/nearby-with-details`, {
+        const response = await axios.get(`http://localhost:8000/nearby-with-details`, {
           params: {
             lat,
             lng,
