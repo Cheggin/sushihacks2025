@@ -56,6 +56,9 @@ if [ ! -d "frontend" ] || [ ! -d "backend" ]; then
     exit 1
 fi
 
+# Create logs directory if it doesn't exist
+mkdir -p logs
+
 # Check Node.js
 if ! command -v node &> /dev/null; then
     print_error "Node.js is not installed. Please install Node.js first."
