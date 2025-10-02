@@ -18,7 +18,9 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nMerge remote-tracking branch ''origin/main'' into main\n\nResolved conflicts by:\n- Combined Places API and Gemini Chat API in fish_api.py\n- Enhanced weather calculation in HomePage.tsx with time/date parsing\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_ItPJd0/**)",
-      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_7Pb41K/**)"
+      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_7Pb41K/**)",
+      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_IhW68W/**)",
+      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_1TfV02/**)"
     ],
     "deny": [],
     "ask": []

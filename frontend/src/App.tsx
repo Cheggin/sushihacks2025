@@ -135,7 +135,11 @@ export default function App() {
               isHomePageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
             } transition-all duration-1000 ease-in-out h-full`}
           >
-            <HomePage isHomePageVisible={isHomePageVisible} togglePopup={togglePopup} />
+            <HomePage
+              isHomePageVisible={isHomePageVisible}
+              togglePopup={togglePopup}
+              userLocation={userMarker ? { lat: userMarker.lat, lng: userMarker.lng } : null}
+            />
           </div>
         )}
 

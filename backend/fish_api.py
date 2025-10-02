@@ -156,7 +156,7 @@ async def root():
 @app.get("/fish-occurrences")
 async def get_fish_occurrences(
     type: Optional[str] = Query(None, description="Fish type filter"),
-    limit: Optional[int] = Query(1000, description="Maximum number of records to return"),
+    limit: Optional[int] = Query(5000, description="Maximum number of records to return"),
     country: Optional[str] = Query(None, description="Filter by country"),
     min_depth: Optional[float] = Query(None, description="Minimum depth in meters"),
     max_depth: Optional[float] = Query(None, description="Maximum depth in meters"),
@@ -215,12 +215,18 @@ async def get_fish_occurrences(
         # Limit results
         filtered_df = filtered_df.head(limit)
 
-        # Convert to list of dicts
+        # Convert to list of dicts and replace NaN with None
         records = filtered_df[[
             'id', 'catalogNumber', 'scientificName', 'family', 'order', 'genus',
             'decimalLatitude', 'decimalLongitude', 'country', 'eventDate',
             'year', 'minimumDepthInMeters', 'maximumDepthInMeters', 'occurrenceStatus'
-        ]].to_dict('records')
+        ]].replace({pd.NA: None, float('nan'): None}).to_dict('records')
+
+        # Replace any remaining NaN values with None
+        for record in records:
+            for key, value in record.items():
+                if pd.isna(value):
+                    record[key] = None
 
         return {
             "count": len(records),

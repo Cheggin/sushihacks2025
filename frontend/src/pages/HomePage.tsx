@@ -28,6 +28,8 @@ interface RankedFish {
   peak_season: string;
   is_edible: boolean;
   score: number;
+  original_score?: number;
+  distance?: number;
 }
 
 const catchData = [
@@ -146,7 +148,15 @@ const weatherCodeToEmoji = (code: number) => {
   }
 };
 
-export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePageVisible: boolean; togglePopup: (page: string) => void }) {
+export default function HomePage({
+  isHomePageVisible,
+  togglePopup,
+  userLocation
+}: {
+  isHomePageVisible: boolean;
+  togglePopup: (page: string) => void;
+  userLocation?: { lat: number; lng: number } | null;
+}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fishingScore, setFishingScore] = useState<number>(0);
@@ -233,38 +243,110 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
   }, []);
 
 
-  // Fetch top fish rankings
+  // Fetch top fish rankings based on user location
   useEffect(() => {
     const fetchFishRankings = async () => {
+      if (!userLocation) {
+        setFishLoading(false);
+        return;
+      }
+
       setFishLoading(true);
       try {
+        // Fetch a large number of fish occurrences to find closest ones
+        const occurrenceResponse = await fetch(
+          `http://localhost:8000/fish-occurrences?limit=5000`
+        );
+
+        if (!occurrenceResponse.ok) throw new Error('Failed to fetch fish occurrences');
+
+        const occurrenceData = await occurrenceResponse.json();
+
+        // Calculate distances to all fish
+        const fishWithDistance = occurrenceData.data
+          .filter((fish: any) => fish.decimalLatitude && fish.decimalLongitude)
+          .map((fish: any) => {
+            const distance = Math.sqrt(
+              Math.pow(fish.decimalLatitude - userLocation.lat, 2) +
+              Math.pow(fish.decimalLongitude - userLocation.lng, 2)
+            );
+            return {
+              scientificName: fish.scientificName,
+              distance
+            };
+          });
+
+        // Sort by distance and get unique species with their distances
+        const uniqueSpecies = new Map<string, number>();
+        fishWithDistance
+          .sort((a: any, b: any) => a.distance - b.distance)
+          .forEach((fish: any) => {
+            if (!uniqueSpecies.has(fish.scientificName)) {
+              uniqueSpecies.set(fish.scientificName, fish.distance);
+            }
+          });
+
+        // Take top 50 closest unique species for ranking
+        const closestFishEntries = Array.from(uniqueSpecies.entries()).slice(0, 50);
+        const closestFish = closestFishEntries.map(([name, _]) => name);
+
+        if (closestFish.length === 0) {
+          setFishLoading(false);
+          return;
+        }
+
+        // Now rank these fish
         const response = await fetch('http://localhost:8000/fish-ranking', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            fish_list: [
-              "Thunnus albacares",    // Yellowfin Tuna
-              "Oncorhynchus keta",    // Chum Salmon
-              "Scomber japonicus",    // Mackerel
-              "Sardinops sagax",      // Sardine
-              "Katsuwonus pelamis",   // Skipjack Tuna
-              "Seriola quinqueradiata", // Yellowtail
-              "Engraulis japonicus",  // Japanese Anchovy
-            ]
+            fish_list: closestFish
           })
         });
 
         if (!response.ok) throw new Error('Failed to fetch fish rankings');
 
         const data = await response.json();
-        // Convert response object to array with scientific names
-        const ranked: RankedFish[] = Object.entries(data).map(([scientificName, fishData]: [string, any]) => ({
-          scientific_name: scientificName,
-          ...fishData
+
+        // Convert response object to array with scientific names and incorporate distance into score
+        const rankedWithDistance: RankedFish[] = Object.entries(data).map(([scientificName, fishData]: [string, any]) => {
+          const distance = uniqueSpecies.get(scientificName) || 0;
+          // Incorporate distance into score: divide original score by (1 + distance * 10)
+          // This way, closer fish get higher scores
+          const distanceAdjustedScore = fishData.score / (1 + distance * 10);
+
+          return {
+            scientific_name: scientificName,
+            ...fishData,
+            score: distanceAdjustedScore,
+            original_score: fishData.score,
+            distance: distance
+          };
+        });
+
+        // Find min and max scores for normalization
+        const scores = rankedWithDistance.map(f => f.score);
+        const minScore = Math.min(...scores);
+        const maxScore = Math.max(...scores);
+
+        // Normalize scores to 1-10 scale
+        const normalized = rankedWithDistance.map(fish => ({
+          ...fish,
+          score: minScore === maxScore
+            ? 5.5 // If all scores are the same, use middle value
+            : 1 + ((fish.score - minScore) / (maxScore - minScore)) * 9
         }));
-        // Sort by rank and take top 14
-        const sorted = ranked.sort((a, b) => a.rank - b.rank).slice(0, 14);
-        setRankedFish(sorted);
+
+        // Sort by normalized score (higher is better) and take top 3
+        const sorted = normalized.sort((a, b) => b.score - a.score).slice(0, 3);
+
+        // Reassign ranks to be 1, 2, 3
+        const reranked = sorted.map((fish, index) => ({
+          ...fish,
+          rank: index + 1
+        }));
+
+        setRankedFish(reranked);
       } catch (err) {
         console.error('Error fetching fish rankings:', err);
       } finally {
@@ -273,7 +355,7 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
     };
 
     fetchFishRankings();
-  }, []);
+  }, [userLocation]);
 
   return (
     <>
@@ -341,7 +423,7 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
                   <div style={{ color: "var(--text-secondary)" }}>Loading...</div>
                 </div>
               ) : (
-                <ul className="space-y-1 max-h-[520px] overflow-y-auto">
+                <ul className="space-y-3 max-h-[480px] overflow-y-auto pr-2">
                   {rankedFish.map((fish) => {
                     // Map scientific name to common name
                     const commonNames: { [key: string]: string } = {
@@ -351,59 +433,101 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
                       "Sardinops sagax": "Sardine",
                       "Katsuwonus pelamis": "Skipjack Tuna",
                       "Seriola quinqueradiata": "Yellowtail",
-                      "Engraulis japonicus": "Japanese Anchovy"
+                      "Engraulis japonicus": "Japanese Anchovy",
+                      "Thunnus alalunga": "Albacore",
+                      "Thunnus obesus": "Bigeye Tuna",
+                      "Katsuwonus pelamis": "Skipjack Tuna",
+                      "Sarda orientalis": "Striped Bonito",
+                      "Anguilla japonica": "Japanese Eel"
                     };
-                    const commonName = commonNames[fish.scientific_name] || fish.scientific_name;
+                    // Extract genus name as fallback if no common name
+                    const genusName = fish.scientific_name.split(' ')[0];
+                    const commonName = commonNames[fish.scientific_name] || genusName;
 
-                    // Calculate formula components based on actual backend logic
-                    // Formula: score = (is_edible * commonality) / (peak_season_score + cleaning_difficulty)
+                    // Calculate formula components
                     const edibleMultiplier = fish.is_edible ? 1 : 0;
                     const commonalityValue = fish.commonality === "rare" ? 1 : fish.commonality === "uncommon" ? 2 : 3;
                     const cleaningValue = fish.cleaning_difficulty === "easy" ? 1 : fish.cleaning_difficulty === "medium" ? 2 : 3;
-                    // Calculate peak_season_score from the formula: peak_season_score = (edible * commonality) / score - cleaning_difficulty
-                    const peakSeasonScore = edibleMultiplier > 0 && fish.score > 0
-                      ? Math.max(1, (edibleMultiplier * commonalityValue) / fish.score - cleaningValue)
-                      : 1;
+                    const peakSeasonValue = fish.peak_season === "in_season" ? 1 : fish.peak_season === "near_season" ? 3 : 6;
+
+                    // Backend base score
+                    const baseScore = fish.original_score || ((edibleMultiplier * commonalityValue) / (peakSeasonValue + cleaningValue));
+
+                    // Distance factor
+                    const distanceFactor = 1 + (fish.distance || 0) * 10;
 
                     return (
                       <li
                         key={fish.scientific_name}
-                        className="flex flex-col text-sm border-b py-2 hover:bg-white/5 rounded-lg px-2 transition-all cursor-pointer group"
-                        style={{ borderBottomColor: "rgba(255,255,255,0.06)" }}
+                        className="flex flex-col text-sm border rounded-xl p-4 hover:bg-white/5 transition-all cursor-pointer group shadow-lg"
+                        style={{
+                          borderColor: "rgba(6, 182, 212, 0.3)",
+                          backgroundColor: "rgba(6, 182, 212, 0.05)"
+                        }}
                       >
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-start gap-2 flex-1">
-                            <span style={{ color: "var(--text-secondary)", fontSize: 11, fontWeight: 600, minWidth: 20 }}>#{fish.rank}</span>
-                            <div className="flex flex-col gap-0.5">
-                              <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: 13 }} className="group-hover:text-cyan-400 transition-colors">
+                        {/* Header with rank and name */}
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-start gap-3 flex-1">
+                            <div className="flex items-center justify-center w-8 h-8 rounded-full" style={{
+                              backgroundColor: "rgba(6, 182, 212, 0.2)",
+                              border: "2px solid #06b6d4"
+                            }}>
+                              <span style={{ color: "#06b6d4", fontSize: 14, fontWeight: 700 }}>#{fish.rank}</span>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: 16 }} className="group-hover:text-cyan-400 transition-colors">
                                 {commonName}
                               </span>
-                              <span style={{ color: "var(--muted)", fontSize: 9, fontStyle: "italic" }}>{fish.scientific_name}</span>
+                              <span style={{ color: "var(--muted)", fontSize: 10, fontStyle: "italic" }}>{fish.scientific_name}</span>
                             </div>
                           </div>
-                          <div className="flex flex-col items-end gap-0.5">
-                            <div className="flex items-center gap-1 px-2 py-1 rounded-md" style={{ backgroundColor: "rgba(6, 182, 212, 0.15)", border: "1px solid rgba(6, 182, 212, 0.3)" }}>
-                              <span style={{ color: "#06b6d4", fontSize: 11, fontWeight: 700 }}>
-                                {fish.score.toFixed(3)}
-                              </span>
-                            </div>
+                          {/* Large showy score */}
+                          <div className="flex flex-col items-center justify-center px-4 py-2 rounded-lg" style={{
+                            backgroundColor: "rgba(6, 182, 212, 0.25)",
+                            border: "2px solid #06b6d4"
+                          }}>
+                            <span style={{ color: "#06b6d4", fontSize: 24, fontWeight: 900, lineHeight: 1 }}>
+                              {fish.score.toFixed(1)}
+                            </span>
+                            <span style={{ color: "#06b6d4", fontSize: 10, fontWeight: 600, opacity: 0.8 }}>/ 10</span>
                           </div>
                         </div>
 
-                        {/* Score Formula Display */}
-                        <div className="mt-2 px-2 py-1.5 rounded-md" style={{ backgroundColor: "rgba(6, 182, 212, 0.05)", border: "1px solid rgba(6, 182, 212, 0.15)" }}>
-                          <div className="flex items-center gap-1 flex-wrap text-[10px]" style={{ color: "var(--text-secondary)", fontFamily: "monospace" }}>
-                            <span style={{ color: "#06b6d4", fontWeight: 700 }}>Score:</span>
-                            <span>(</span>
-                            <span style={{ color: fish.is_edible ? "#10b981" : "#ef4444", fontWeight: 600 }} title="is_edible: 1 if true, 0 if false">{edibleMultiplier}</span>
-                            <span>×</span>
-                            <span style={{ color: "#8b5cf6", fontWeight: 600 }} title="commonality: rare=1, uncommon=2, common=3">{commonalityValue}</span>
-                            <span>) ÷ (</span>
-                            <span style={{ color: "#f59e0b", fontWeight: 600 }} title="peak_season_score: 1 if in season, up to 6 if far from season">{peakSeasonScore.toFixed(1)}</span>
-                            <span>+</span>
-                            <span style={{ color: "#ec4899", fontWeight: 600 }} title="cleaning_difficulty: easy=1, medium=2, hard=3">{cleaningValue}</span>
-                            <span>) =</span>
-                            <span style={{ color: "#06b6d4", fontWeight: 700, fontSize: 11 }}>{fish.score.toFixed(3)}</span>
+                        {/* Combined Formula Display */}
+                        <div className="mt-2 px-4 py-3 rounded-lg" style={{
+                          backgroundColor: "rgba(6, 182, 212, 0.1)",
+                          border: "2px solid rgba(6, 182, 212, 0.3)"
+                        }}>
+                          <div className="flex flex-col gap-2">
+                            <div className="flex items-center gap-1 flex-wrap text-[11px]" style={{ color: "var(--text-secondary)", fontFamily: "monospace", lineHeight: 1.6 }}>
+                              <span style={{ color: "#06b6d4", fontWeight: 700, fontSize: 12 }}>Score =</span>
+                              <span className="text-white">[</span>
+                              <span>(</span>
+                              <span style={{ color: fish.is_edible ? "#10b981" : "#ef4444", fontWeight: 700 }} title="is_edible: 1 if true, 0 if false">{edibleMultiplier}</span>
+                              <span>×</span>
+                              <span style={{ color: "#8b5cf6", fontWeight: 700 }} title="commonality: rare=1, uncommon=2, common=3">{commonalityValue}</span>
+                              <span>) ÷ (</span>
+                              <span style={{ color: "#f59e0b", fontWeight: 700 }} title="peak_season: in=1, near=3, off=6">{peakSeasonValue}</span>
+                              <span>+</span>
+                              <span style={{ color: "#ec4899", fontWeight: 700 }} title="cleaning_difficulty: easy=1, medium=2, hard=3">{cleaningValue}</span>
+                              <span>)</span>
+                              <span className="text-white">]</span>
+                              <span>÷</span>
+                              <span className="text-white">(</span>
+                              <span>1 +</span>
+                              <span style={{ color: "#10b981", fontWeight: 700 }} title="distance from your location">{(fish.distance || 0).toFixed(2)}</span>
+                              <span>× 10</span>
+                              <span className="text-white">)</span>
+                              <span className="mx-1">=</span>
+                              <span style={{
+                                color: "#06b6d4",
+                                fontWeight: 900,
+                                fontSize: 14,
+                                padding: "2px 8px",
+                                backgroundColor: "rgba(6, 182, 212, 0.2)",
+                                borderRadius: "4px"
+                              }}>{fish.score.toFixed(1)}</span>
+                            </div>
                           </div>
                         </div>
                       </li>
@@ -416,11 +540,12 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
 
           {/* Right chart area */}
           <div className="col-span-9 grid grid-cols-12 gap-2">
-            <Card className="col-span-12">
-              <CardContent>
-                <h2 style={{ fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Number of Fish Caught per Month</h2>
-                <ResponsiveContainer width="100%" height={130}>
-                  <LineChart data={catchData} margin={{ left: 20, right: 10, top: 5, bottom: 5 }}>
+            <Card className="col-span-12" style={{ display: "flex", flexDirection: "column", padding: "20px 20px 16px 20px" }}>
+              <h2 style={{ fontWeight: 600, marginBottom: 16, color: "var(--text-primary)" }}>Number of Fish Caught per Month</h2>
+              <CardContent style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: "100%", height: "160px" }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={catchData} margin={{ left: 0, right: 10, top: 10, bottom: 10 }}>
                     <defs>
                       <linearGradient id="colorCaught" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
@@ -431,13 +556,13 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
                       dataKey="month"
                       stroke="var(--text-secondary)"
                       tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
-                      axisLine={{ stroke: "rgba(0,0,0,0.08)" }}
+                      axisLine={{ stroke: "rgba(255,255,255,0.2)" }}
                     />
                     <YAxis
                       stroke="var(--text-secondary)"
                       tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
-                      axisLine={{ stroke: "rgba(0,0,0,0.08)" }}
-                      label={{ value: "Fish Caught", angle: -90, position: "insideLeft", fill: "var(--text-secondary)", offset: -5 }}
+                      axisLine={{ stroke: "rgba(255,255,255,0.2)" }}
+                      label={{ value: "Count", angle: -90, position: "insideLeft", fill: "var(--text-secondary)", style: { textAnchor: 'middle' } }}
                     />
                     <Tooltip
                       contentStyle={{
@@ -462,6 +587,7 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
                     />
                   </LineChart>
                 </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
 
