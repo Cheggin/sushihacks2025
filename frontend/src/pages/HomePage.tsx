@@ -230,7 +230,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold text-lg flex items-center gap-2 text-white">
                   <Fish className="w-5 h-5 text-cyan-400" />
-                  Top Fish to Fish (14)
+                  Top Fish to Catch (14)
                 </h2>
                 <span className="text-sm text-white/80 font-medium">24h</span>
               </div>
