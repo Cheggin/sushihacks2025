@@ -15,7 +15,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-import { Activity, Heart, TrendingUp, Hand } from 'lucide-react';
+import { Activity, Heart, TrendingUp, Hand, User, Edit2, Brain, AlertCircle } from 'lucide-react';
 
 // User ID - In production, this would come from authentication
 const USER_ID = 'user_001';
@@ -70,10 +70,21 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
   const [countdown, setCountdown] = useState<number | null>(null);
   const [prediction, setPrediction] = useState<CTSPrediction | null>(null);
 
+  // Profile editing
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
+  const [editProfileData, setEditProfileData] = useState({
+    age: '',
+    sex: '0',
+    height: '',
+    weight: '',
+    ctsPainDuration: '',
+  });
+
   // Convex queries and mutations
   const userProfile = useQuery(api.userProfiles.getByUserId, { userId: USER_ID });
   const assessments = useQuery(api.ctsAssessments.getByUserId, { userId: USER_ID });
   const createProfile = useMutation(api.userProfiles.create);
+  const updateProfile = useMutation(api.userProfiles.update);
   const createAssessment = useMutation(api.ctsAssessments.create);
 
   // Determine initial view based on user profile
@@ -87,6 +98,43 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
       setViewMode('onboarding');
     }
   }, [userProfile]);
+
+  // Load profile data into edit form when opening modal
+  const openProfileEdit = () => {
+    if (userProfile) {
+      setEditProfileData({
+        age: userProfile.age.toString(),
+        sex: userProfile.sex.toString(),
+        height: userProfile.height.toString(),
+        weight: userProfile.weight.toString(),
+        ctsPainDuration: userProfile.ctsPainDuration.toString(),
+      });
+      setShowProfileEdit(true);
+    }
+  };
+
+  // Handle profile update
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const age = parseInt(editProfileData.age);
+    const height = parseFloat(editProfileData.height);
+    const weight = parseFloat(editProfileData.weight);
+    const bmi = calculateBMI(weight, height);
+    const ctsPainDuration = parseInt(editProfileData.ctsPainDuration);
+
+    await updateProfile({
+      userId: USER_ID,
+      age,
+      sex: parseInt(editProfileData.sex),
+      height,
+      weight,
+      bmi,
+      ctsPainDuration,
+    });
+
+    setShowProfileEdit(false);
+  };
 
   // Calculate BMI
   const calculateBMI = (weight: number, height: number): number => {
@@ -433,6 +481,68 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
         pinch: a.pinchStrength,
         confidence: a.confidence * 100,
       }));
+  };
+
+  // AI Analysis of CTS trends
+  const getAIAnalysis = () => {
+    if (!assessments || assessments.length === 0) return null;
+
+    const recentAssessments = assessments.slice(-5).reverse();
+    const latest = recentAssessments[0];
+    const previous = recentAssessments[1];
+
+    const trend = previous
+      ? latest.predictedClassNumeric - previous.predictedClassNumeric
+      : 0;
+
+    const avgGrip = assessments.reduce((sum: number, a: any) => sum + a.gripStrength, 0) / assessments.length;
+    const avgPinch = assessments.reduce((sum: number, a: any) => sum + a.pinchStrength, 0) / assessments.length;
+
+    let trendText = '';
+    let trendColor = '';
+    let icon = null;
+
+    if (trend > 0) {
+      trendText = 'Your symptoms appear to be worsening. Consider consulting a healthcare provider.';
+      trendColor = 'text-red-400';
+      icon = <AlertCircle className="w-5 h-5 text-red-400" />;
+    } else if (trend < 0) {
+      trendText = 'Your symptoms are improving! Keep up with your current management strategies.';
+      trendColor = 'text-green-400';
+      icon = <TrendingUp className="w-5 h-5 text-green-400" />;
+    } else {
+      trendText = 'Your condition appears stable. Continue monitoring and maintaining healthy hand habits.';
+      trendColor = 'text-cyan-400';
+      icon = <Activity className="w-5 h-5 text-cyan-400" />;
+    }
+
+    let gripAnalysis = '';
+    if (latest.gripStrength < avgGrip * 0.9) {
+      gripAnalysis = 'Your recent grip strength is below your average. Consider rest and ergonomic adjustments.';
+    } else if (latest.gripStrength > avgGrip * 1.1) {
+      gripAnalysis = 'Your grip strength is above average - great progress!';
+    } else {
+      gripAnalysis = 'Your grip strength is consistent with your baseline.';
+    }
+
+    let pinchAnalysis = '';
+    if (latest.pinchStrength < avgPinch * 0.9) {
+      pinchAnalysis = 'Your pinch strength has decreased. This may indicate increased nerve compression.';
+    } else if (latest.pinchStrength > avgPinch * 1.1) {
+      pinchAnalysis = 'Your pinch strength is improving!';
+    } else {
+      pinchAnalysis = 'Your pinch strength remains stable.';
+    }
+
+    return {
+      trendText,
+      trendColor,
+      icon,
+      gripAnalysis,
+      pinchAnalysis,
+      latest,
+      totalAssessments: assessments.length,
+    };
   };
 
   // Render onboarding screen
@@ -1166,6 +1276,7 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
   const renderDashboard = () => {
     const chartData = getChartData();
     const hasAssessments = chartData.length > 0;
+    const aiAnalysis = getAIAnalysis();
 
     return (
       <PageLayout
@@ -1178,8 +1289,15 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
         togglePopup={togglePopup}
       >
         <div className="space-y-6">
-          {/* Risk Test Button */}
-          <div className="flex justify-end">
+          {/* Action Buttons */}
+          <div className="flex justify-between items-center gap-4">
+            <button
+              onClick={openProfileEdit}
+              className="bg-white/5 hover:bg-white/10 border border-white/20 text-white font-medium px-6 py-3 rounded-lg transition-all flex items-center gap-2"
+            >
+              <User className="w-5 h-5" />
+              Update Profile
+            </button>
             <button
               onClick={startRiskTest}
               className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-6 py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20 flex items-center gap-2"
@@ -1188,6 +1306,52 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
               Take New Risk Assessment
             </button>
           </div>
+
+          {/* Profile Summary Card */}
+          {userProfile && (
+            <Card>
+              <CardContent>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg text-white mb-3 flex items-center gap-2">
+                      <User className="w-5 h-5" />
+                      Your Profile
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+                      <div>
+                        <p className="text-white/60">Age</p>
+                        <p className="font-semibold text-white">{userProfile.age} years</p>
+                      </div>
+                      <div>
+                        <p className="text-white/60">Sex</p>
+                        <p className="font-semibold text-white">{userProfile.sex === 0 ? 'Male' : 'Female'}</p>
+                      </div>
+                      <div>
+                        <p className="text-white/60">Height</p>
+                        <p className="font-semibold text-white">{userProfile.height} cm</p>
+                      </div>
+                      <div>
+                        <p className="text-white/60">Weight</p>
+                        <p className="font-semibold text-white">{userProfile.weight} kg</p>
+                      </div>
+                      <div>
+                        <p className="text-white/60">BMI</p>
+                        <p className="font-semibold text-white">{userProfile.bmi.toFixed(1)}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={openProfileEdit}
+                    className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                  >
+                    <Edit2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+
 
           {!hasAssessments ? (
             <Card>
@@ -1369,7 +1533,127 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
     if (riskTestStep === 'pinchMeasurement') return renderPinchMeasurement();
     if (riskTestStep === 'summary') return renderSummary();
   } else if (viewMode === 'dashboard') {
-    return renderDashboard();
+    return (
+      <>
+        {renderDashboard()}
+
+        {/* Profile Edit Modal */}
+        {showProfileEdit && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-2xl">
+              <CardContent>
+                <div className="mb-6">
+                  <h2 className="text-2xl font-bold text-white mb-2">Update Your Profile</h2>
+                  <p className="text-white/70">
+                    Keep your information up to date for accurate CTS assessments.
+                  </p>
+                </div>
+
+                <form onSubmit={handleProfileUpdate} className="space-y-4">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">Age</label>
+                      <input
+                        type="number"
+                        required
+                        min="18"
+                        max="100"
+                        value={editProfileData.age}
+                        onChange={(e) => setEditProfileData({ ...editProfileData, age: e.target.value })}
+                        className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">Sex</label>
+                      <select
+                        value={editProfileData.sex}
+                        onChange={(e) => setEditProfileData({ ...editProfileData, sex: e.target.value })}
+                        className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white transition-all"
+                      >
+                        <option value="0" className="bg-slate-800">Male</option>
+                        <option value="1" className="bg-slate-800">Female</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">Height (cm)</label>
+                      <input
+                        type="number"
+                        required
+                        min="100"
+                        max="250"
+                        step="0.1"
+                        value={editProfileData.height}
+                        onChange={(e) => setEditProfileData({ ...editProfileData, height: e.target.value })}
+                        className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-1">Weight (kg)</label>
+                      <input
+                        type="number"
+                        required
+                        min="30"
+                        max="200"
+                        step="0.1"
+                        value={editProfileData.weight}
+                        onChange={(e) => setEditProfileData({ ...editProfileData, weight: e.target.value })}
+                        className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-white mb-1">
+                        Carpal Tunnel Pain Duration (months)
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0"
+                        max="120"
+                        value={editProfileData.ctsPainDuration}
+                        onChange={(e) => setEditProfileData({ ...editProfileData, ctsPainDuration: e.target.value })}
+                        className="w-full px-4 py-2 border border-white/20 rounded-lg focus:border-cyan-400/60 focus:outline-none bg-white/5 backdrop-blur-sm text-white placeholder-white/40 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  {editProfileData.height && editProfileData.weight && (
+                    <div className="p-4 bg-cyan-400/10 border border-cyan-400/30 rounded-lg backdrop-blur-sm">
+                      <p className="text-sm text-white">
+                        <strong>Updated BMI:</strong>{' '}
+                        {calculateBMI(
+                          parseFloat(editProfileData.weight),
+                          parseFloat(editProfileData.height)
+                        ).toFixed(1)}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowProfileEdit(false)}
+                      className="flex-1 border border-white/20 text-white font-medium py-3 rounded-lg hover:bg-white/10 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
+                    >
+                      Save Changes
+                    </button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </>
+    );
   }
 
   return null;
