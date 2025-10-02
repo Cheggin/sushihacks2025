@@ -430,8 +430,8 @@ export default function FishSidebar({ fish, onClose }: FishSidebarProps) {
 
         {/* Last Price Sold Box */}
         <div className="bg-white/5 border border-white/20 rounded-xl p-6 mb-6">
-          <div className="text-sm text-white/60 mb-2">Last Price Sold</div>
-          <div className="text-4xl font-bold text-white mb-1">${lastPrice}</div>
+          <div className="text-sm text-white/60 mb-2">Predicted Selling Price</div>
+          <div className="text-4xl font-bold text-white mb-1">~${lastPrice}/lb</div>
           <div className="text-xs text-green-400">+5.2% from last month</div>
         </div>
 
