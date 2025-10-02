@@ -7,7 +7,9 @@
       "Bash(cat:*)",
       "Bash(npm uninstall:*)",
       "Bash(npx expo install:*)",
-      "Bash(npx expo prebuild:*)"
+      "Bash(npx expo prebuild:*)",
+      "Bash(git log:*)",
+      "Bash(git stash push:*)"
     ],
     "deny": [],
     "ask": []
