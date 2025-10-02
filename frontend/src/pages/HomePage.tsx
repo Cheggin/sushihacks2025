@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import PageLayout from "../components/PageLayout";
 import { Card, CardContent } from "../components/ui/card";
+import DashboardSummary from "../components/DashboardSummary";
+import AIAssistant from "../components/AIAssistant";
 import {
   LineChart,
   Line,
@@ -16,7 +18,7 @@ import {
   RadialBar,
   PolarAngleAxis,
 } from "recharts";
-import { Search, Fish } from "lucide-react";
+import { Search, Fish, MessageCircle } from "lucide-react";
 
 // Dummy data
 const fishData = [
@@ -116,6 +118,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
   const [error, setError] = useState<string | null>(null);
   const [fishingScore, setFishingScore] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
 
   const getConditionLabel = (score: number): string => {
     if (score >= 80) return "Excellent";
@@ -161,19 +164,44 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
   }, []);
 
   return (
-    <div
-      className={`${
-        isHomePageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-      } transition-all duration-500 ease-in-out h-full`}
-    >
-      <PageLayout
-        title="Dashboard"
-        rightText={
-          loading ? "Loading weather..." : error ? <span style={{ color: "var(--text-secondary)" }}>{error}</span> : weather
-        }
+    <>
+      {showAIAssistant && (
+        <AIAssistant
+          onClose={() => setShowAIAssistant(false)}
+          ctsData={null}
+        />
+      )}
+      <div
+        className={`${
+          isHomePageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+        } transition-all duration-500 ease-in-out h-full`}
       >
+        <PageLayout
+          title="Dashboard"
+          rightText={
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setShowAIAssistant(true)}
+                className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-4 py-2 rounded-lg transition-all shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/30 flex items-center gap-2 text-sm"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Ask AI Assistant
+              </button>
+              <span>
+                {loading ? "Loading weather..." : error ? <span style={{ color: "var(--text-secondary)" }}>{error}</span> : weather}
+              </span>
+            </div>
+          }
+        >
         {/* Page content */}
         <div className="grid grid-cols-12 gap-4">
+          {/* Dashboard Summary - Today's Summary Box */}
+          <DashboardSummary
+            ctsData={null}
+            fishingScore={fishingScore}
+            temperature={temperature}
+          />
+
           {/* Left list */}
           <Card className="col-span-3">
             <CardContent>
@@ -222,8 +250,14 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
             <Card className="col-span-12">
               <CardContent>
                 <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Number of Fish Caught per Month</h2>
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width="100%" height={180}>
                   <LineChart data={catchData}>
+                    <defs>
+                      <linearGradient id="colorCaught" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
                     <XAxis
                       dataKey="month"
                       stroke="var(--text-secondary)"
@@ -255,6 +289,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                       strokeWidth={3}
                       dot={{ fill: "#06b6d4", r: 5, strokeWidth: 2, stroke: "#0891b2" }}
                       activeDot={{ r: 7, fill: "#06b6d4", stroke: "#fff", strokeWidth: 2 }}
+                      fill="url(#colorCaught)"
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -264,7 +299,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
             <Card className="col-span-6">
               <CardContent>
                 <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Fish Types</h2>
-                <ResponsiveContainer width="100%" height={180}>
+                <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie
                       data={onboardData}
@@ -307,7 +342,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
             <Card className="col-span-6">
               <CardContent>
                 <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Fishing Conditions</h2>
-                <div className="relative h-[180px] flex items-center justify-center">
+                <div className="relative h-[160px] flex items-center justify-center">
                   {loading ? (
                     <div style={{ color: "var(--muted)" }}>Loading...</div>
                   ) : (
@@ -364,6 +399,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
           </div>
         </div>
       </PageLayout>
-    </div>
+      </div>
+    </>
   );
 }
