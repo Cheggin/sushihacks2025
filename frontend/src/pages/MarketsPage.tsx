@@ -108,7 +108,7 @@ const MarketsPage = ({
         });
 
         // Sort and limit markets to 4
-        const sortedMarkets = sortMarkets(marketsWithDistance, sortType).slice(0, 4);
+        const sortedMarkets = sortMarkets(marketsWithDistance, sortType).slice(0, 8);
 
         setMarkets(sortedMarkets);
         if (sortedMarkets.length > 0) {
@@ -259,16 +259,16 @@ const MarketsPage = ({
               <div className="flex-1 flex items-end justify-center pt-6">
                 <img
                   src="/ai_caller.png"
-                  alt="AI Caller"
+                  alt="AI Market Assistant"
                   className="w-full max-w-[280px] h-auto object-contain"
                 />
               </div>
               <CardContent className="p-6">
                 <h3 className="text-lg font-semibold mb-2 text-center" style={{ color: "var(--text-primary)" }}>
-                  AI Call Assistant
+                  AI Market Assistant
                 </h3>
                 <p className="text-sm mb-4 text-center" style={{ color: "var(--muted)" }}>
-                  Let our AI assistant call and make reservations for you
+                  Let our AI assistant tell you more about the market
                 </p>
                 <Button
                   className="w-full py-3 text-base flex items-center justify-center gap-2"
