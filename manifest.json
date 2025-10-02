@@ -1,0 +1,121 @@
+{
+    "team_name": "PillSnap",
+    "freeze_timestamp": "2025-10-01T23:59:00-07:00",
+    "licenses": [
+      {
+        "component": "Python Package: pandas 2.1.3",
+        "license": "BSD-3-Clause",
+        "link": "https://github.com/pandas-dev/pandas/blob/main/LICENSE"
+      },
+      {
+        "component": "Python Package: openpyxl",
+        "license": "MIT",
+        "link": "https://foss.heptapod.net/openpyxl/openpyxl"
+      },
+      {
+        "component": "Python Package: scikit-learn 1.3.2",
+        "license": "BSD-3-Clause",
+        "link": "https://github.com/scikit-learn/scikit-learn/blob/main/COPYING"
+      },
+      {
+        "component": "Python Package: joblib 1.3.2",
+        "license": "BSD-3-Clause",
+        "link": "https://github.com/joblib/joblib/blob/master/LICENSE.txt"
+      },
+      {
+        "component": "Python Package: numpy 1.25.2",
+        "license": "BSD-3-Clause",
+        "link": "https://github.com/numpy/numpy/blob/main/LICENSE.txt"
+      },
+      {
+        "component": "Python Package: fastapi 0.104.1",
+        "license": "MIT",
+        "link": "https://github.com/tiangolo/fastapi/blob/master/LICENSE"
+      },
+      {
+        "component": "Python Package: uvicorn 0.24.0",
+        "license": "BSD-3-Clause",
+        "link": "https://github.com/encode/uvicorn/blob/master/LICENSE.md"
+      },
+      {
+        "component": "Python Package: pydantic 2.5.0",
+        "license": "MIT",
+        "link": "https://github.com/pydantic/pydantic/blob/main/LICENSE"
+      },
+      {
+        "component": "Python Package: requests 2.31.0",
+        "license": "Apache-2.0",
+        "link": "https://github.com/psf/requests/blob/main/LICENSE"
+      },
+      {
+        "component": "Python Package: bleak",
+        "license": "MIT",
+        "link": "https://github.com/hbldh/bleak/blob/develop/LICENSE"
+      },
+      {
+        "component": "Python Package: xgboost",
+        "license": "Apache-2.0",
+        "link": "https://github.com/dmlc/xgboost/blob/master/LICENSE"
+      },
+      {
+        "component": "Dataset: CTS Severity Classification Dataset",
+        "license": "CC BY 4.0",
+        "link": "https://www.nature.com/articles/s41598-021-97043-7#Sec12"
+      },
+      {
+        "component": "API/Data: SeafoodPriceData.com – average global retail seafood prices (2023–2024)",
+        "license": "Check site-specific data usage and attribution terms.",
+        "link": "https://seafoodpricedata.com/"
+      },
+      {
+        "component": "Dataset: NOAA Fisheries Market Reports (USA, Japan, Europe; recent)",
+        "license": "NOAA Terms of Use; government public data.",
+        "link": "https://www.fisheries.noaa.gov/national/sustainable-fisheries/market-news-reports"
+      },
+      {
+        "component": "Dataset: Sea Around Us Project – commercial catch values and pricing trends",
+        "license": "CC BY-NC; see project guidelines.",
+        "link": "https://www.seaaroundus.org/"
+      },
+      {
+        "component": "Dataset: Global Seafood Trade & Market Analyses (2023–2024)",
+        "license": "Contact relevant organizations for usage.",
+        "link": "https://www.seafoodsource.com/seafood-handbook/global-markets"
+      },
+      {
+        "component": "Dataset: Japanese fish market pricing and statistics (e-Stat Japan, 2023–2024)",
+        "license": "Japanese government open data terms.",
+        "link": "https://www.e-stat.go.jp/en/stat-search/files?page=1&query=fish&layout=dataset&stat_infid=000040325885"
+      }, 
+      {
+        "component": "Dataset: FishBase",
+        "license": "Creative Commons Attribution-NonCommercial 4.0 International (CC-BY-NC 4.0)",
+        "link": "https://www.fishbase.se/summary/citation.php"
+      },
+      {
+        "component": "Journal: Marine Biology Research",
+        "license": "Copyright/licensing managed by Taylor & Francis; standard journal article terms apply",
+        "link": "https://www.tandfonline.com/journal/smar"
+      },
+      {
+        "component": "Database: FAO Fisheries (including FAO Statistical Databases)",
+        "license": "Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Intergovernmental Organization (CC BY-NC-SA 3.0 IGO)",
+        "link": "https://www.fao.org/contact-us/terms/db-terms-of-use/en"
+      },
+      {
+        "component": "Database: NOAA (National Oceanic and Atmospheric Administration) Data",
+        "license": "Creative Commons Attribution 4.0 International (CC-BY-4.0) for bathymetric, ocean, and fisheries datasets",
+        "link": "https://nauticalcharts.noaa.gov/data/data-licensing.html"
+      },
+      {
+        "component": "API: Google Gemini Language Model",
+        "license": "Google GenAI API Terms and Service",
+        "link": "https://ai.google.dev/docs/terms"
+      },
+      {
+        "component": "API: Google Maps Platform",
+        "license": "Google Maps Platform Terms of Service",
+        "link": "https://cloud.google.com/maps-platform/terms"
+      }
+    ]
+}
