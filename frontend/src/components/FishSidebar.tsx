@@ -1,27 +1,67 @@
 import { X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useState, useEffect } from 'react';
 import type { FishOccurrence } from '../types/fish';
+
+interface FishPriceData {
+  'Fish Name': string;
+  'Jul 2024': string;
+  'Aug 2024': string;
+  'Sep 2024': string;
+  'Oct 2024': string;
+  'Nov 2024': string;
+  'Dec 2024': string;
+  'Jan 2025': string;
+  'Feb 2025': string;
+  'Mar 2025': string;
+  'Apr 2025': string;
+  'May 2025': string;
+  'Jun 2025': string;
+  'Jul 2025': string;
+  [key: string]: string; // Index signature for dynamic access
+}
 
 interface FishSidebarProps {
   fish: FishOccurrence | null;
   onClose: () => void;
 }
 
-// Generate mock price data with consistent base price
-const generatePriceHistory = (fishName: string) => {
-  // Generate consistent base price based on scientific name hash
+// Generate price data from CSV or fallback to mock data
+const generatePriceHistory = (scientificName: string, priceData: FishPriceData[]) => {
+  // Try to find the fish in the real price data
+  const fishRow = priceData.find(row => row['Fish Name'].includes(scientificName));
+
+  if (fishRow) {
+    // Real data found, format it to show Jul 2024 - Jun 2025, converting from per 100g to per lb
+    const convertTo100gToLb = (price: string) => parseFloat((parseFloat(price) * 4.53592).toFixed(2));
+    return [
+      { month: 'Jul', price: convertTo100gToLb(fishRow['Jul 2024']) },
+      { month: 'Aug', price: convertTo100gToLb(fishRow['Aug 2024']) },
+      { month: 'Sep', price: convertTo100gToLb(fishRow['Sep 2024']) },
+      { month: 'Oct', price: convertTo100gToLb(fishRow['Oct 2024']) },
+      { month: 'Nov', price: convertTo100gToLb(fishRow['Nov 2024']) },
+      { month: 'Dec', price: convertTo100gToLb(fishRow['Dec 2024']) },
+      { month: 'Jan', price: convertTo100gToLb(fishRow['Jan 2025']) },
+      { month: 'Feb', price: convertTo100gToLb(fishRow['Feb 2025']) },
+      { month: 'Mar', price: convertTo100gToLb(fishRow['Mar 2025']) },
+      { month: 'Apr', price: convertTo100gToLb(fishRow['Apr 2025']) },
+      { month: 'May', price: convertTo100gToLb(fishRow['May 2025']) },
+      { month: 'Jun', price: convertTo100gToLb(fishRow['Jun 2025']) }
+    ];
+  }
+
+  // Fallback to mock data if fish not found in price data
   let hash = 0;
-  for (let i = 0; i < fishName.length; i++) {
-    hash = ((hash << 5) - hash) + fishName.charCodeAt(i);
+  for (let i = 0; i < scientificName.length; i++) {
+    hash = ((hash << 5) - hash) + scientificName.charCodeAt(i);
     hash = hash & hash;
   }
-  const basePrice = 20 + Math.abs(hash % 50); // $20-70 base price
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const basePrice = 20 + Math.abs(hash % 50);
+  const months = ['Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
 
   return months.map((month, index) => {
-    // Use hash + index for consistent variations per month
     const monthHash = Math.abs((hash + index * 7) % 20);
-    const variation = (monthHash / 20 - 0.5) * 20; // -10 to +10 variation
+    const variation = (monthHash / 20 - 0.5) * 20;
     return {
       month,
       price: parseFloat((basePrice + variation).toFixed(2))
@@ -29,16 +69,49 @@ const generatePriceHistory = (fishName: string) => {
   });
 };
 
-const getLastPrice = (fishName: string) => {
-  // Generate consistent price based on scientific name hash
+interface PricePrediction {
+  price: number;
+  trend: string; // e.g., "+3.2% upward" or "-1.5% downward"
+}
+
+const getLastPrice = (scientificName: string, priceData: FishPriceData[]): PricePrediction => {
+  const fishRow = priceData.find(row => row['Fish Name'].includes(scientificName));
+
+  if (fishRow) {
+    const months = [
+      'Jul 2024','Aug 2024','Sep 2024','Oct 2024','Nov 2024','Dec 2024',
+      'Jan 2025','Feb 2025','Mar 2025','Apr 2025','May 2025','Jun 2025'
+    ];
+    const prices = months
+      .map(month => parseFloat(fishRow[month] || '0') * 4.53592)
+      .filter(p => !isNaN(p) && p > 0);
+
+    if (prices.length === 0) return { price: 0, trend: '0% no change' };
+
+    // Weighted average for predicted price
+    const weightedSum = prices.reduce((sum, price, i) => sum + price * (i + 1), 0);
+    const weightTotal = prices.reduce((sum, _, i) => sum + (i + 1), 0);
+    const predictedPrice = parseFloat((weightedSum / weightTotal).toFixed(2));
+
+    // Trend calculation: percentage difference between last month and first month
+    const firstPrice = prices[0];
+    const lastPrice = prices[prices.length - 1];
+    const trendPct = ((lastPrice - firstPrice) / firstPrice) * 100;
+    const trendStr = `${trendPct >= 0 ? '+' : ''}${trendPct.toFixed(1)}% ${trendPct >= 0 ? 'upward' : 'downward'}`;
+
+    return { price: predictedPrice, trend: trendStr };
+  }
+
+  // Fallback: hash mock
   let hash = 0;
-  for (let i = 0; i < fishName.length; i++) {
-    hash = ((hash << 5) - hash) + fishName.charCodeAt(i);
+  for (let i = 0; i < scientificName.length; i++) {
+    hash = ((hash << 5) - hash) + scientificName.charCodeAt(i);
     hash = hash & hash;
   }
-  const basePrice = 20 + Math.abs(hash % 50); // $20-70
-  return parseFloat(basePrice.toFixed(2));
+  const basePrice = 20 + Math.abs(hash % 50);
+  return { price: parseFloat(basePrice.toFixed(2)), trend: '2.3% upwards' };
 };
+
 
 // Generate common name from scientific name
 const getCommonName = (scientificName: string, genus?: string): string => {
@@ -396,10 +469,43 @@ const getCategory = (className?: string, phylum?: string): string => {
 };
 
 export default function FishSidebar({ fish, onClose }: FishSidebarProps) {
+  const [priceData, setPriceData] = useState<FishPriceData[]>([]);
+
+  useEffect(() => {
+    const loadPrices = async () => {
+      try {
+        const response = await fetch('/average_edible_fish_prices_Jul2024_Jul2025.csv');
+        const csvText = await response.text();
+        const lines = csvText.split('\n');
+        const headers = lines[0].split(',');
+
+        const data: FishPriceData[] = [];
+        for (let i = 1; i < lines.length; i++) {
+          const line = lines[i];
+          if (!line.trim()) continue;
+
+          const values = line.split(',');
+          const rowData = {} as FishPriceData;
+          headers.forEach((header, index) => {
+            rowData[header.trim()] = values[index]?.trim() || '';
+          });
+          data.push(rowData);
+        }
+
+        setPriceData(data);
+        console.log('Loaded fish prices:', data);
+      } catch (error) {
+        console.error('Failed to load fish prices:', error);
+      }
+    };
+
+    loadPrices();
+  }, []);
+
   if (!fish) return null;
 
-  const priceHistory = generatePriceHistory(fish.scientificName);
-  const lastPrice = getLastPrice(fish.scientificName);
+  const priceHistory = generatePriceHistory(fish.scientificName, priceData);
+  const { price: lastPrice, trend: priceTrend } = getLastPrice(fish.scientificName, priceData);
 
   return (
     <div
@@ -432,7 +538,7 @@ export default function FishSidebar({ fish, onClose }: FishSidebarProps) {
         <div className="bg-white/5 border border-white/20 rounded-xl p-6 mb-6">
           <div className="text-sm text-white/60 mb-2">Predicted Selling Price</div>
           <div className="text-4xl font-bold text-white mb-1">~${lastPrice}/lb</div>
-          <div className="text-xs text-green-400">+5.2% from last month</div>
+          <div className="text-xs text-green-400">{priceTrend}</div>
         </div>
 
         {/* Fish Details */}
@@ -462,7 +568,7 @@ export default function FishSidebar({ fish, onClose }: FishSidebarProps) {
 
         {/* Past Sell Prices Graph */}
         <div className="bg-white/5 border border-white/20 rounded-xl p-4 flex-1">
-          <h3 className="text-sm font-semibold text-white mb-4">Past Sell Prices (2024)</h3>
+          <h3 className="text-sm font-semibold text-white mb-4">Past Sell Prices (Jul 2024 - Jun 2025)</h3>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={priceHistory}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
