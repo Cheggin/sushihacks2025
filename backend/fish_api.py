@@ -1,8 +1,14 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from typing import List, Optional
 import pandas as pd
 from pathlib import Path
+import sys
+
+# Add fish_market directory to path to import fish_ranking
+sys.path.append(str(Path(__file__).parent / "fish_market"))
+from fish_ranking import fish_ranking
 
 app = FastAPI()
 
@@ -150,6 +156,37 @@ async def get_fish_stats():
     }
 
     return stats
+
+
+class FishRankingRequest(BaseModel):
+    fish_list: List[str]
+
+
+@app.post("/fish-ranking")
+async def rank_fish(request: FishRankingRequest):
+    """
+    Rank fish based on cleaning difficulty, commonality, peak season, and edibility.
+
+    Input: List of scientific fish names
+    Output: Dictionary with rankings and metadata for each fish
+
+    Example:
+    POST /fish-ranking
+    {
+        "fish_list": ["Thunnus albacares", "Fragum scruposum"]
+    }
+    """
+    if not request.fish_list:
+        raise HTTPException(status_code=400, detail="fish_list cannot be empty")
+
+    try:
+        result = fish_ranking(request.fish_list)
+        return result
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=f"Fish classification data not found: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error ranking fish: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn
