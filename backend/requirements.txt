@@ -10,6 +10,7 @@ numpy
 fastapi
 uvicorn
 pydantic
+google-generativeai
 
 # Client testing
 requests
@@ -21,5 +22,5 @@ bleak
 xgboost
 
 #fish-market
-dotenv
+python-dotenv
 browser_use_sdk
