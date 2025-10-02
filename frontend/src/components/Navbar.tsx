@@ -6,12 +6,12 @@ interface NavbarProps {
 }
 
 export default function Navbar({ togglePopup }: NavbarProps) {
-  const [mode, setMode] = useState<'default' | 'accessible'>('default');
+  const [mode, setMode] = useState<'default' | 'light'>('default');
 
-  const toggleAccessibleMode = () => {
-    const newMode = mode === 'default' ? 'accessible' : 'default';
+  const toggleLightMode = () => {
+    const newMode = mode === 'default' ? 'light' : 'default';
     setMode(newMode);
-    if (newMode === 'accessible') {
+    if (newMode === 'light') {
       document.documentElement.setAttribute('data-theme', 'accessible');
     } else {
       document.documentElement.removeAttribute('data-theme');
@@ -19,7 +19,7 @@ export default function Navbar({ togglePopup }: NavbarProps) {
   };
 
   const getModeLabel = () => {
-    return mode === 'default' ? 'Default' : 'Accessible';
+    return mode === 'light' ? 'Light' : 'Color';
   };
 
   return (
@@ -46,10 +46,10 @@ export default function Navbar({ togglePopup }: NavbarProps) {
 
       <div className="flex items-center gap-4 rounded-3xl px-4 py-2 ml-16 h-[50px] border border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_70%,transparent)] backdrop-blur-xl shadow-md">
         <button
-          onClick={toggleAccessibleMode}
+          onClick={toggleLightMode}
           className="flex items-center gap-2 text-[var(--color-foreground)] hover:text-[var(--color-on-primary)] hover:bg-[rgba(37,99,235,0.15)] px-3 py-2 rounded-md transition-colors focus-visible:outline-none"
-          aria-pressed={mode === 'accessible'}
-          aria-label="Toggle accessible mode"
+          aria-pressed={mode === 'light'}
+          aria-label="Toggle light mode"
         >
           <Palette className="w-4 h-4" />
           <span className="text-sm">{getModeLabel()}</span>

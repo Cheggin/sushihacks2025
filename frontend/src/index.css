@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   /* Core brand & feedback colors (WCAG AA compliant on dark surfaces) */
   --color-primary: #2563eb;            /* blue-600 */
   --color-primary-hover: #1d4ed8;      /* blue-700 */
@@ -59,6 +59,29 @@
   --color-dark: #0b1220;               /* deep ocean */
 }
 
+/* Utility mappings for CSS variable tokens (avoid @theme at-rule) */
+.bg-card {
+  background-color: var(--color-card);
+}
+.text-text-primary {
+  color: var(--color-text-primary);
+}
+.text-text-secondary {
+  color: var(--color-text-secondary);
+}
+.text-text-light {
+  color: var(--color-text-light);
+}
+.bg-primary {
+  background-color: var(--color-primary);
+}
+.border-border {
+  border-color: var(--color-border);
+}
+.border-primary {
+  border-color: var(--color-primary);
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -83,43 +106,151 @@ body {
   }
 }
 
-/* Accessible mode: solid white surfaces, larger type, no translucency */
+/* Dashboard content wrapper styles are applied contextually below */
+
+/* ============================================================================
+   LIGHT MODE DESIGN SYSTEM
+   ============================================================================
+
+   Design Philosophy:
+   This light mode is a complete reimagining of the Color mode with zero
+   translucency. Every element is solid, clean, and modern while maintaining
+   the visual hierarchy and structure of the original design.
+
+   Key Design Decisions:
+
+   1. BACKGROUND
+      - Soft gradient (slate-50 to cyan-50) creates depth without translucency
+      - Replaces the dark ocean gradient with an airy, professional look
+
+   2. SURFACES
+      - Pure white (#ffffff) for all cards and containers
+      - Subtle shadows (rgba) for elevation instead of glassmorphism
+      - 2px borders in slate-200/slate-100 for definition
+
+   3. COLOR PALETTE
+      - Primary: Cyan-600 (#0891b2) - deeper than Color mode for contrast
+      - Borders: Slate-200/300 (#e2e8f0, #cbd5e1) - soft but visible
+      - Text: Slate-900 (#0f172a) - maximum readability
+      - Hover states: Slate-50 (#f8fafc) with transform effects
+
+   4. INTERACTIVE ELEMENTS
+      - Buttons: Solid backgrounds with 2px borders, subtle shadows
+      - Hover: Light elevation (translateY) + enhanced shadows
+      - Focus: Cyan ring with 3px spread for accessibility
+
+   5. NO TRANSLUCENCY
+      - backdrop-filter: none on ALL elements
+      - rgba() only in shadows, never in backgrounds
+      - All colors are solid hex values
+
+   6. VISUAL HIERARCHY
+      - Shadows define depth (light, medium, heavy)
+      - Border weights indicate importance (1px, 2px)
+      - White space and elevation replace blur effects
+
+   ============================================================================ */
+
 [data-theme="accessible"] body {
-  color: #111827; /* gray-900 */
-  background: #ffffff;
-  font-size: 18px;
-  line-height: 1.7;
+  color: #111827; /* Slate-900 - dark text for readability */
+  background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 100%); /* Soft gradient: slate-50 to cyan-50 */
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 [data-theme="accessible"] .page-content,
 [data-theme="accessible"] .dashboard-content {
-  background: #ffffff !important;
+  background: #ffffff !important; /* Pure solid white - no translucency */
+  backdrop-filter: none !important; /* Remove glassmorphism */
+  -webkit-backdrop-filter: none !important;
   color: #111827;
-  border-color: #e5e7eb !important; /* gray-200 */
+  border: 2px solid #e2e8f0 !important; /* Soft gray border (slate-200) */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04) !important; /* Subtle shadow for depth */
   overflow: hidden !important;
-  border-radius: 1.5rem !important; /* Force rounded-3xl */
+  border-radius: 1.5rem !important; /* Maintain rounded-3xl */
 }
 
 [data-theme="accessible"] .card-surface,
 [data-theme="accessible"] .bg-card {
-  background: #ffffff !important;
-  border-color: #e5e7eb !important;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08) !important;
-  border-radius: 1rem !important; /* Ensure cards maintain rounded borders */
+  background: #ffffff !important; /* Pure solid white */
+  backdrop-filter: none !important; /* No blur effects */
+  -webkit-backdrop-filter: none !important;
+  border: 2px solid #f1f5f9 !important; /* Very subtle border (slate-100) */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 4px rgba(0, 0, 0, 0.04) !important; /* Soft elevation */
+  border-radius: 1rem !important; /* Maintain rounded-2xl */
   overflow: hidden !important;
 }
 
 [data-theme="accessible"] nav > div {
-  background: #ffffff !important;
+  background: #ffffff !important; /* Solid white navbar */
   color: #111827 !important;
-  border-color: #e5e7eb !important;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08) !important;
+  border: 2px solid #f1f5f9 !important; /* Subtle border */
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.04) !important; /* Soft shadow */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-[data-theme="accessible"] .backdrop-blur-xl,
-[data-theme="accessible"] .backdrop-blur-sm {
-  -webkit-backdrop-filter: none !important;
+/* Navbar buttons should NOT have borders */
+[data-theme="accessible"] nav button {
+  border: none !important;
   backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Ensure all buttons are 100% opaque in light mode with proper borders (except navbar) */
+[data-theme="accessible"] button {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-width: 2px !important;
+}
+
+/* Override: Navbar buttons specifically have no borders */
+[data-theme="accessible"] nav button {
+  border: none !important;
+}
+
+/* Primary buttons - vibrant cyan with solid colors */
+[data-theme="accessible"] button.bg-cyan-500,
+[data-theme="accessible"] button.bg-cyan-600,
+[data-theme="accessible"] .bg-cyan-500 button,
+[data-theme="accessible"] .bg-cyan-600 button {
+  background-color: #0891b2 !important; /* Cyan-600 for better contrast */
+  border: 2px solid #0e7490 !important; /* Cyan-700 border */
+  color: #ffffff !important;
+  opacity: 1 !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25), 0 2px 4px rgba(8, 145, 178, 0.15) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="accessible"] button.bg-cyan-500:hover,
+[data-theme="accessible"] button.bg-cyan-600:hover {
+  background-color: #0e7490 !important; /* Cyan-700 on hover */
+  border-color: #155e75 !important; /* Cyan-800 border */
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.3), 0 3px 6px rgba(8, 145, 178, 0.2) !important;
+  transform: translateY(-1px);
+}
+
+/* Secondary/ghost buttons - clean white with subtle borders */
+[data-theme="accessible"] button.bg-white\/10,
+[data-theme="accessible"] button.bg-white\/20,
+[data-theme="accessible"] button.border-white\/20 {
+  background-color: #ffffff !important;
+  border: 2px solid #e2e8f0 !important; /* Slate-200 */
+  color: #334155 !important; /* Slate-700 for readable text */
+  opacity: 1 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="accessible"] button.bg-white\/10:hover,
+[data-theme="accessible"] button.bg-white\/20:hover,
+[data-theme="accessible"] button.border-white\/20:hover {
+  background-color: #f8fafc !important; /* Slate-50 */
+  border-color: #cbd5e1 !important; /* Slate-300 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
+  transform: translateY(-1px);
 }
 
 [data-theme="accessible"] button[aria-label="Open search filters"] {
@@ -134,7 +265,19 @@ body {
 [data-theme="accessible"] textarea {
   background: #ffffff !important;
   color: #111827 !important;
-  border-color: #e5e7eb !important;
+  border: 2px solid #e2e8f0 !important; /* Slate-200 - soft border */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="accessible"] input:focus,
+[data-theme="accessible"] select:focus,
+[data-theme="accessible"] textarea:focus {
+  border-color: #0891b2 !important; /* Cyan-600 focus ring */
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12), 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  outline: none !important;
+  background: #ffffff !important;
 }
 
 [data-theme="accessible"] ::placeholder {
@@ -190,31 +333,39 @@ body {
   color: #ffffff !important;
 }
 
-/* AI Assistant accessible mode styling */
+/* AI Assistant - modern clean modal */
 [data-theme="accessible"] .ai-assistant-modal {
   background: #ffffff !important;
-  border-color: #e5e7eb !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border: 2px solid #e2e8f0 !important; /* Slate-200 */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .ai-assistant-modal .border-white\/10 {
-  border-color: #e5e7eb !important;
+  border-color: #e2e8f0 !important; /* Slate-200 */
 }
 
 [data-theme="accessible"] .ai-assistant-modal .border-white\/20 {
-  border-color: #e5e7eb !important;
+  border-color: #cbd5e1 !important; /* Slate-300 */
 }
 
 [data-theme="accessible"] .ai-assistant-modal .bg-white\/10 {
-  background: #f3f4f6 !important;
+  background: #f8fafc !important; /* Slate-50 solid */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .ai-assistant-modal .bg-white\/5 {
-  background: #f9fafb !important;
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .ai-assistant-modal .bg-cyan-500\/20 {
-  background: #e0f2fe !important;
+  background: #e0f2fe !important; /* Cyan-100 solid */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .ai-assistant-modal .text-white {
@@ -242,35 +393,43 @@ body {
   background-color: #0891b2 !important;
 }
 
-/* Search Panel accessible mode styling */
+/* Search Panel - clean and modern */
 [data-theme="accessible"] .search-panel {
   background: #ffffff !important;
-  border-color: #e5e7eb !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border: 2px solid #e2e8f0 !important; /* Slate-200 */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .search-panel .border-white\/10 {
-  border-color: #e5e7eb !important;
+  border-color: #e2e8f0 !important; /* Slate-200 */
 }
 
 [data-theme="accessible"] .search-panel .border-white\/20 {
-  border-color: #e5e7eb !important;
+  border-color: #cbd5e1 !important; /* Slate-300 */
 }
 
 [data-theme="accessible"] .search-panel .border-white\/30 {
-  border-color: #d1d5db !important;
+  border-color: #94a3b8 !important; /* Slate-400 */
 }
 
 [data-theme="accessible"] .search-panel .bg-white\/5 {
-  background: #f9fafb !important;
+  background: #ffffff !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .search-panel .bg-white\/10 {
-  background: #f3f4f6 !important;
+  background: #f8fafc !important; /* Slate-50 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .search-panel .bg-white\/20 {
-  background: #e5e7eb !important;
+  background: #f1f5f9 !important; /* Slate-100 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .search-panel .text-white {
@@ -293,25 +452,33 @@ body {
   color: #9ca3af !important;
 }
 
-/* Colored backgrounds for filter tags in accessible mode */
+/* Colored filter tags - vibrant and solid */
 [data-theme="accessible"] .search-panel .bg-blue-500\/30 {
-  background: #dbeafe !important;
-  border-color: #93c5fd !important;
+  background: #dbeafe !important; /* Blue-100 */
+  border-color: #60a5fa !important; /* Blue-400 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .search-panel .bg-green-500\/30 {
-  background: #dcfce7 !important;
-  border-color: #86efac !important;
+  background: #dcfce7 !important; /* Green-100 */
+  border-color: #4ade80 !important; /* Green-400 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .search-panel .bg-purple-500\/30 {
-  background: #f3e8ff !important;
-  border-color: #c4b5fd !important;
+  background: #f3e8ff !important; /* Purple-100 */
+  border-color: #a78bfa !important; /* Purple-400 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .search-panel .bg-blue-500\/10 {
-  background: #eff6ff !important;
-  border-color: #bfdbfe !important;
+  background: #eff6ff !important; /* Blue-50 */
+  border-color: #93c5fd !important; /* Blue-300 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Colored text elements */
@@ -365,56 +532,143 @@ body {
   overflow: hidden !important;
 }
 
-/* Chart tooltips in accessible mode */
+/* Chart tooltips - clean and modern */
 [data-theme="accessible"] .recharts-tooltip-wrapper .recharts-default-tooltip {
   background: #ffffff !important;
-  border: 2px solid #e5e7eb !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border: 2px solid #e2e8f0 !important; /* Slate-200 */
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .recharts-tooltip-item {
-  color: #111827 !important;
+  color: #0f172a !important; /* Slate-900 */
 }
 
 [data-theme="accessible"] .recharts-tooltip-label {
-  color: #111827 !important;
+  color: #0f172a !important; /* Slate-900 */
   font-weight: bold !important;
 }
 
-/* Search bar styling in accessible mode */
-[data-theme="accessible"] .dashboard-content .bg-white\/5 {
-  background: #f9fafb !important;
-  border-color: #d1d5db !important;
+/* Search bar styling - clean and modern */
+[data-theme="accessible"] .dashboard-content .bg-white\/5,
+[data-theme="accessible"] .page-content .bg-white\/5 {
+  background: #ffffff !important;
+  border: 2px solid #e2e8f0 !important; /* Slate-200 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
-[data-theme="accessible"] .dashboard-content .border-white\/20 {
-  border-color: #d1d5db !important;
+[data-theme="accessible"] .dashboard-content .border-white\/20,
+[data-theme="accessible"] .page-content .border-white\/20 {
+  border: 2px solid #e2e8f0 !important;
 }
 
-[data-theme="accessible"] .dashboard-content .focus-within\:border-cyan-400\/60:focus-within {
-  border-color: #0891b2 !important;
+[data-theme="accessible"] .dashboard-content .focus-within\:border-cyan-400\/60:focus-within,
+[data-theme="accessible"] .page-content .focus-within\:border-cyan-400\/60:focus-within {
+  border-color: #0891b2 !important; /* Cyan-600 */
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  background: #ffffff !important;
 }
 
-[data-theme="accessible"] .dashboard-content .bg-white\/10 {
-  background: #f3f4f6 !important;
+[data-theme="accessible"] .dashboard-content .bg-white\/10,
+[data-theme="accessible"] .page-content .bg-white\/10 {
+  background: #f8fafc !important; /* Slate-50 for hover states */
 }
 
-/* Fish list items in accessible mode */
-[data-theme="accessible"] .dashboard-content .hover\:bg-white\/10:hover {
-  background: #f3f4f6 !important;
+/* Fish list items and hover states - clean interactions */
+[data-theme="accessible"] .dashboard-content .hover\:bg-white\/10:hover,
+[data-theme="accessible"] .page-content .hover\:bg-white\/10:hover {
+  background: #f0f9ff !important; /* Cyan-50 for subtle hover */
+  border-color: #0891b2 !important; /* Cyan-600 */
+  box-shadow: 0 2px 8px rgba(8, 145, 178, 0.1) !important;
 }
 
 [data-theme="accessible"] .dashboard-content .group:hover .group-hover\:text-cyan-300 {
-  color: #0891b2 !important;
+  color: #0891b2 !important; /* Cyan-600 */
 }
 
 [data-theme="accessible"] .dashboard-content .group:hover .group-hover\:text-cyan-100 {
-  color: #0f172a !important;
+  color: #0e7490 !important; /* Cyan-700 for better contrast */
 }
 
 [data-theme="accessible"] .dashboard-content .group:hover .group-hover\:text-white\/80 {
-  color: #374151 !important;
+  color: #475569 !important; /* Slate-600 */
+}
+
+/* Improved hover states - subtle elevation */
+[data-theme="accessible"] .hover\:border-cyan-400\/40:hover {
+  border-color: #0891b2 !important; /* Cyan-600 */
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.15), 0 2px 4px rgba(8, 145, 178, 0.1) !important;
+  transform: translateY(-1px);
+}
+
+/* Time range selector and toggle buttons - crisp and clean */
+[data-theme="accessible"] button.bg-white\/5 {
+  background: #ffffff !important;
+  border: 2px solid #e2e8f0 !important; /* Slate-200 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="accessible"] button.bg-white\/5:hover {
+  background: #f8fafc !important; /* Slate-50 */
+  border-color: #cbd5e1 !important; /* Slate-300 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06) !important;
+  transform: translateY(-1px);
+}
+
+/* Info/stat cards with colored backgrounds - vibrant and clear */
+[data-theme="accessible"] .bg-cyan-400\/10 {
+  background: #ecfeff !important; /* Cyan-50 solid background */
+  border-color: #06b6d4 !important; /* Cyan-500 for visibility */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="accessible"] .bg-green-400\/10 {
+  background: #f0fdf4 !important; /* Green-50 solid */
+  border-color: #22c55e !important; /* Green-500 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="accessible"] .bg-yellow-400\/10 {
+  background: #fefce8 !important; /* Yellow-50 solid */
+  border-color: #eab308 !important; /* Yellow-500 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+[data-theme="accessible"] .bg-red-400\/10 {
+  background: #fef2f2 !important; /* Red-50 solid */
+  border-color: #ef4444 !important; /* Red-500 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Colored borders - vibrant and defined */
+[data-theme="accessible"] .border-cyan-400\/30 {
+  border-color: #06b6d4 !important; /* Cyan-500 */
+  border-width: 2px !important;
+}
+
+[data-theme="accessible"] .border-green-400\/30 {
+  border-color: #22c55e !important; /* Green-500 */
+  border-width: 2px !important;
+}
+
+[data-theme="accessible"] .border-yellow-400\/30 {
+  border-color: #eab308 !important; /* Yellow-500 */
+  border-width: 2px !important;
+}
+
+[data-theme="accessible"] .border-red-400\/30 {
+  border-color: #ef4444 !important; /* Red-500 */
+  border-width: 2px !important;
 }
 
 /* Legend text in charts */
@@ -442,15 +696,19 @@ body {
   outline: none;
 }
 
-/* Accessible mode search container */
+/* Search container - modern and clean */
 [data-theme="accessible"] .search-container {
-  background: #f9fafb !important;
-  border-color: #d1d5db !important;
+  background: #ffffff !important;
+  border: 2px solid #e2e8f0 !important; /* Slate-200 */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 [data-theme="accessible"] .search-container:focus-within {
-  border-color: #0891b2 !important;
-  background: #f3f4f6 !important;
+  border-color: #0891b2 !important; /* Cyan-600 */
+  background: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04) !important;
 }
 
 [data-theme="accessible"] .search-container input {
@@ -459,7 +717,7 @@ body {
 }
 
 [data-theme="accessible"] .search-container input::placeholder {
-  color: #6b7280 !important;
+  color: #94a3b8 !important; /* Slate-400 */
 }
 
 /* Global focus styles for better keyboard accessibility */

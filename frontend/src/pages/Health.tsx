@@ -78,6 +78,7 @@ export default function Health() {
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [weatherError, setWeatherError] = useState<string | null>(null);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [isAccessibleMode, setIsAccessibleMode] = useState(false);
 
   // Onboarding form data
   const [onboardingData, setOnboardingData] = useState({
@@ -114,6 +115,21 @@ export default function Health() {
       setViewMode('onboarding');
     }
   }, [userProfile]);
+
+  // Track accessible mode
+  useEffect(() => {
+    const checkAccessibleMode = () => {
+      setIsAccessibleMode(document.documentElement.getAttribute('data-theme') === 'accessible');
+    };
+
+    checkAccessibleMode();
+
+    // Listen for theme changes
+    const observer = new MutationObserver(checkAccessibleMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Fetch weather data
   useEffect(() => {
@@ -776,27 +792,28 @@ export default function Health() {
                   </h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke={isAccessibleMode ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.1)'} />
                       <XAxis
                         dataKey="index"
-                        stroke="rgba(255,255,255,0.3)"
-                        tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
-                        label={{ value: 'Reading', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.7)' }}
+                        stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                        tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        label={{ value: 'Reading', position: 'insideBottom', offset: -5, fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.7)' }}
                       />
                       <YAxis
-                        stroke="rgba(255,255,255,0.3)"
-                        tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
-                        label={{ value: 'Grip Strength (kg)', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.7)' }}
+                        stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                        tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        label={{ value: 'Grip Strength (kg)', angle: -90, position: 'insideLeft', fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.7)' }}
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                          border: '1px solid rgba(6,182,212,0.4)',
+                          backgroundColor: isAccessibleMode ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
+                          border: isAccessibleMode ? '2px solid #e2e8f0' : '1px solid rgba(6,182,212,0.4)',
                           borderRadius: '12px',
-                          backdropFilter: 'blur(16px)',
+                          backdropFilter: isAccessibleMode ? 'none' : 'blur(16px)',
+                          boxShadow: isAccessibleMode ? '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06)' : undefined,
                         }}
-                        itemStyle={{ color: '#06b6d4' }}
-                        labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+                        itemStyle={{ color: isAccessibleMode ? '#0f172a' : '#06b6d4' }}
+                        labelStyle={{ color: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.95)', fontWeight: 'bold' }}
                       />
                       <Line
                         type="monotone"
@@ -904,32 +921,33 @@ export default function Health() {
                   </h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke={isAccessibleMode ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.1)'} />
                       <XAxis
                         dataKey="index"
-                        stroke="rgba(255,255,255,0.3)"
-                        tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
-                        label={{ value: 'Reading', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.7)' }}
+                        stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                        tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        label={{ value: 'Reading', position: 'insideBottom', offset: -5, fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.7)' }}
                       />
                       <YAxis
-                        stroke="rgba(255,255,255,0.3)"
-                        tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                        tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 12 }}
                         label={{
                           value: 'Pinch Strength (kg)',
                           angle: -90,
                           position: 'insideLeft',
-                          fill: 'rgba(255,255,255,0.7)'
+                          fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.7)'
                         }}
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                          border: '1px solid rgba(6,182,212,0.4)',
+                          backgroundColor: isAccessibleMode ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
+                          border: isAccessibleMode ? '2px solid #e2e8f0' : '1px solid rgba(6,182,212,0.4)',
                           borderRadius: '12px',
-                          backdropFilter: 'blur(16px)',
+                          backdropFilter: isAccessibleMode ? 'none' : 'blur(16px)',
+                          boxShadow: isAccessibleMode ? '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06)' : undefined,
                         }}
-                        itemStyle={{ color: '#06b6d4' }}
-                        labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+                        itemStyle={{ color: isAccessibleMode ? '#0f172a' : '#06b6d4' }}
+                        labelStyle={{ color: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.95)', fontWeight: 'bold' }}
                       />
                       <Line
                         type="monotone"
@@ -1092,34 +1110,35 @@ export default function Health() {
                     })),
                   ]}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isAccessibleMode ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.1)'} />
                   <XAxis
                     dataKey="index"
-                    stroke="rgba(255,255,255,0.3)"
-                    tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
-                    label={{ value: 'Reading', position: 'insideBottom', offset: -5, fill: 'rgba(255,255,255,0.7)' }}
+                    stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                    tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                    label={{ value: 'Reading', position: 'insideBottom', offset: -5, fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.7)' }}
                   />
                   <YAxis
-                    stroke="rgba(255,255,255,0.3)"
-                    tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
-                    label={{ value: 'Strength (kg)', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.7)' }}
+                    stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                    tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                    label={{ value: 'Strength (kg)', angle: -90, position: 'insideLeft', fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.7)' }}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                      border: '1px solid rgba(6,182,212,0.4)',
+                      backgroundColor: isAccessibleMode ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
+                      border: isAccessibleMode ? '2px solid #e2e8f0' : '1px solid rgba(6,182,212,0.4)',
                       borderRadius: '12px',
-                      backdropFilter: 'blur(16px)',
+                      backdropFilter: isAccessibleMode ? 'none' : 'blur(16px)',
+                      boxShadow: isAccessibleMode ? '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06)' : undefined,
                     }}
-                    itemStyle={{ color: '#06b6d4' }}
-                    labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+                    itemStyle={{ color: isAccessibleMode ? '#0f172a' : '#06b6d4' }}
+                    labelStyle={{ color: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.95)', fontWeight: 'bold' }}
                   />
                   <Legend
                     wrapperStyle={{
                       paddingTop: '20px',
                     }}
                     iconType="line"
-                    formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.9)' }}>{value}</span>}
+                    formatter={(value) => <span style={{ color: isAccessibleMode ? '#111827' : 'rgba(255,255,255,0.9)', fontWeight: '500' }}>{value}</span>}
                   />
                   <Line
                     type="monotone"
@@ -1437,27 +1456,27 @@ export default function Health() {
               <CardContent>
                 <h2 className="text-lg font-bold text-white mb-3">Your Health Profile</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                  <div className="p-3 bg-white/5 rounded-lg border-2 border-white/20">
                     <p className="text-sm text-white/60">Age</p>
                     <p className="text-lg font-semibold text-white">{userProfile.age} years</p>
                   </div>
-                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                  <div className="p-3 bg-white/5 rounded-lg border-2 border-white/20">
                     <p className="text-sm text-white/60">Sex</p>
                     <p className="text-lg font-semibold text-white">{userProfile.sex === 0 ? 'Male' : 'Female'}</p>
                   </div>
-                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                  <div className="p-3 bg-white/5 rounded-lg border-2 border-white/20">
                     <p className="text-sm text-white/60">BMI</p>
                     <p className="text-lg font-semibold text-white">{userProfile.bmi.toFixed(1)}</p>
                   </div>
-                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                  <div className="p-3 bg-white/5 rounded-lg border-2 border-white/20">
                     <p className="text-sm text-white/60">Height</p>
                     <p className="text-lg font-semibold text-white">{userProfile.height} cm</p>
                   </div>
-                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                  <div className="p-3 bg-white/5 rounded-lg border-2 border-white/20">
                     <p className="text-sm text-white/60">Weight</p>
                     <p className="text-lg font-semibold text-white">{userProfile.weight} kg</p>
                   </div>
-                  <div className="p-3 bg-white/5 rounded-lg border border-white/20">
+                  <div className="p-3 bg-white/5 rounded-lg border-2 border-white/20">
                     <p className="text-sm text-white/60">Pain Duration</p>
                     <p className="text-lg font-semibold text-white">{userProfile.ctsPainDuration} months</p>
                   </div>
@@ -1512,15 +1531,15 @@ export default function Health() {
                     </h3>
                     <ResponsiveContainer width="100%" height={200}>
                       <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <CartesianGrid strokeDasharray="3 3" stroke={isAccessibleMode ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.1)'} />
                         <XAxis
                           dataKey="date"
-                          stroke="rgba(255,255,255,0.3)"
-                          tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                        tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 12 }}
                         />
                         <YAxis
-                          stroke="rgba(255,255,255,0.3)"
-                          tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 10 }}
+                          stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                          tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 10 }}
                           domain={[0, 2]}
                           ticks={[0, 1, 2]}
                           tickFormatter={(value) => ['Mild/None', 'Moderate', 'Severe'][value]}
@@ -1528,13 +1547,14 @@ export default function Health() {
                         />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                            border: '1px solid rgba(6,182,212,0.4)',
+                            backgroundColor: isAccessibleMode ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
+                            border: isAccessibleMode ? '2px solid #e2e8f0' : '1px solid rgba(6,182,212,0.4)',
                             borderRadius: '12px',
-                            backdropFilter: 'blur(16px)',
+                            backdropFilter: isAccessibleMode ? 'none' : 'blur(16px)',
+                            boxShadow: isAccessibleMode ? '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06)' : undefined,
                           }}
-                          itemStyle={{ color: '#06b6d4' }}
-                          labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+                          itemStyle={{ color: isAccessibleMode ? '#0f172a' : '#06b6d4' }}
+                          labelStyle={{ color: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.95)', fontWeight: 'bold' }}
                           formatter={(value: any) => ['Mild or No Carpal Tunnel', 'Moderate Carpal Tunnel', 'Severe Carpal Tunnel'][value]}
                         />
                         <Line
@@ -1556,29 +1576,30 @@ export default function Health() {
                     </h3>
                     <ResponsiveContainer width="100%" height={200}>
                       <BarChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                        <CartesianGrid strokeDasharray="3 3" stroke={isAccessibleMode ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.1)'} />
                         <XAxis
                           dataKey="date"
-                          stroke="rgba(255,255,255,0.3)"
-                          tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                        stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                        tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 12 }}
                         />
                         <YAxis
-                          stroke="rgba(255,255,255,0.3)"
-                          tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
+                          stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+                          tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 12 }}
                         />
                         <Tooltip
                           contentStyle={{
-                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                            border: '1px solid rgba(6,182,212,0.4)',
+                            backgroundColor: isAccessibleMode ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
+                            border: isAccessibleMode ? '2px solid #e2e8f0' : '1px solid rgba(6,182,212,0.4)',
                             borderRadius: '12px',
-                            backdropFilter: 'blur(16px)',
+                            backdropFilter: isAccessibleMode ? 'none' : 'blur(16px)',
+                            boxShadow: isAccessibleMode ? '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06)' : undefined,
                           }}
-                          itemStyle={{ color: '#06b6d4' }}
-                          labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+                          itemStyle={{ color: isAccessibleMode ? '#0f172a' : '#06b6d4' }}
+                          labelStyle={{ color: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.95)', fontWeight: 'bold' }}
                         />
                         <Legend
                           iconType="square"
-                          formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.9)' }}>{value}</span>}
+                          formatter={(value) => <span style={{ color: isAccessibleMode ? '#111827' : 'rgba(255,255,255,0.9)', fontWeight: '500' }}>{value}</span>}
                         />
                         <Bar dataKey="grip" fill="#06b6d4" name="Grip (kg)" />
                         <Bar dataKey="pinch" fill="#10b981" name="Pinch (kg)" />
@@ -1599,7 +1620,7 @@ export default function Health() {
                       .map((assessment, idx) => (
                         <div
                           key={idx}
-                          className="flex items-center justify-between p-3 bg-white/5 border border-white/20 rounded-lg hover:bg-white/10 hover:border-cyan-400/40 transition-all"
+                          className="flex items-center justify-between p-3 bg-white/5 border-2 border-white/20 rounded-lg hover:bg-white/10 hover:border-cyan-400/40 transition-all"
                         >
                           <div>
                             <p className="font-medium text-white">{assessment.date}</p>

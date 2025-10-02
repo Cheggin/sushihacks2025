@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import PageLayout from "../components/PageLayout"; // Import the new PageLayout component
@@ -17,6 +17,7 @@ import {
   RadialBar,
   PolarAngleAxis,
 } from "recharts";
+import type { PieLabelRenderProps } from "recharts";
 import { Search, Fish, MessageCircle } from "lucide-react";
 
 // Dummy data
@@ -273,15 +274,19 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                       cy="50%"
                       outerRadius={50}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      labelLine={{ stroke: 'rgba(255,255,255,0.5)', strokeWidth: 1 }}
+                      label={(props: PieLabelRenderProps) => {
+                        const percent = typeof props.percent === 'number' ? props.percent : 0;
+                        return `${String(props.name)} ${(percent * 100).toFixed(0)}%`;
+                      }}
+                      labelLine={{ stroke: isAccessibleMode ? 'rgba(15,23,42,0.3)' : 'rgba(255,255,255,0.5)', strokeWidth: 1 }}
                     >
                       {onboardData.map((entry, idx) => (
                         <Cell
-                          key={idx}
+                          key={`${entry.name}-${idx}`}
                           fill={COLORS[idx % COLORS.length]}
                           stroke="rgba(255,255,255,0.3)"
                           strokeWidth={2}
+                          aria-label={entry.name}
                         />
                       ))}
                     </Pie>
@@ -301,17 +306,17 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                     <Tooltip
                       contentStyle={{
                         backgroundColor: isAccessibleMode ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
-                        border: isAccessibleMode ? '2px solid #e5e7eb' : '1px solid rgba(59,130,246,0.4)',
+                        border: isAccessibleMode ? '2px solid #e2e8f0' : '1px solid rgba(59,130,246,0.4)',
                         borderRadius: '12px',
-                        backdropFilter: 'blur(16px)',
-                        boxShadow: isAccessibleMode ? '0 4px 12px rgba(0, 0, 0, 0.15)' : '0 8px 32px rgba(0,0,0,0.4)',
+                        backdropFilter: isAccessibleMode ? 'none' : 'blur(16px)',
+                        boxShadow: isAccessibleMode ? '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06)' : '0 8px 32px rgba(0,0,0,0.4)',
                       }}
-                      itemStyle={{ 
-                        color: isAccessibleMode ? '#111827' : '#3b82f6' 
+                      itemStyle={{
+                        color: isAccessibleMode ? '#0f172a' : '#3b82f6'
                       }}
-                      labelStyle={{ 
-                        color: isAccessibleMode ? '#111827' : 'rgba(255,255,255,0.95)', 
-                        fontWeight: 'bold' 
+                      labelStyle={{
+                        color: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.95)',
+                        fontWeight: 'bold'
                       }}
                     />
                   </PieChart>

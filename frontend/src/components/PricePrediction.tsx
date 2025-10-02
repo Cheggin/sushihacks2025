@@ -90,6 +90,18 @@ const PricePrediction = memo(function PricePrediction() {
     return 'text-yellow-400';
   };
 
+  // Detect light/accessible mode
+  const [isAccessibleMode, setIsAccessibleMode] = useState(false);
+  useEffect(() => {
+    const checkAccessibleMode = () => {
+      setIsAccessibleMode(document.documentElement.getAttribute('data-theme') === 'accessible');
+    };
+    checkAccessibleMode();
+    const observer = new MutationObserver(checkAccessibleMode);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <Card>
       <CardContent>
@@ -136,31 +148,31 @@ const PricePrediction = memo(function PricePrediction() {
         {/* Price Chart */}
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={priceData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+            <CartesianGrid strokeDasharray="3 3" stroke={isAccessibleMode ? 'rgba(15,23,42,0.08)' : 'rgba(255,255,255,0.1)'} />
             <XAxis
               dataKey="date"
-              stroke="rgba(255,255,255,0.3)"
-              tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 11 }}
+              stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+              tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 11 }}
             />
             <YAxis
-              stroke="rgba(255,255,255,0.3)"
-              tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 11 }}
-              label={{ value: 'Price ($/kg)', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.7)' }}
+              stroke={isAccessibleMode ? 'rgba(15,23,42,0.25)' : 'rgba(255,255,255,0.3)'}
+              tick={{ fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.8)', fontSize: 11 }}
+              label={{ value: 'Price ($/kg)', angle: -90, position: 'insideLeft', fill: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.7)' }}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                border: '1px solid rgba(6,182,212,0.4)',
+                backgroundColor: isAccessibleMode ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
+                border: isAccessibleMode ? '2px solid #e2e8f0' : '1px solid rgba(6,182,212,0.4)',
                 borderRadius: '12px',
-                backdropFilter: 'blur(16px)',
+                backdropFilter: isAccessibleMode ? 'none' : 'blur(16px)',
               }}
-              itemStyle={{ color: '#06b6d4' }}
-              labelStyle={{ color: 'rgba(255,255,255,0.95)' }}
+              itemStyle={{ color: isAccessibleMode ? '#0f172a' : '#06b6d4' }}
+              labelStyle={{ color: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.95)' }}
               formatter={(value: number) => [`$${value.toFixed(2)}`, 'Price']}
             />
             <Legend
               iconType="line"
-              formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.9)' }}>{value}</span>}
+              formatter={(value) => <span style={{ color: isAccessibleMode ? '#111827' : 'rgba(255,255,255,0.9)' }}>{value}</span>}
             />
             <Line
               type="monotone"
