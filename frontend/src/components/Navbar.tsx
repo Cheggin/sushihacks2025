@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Palette } from "lucide-react";
 
 interface NavbarProps {
@@ -6,57 +6,82 @@ interface NavbarProps {
 }
 
 export default function Navbar({ togglePopup }: NavbarProps) {
-  const [colorMode, setColorMode] = useState<'color' | 'bw'>('color');
+  const [colorMode, setColorMode] = useState<"color" | "bw">(
+    (document.documentElement.getAttribute("data-theme") as "color" | "bw") || "color"
+  );
+
+  useEffect(() => {
+    // ensure document has a default data-theme
+    if (!document.documentElement.getAttribute("data-theme")) {
+      document.documentElement.setAttribute("data-theme", "color");
+    }
+  }, []);
 
   const toggleColorMode = () => {
-    const newMode = colorMode === 'color' ? 'bw' : 'color';
+    const newMode = colorMode === "color" ? "bw" : "color";
     setColorMode(newMode);
-
-    // Apply color theme to document
-    document.documentElement.setAttribute('data-theme', newMode);
+    document.documentElement.setAttribute("data-theme", newMode);
   };
 
   const getColorLabel = () => {
-    return colorMode === 'color' ? 'Color' : 'B&W';
+    return colorMode === "color" ? "Dark" : "Light";
   };
 
   return (
     <nav className="mx-6 flex items-center justify-between px-2 py-6 relative">
-      <div className="flex items-center gap-3 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-md px-4 py-2 mr-16 h-[50px]">
+      <div
+        className="flex items-center gap-3 rounded-3xl backdrop-blur-xl shadow-md px-4 py-2 mr-16 h-[50px]"
+        style={{
+          backgroundColor: "var(--card-bg)",
+          border: "1px solid var(--card-border)",
+          color: "var(--text-primary)",
+        }}
+      >
         <img src="/logo.png" alt="logo" className="h-8 w-8" />
-        <span className="text-white font-bold">CARP</span>
+        <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>CARP</span>
       </div>
 
-      <div className="flex gap-12 h-[50px] items-center text-white font-medium rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-md px-4 py-2">
-        <button
-          onClick={() => togglePopup("homepage")}
-          className="hover:text-blue-100"
-        >
+      <div
+        className="flex gap-12 h-[50px] items-center font-medium rounded-3xl px-4 py-2"
+        style={{
+          backgroundColor: "var(--card-bg)",
+          border: "1px solid var(--card-border)",
+          color: "var(--text-primary)",
+        }}
+      >
+        <button onClick={() => togglePopup("homepage")} style={{ color: "var(--text-primary)" }} className="hover:underline">
           Dashboard
         </button>
-        <button
-          onClick={() => togglePopup("map")}
-          className="hover:text-blue-100"
-        >
+        <button onClick={() => togglePopup("map")} style={{ color: "var(--text-primary)" }} className="hover:underline">
           Map
         </button>
-        <button
-          onClick={() => togglePopup("health")}
-          className="hover:text-blue-100"
-        >
+        <button onClick={() => togglePopup("health")} style={{ color: "var(--text-primary)" }} className="hover:underline">
           Health
         </button>
       </div>
 
-      <div className="flex items-center gap-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-md px-4 py-2 ml-16 h-[50px]">
+      <div
+        className="flex items-center gap-4 rounded-3xl px-4 py-2 ml-16 h-[50px]"
+        style={{
+          backgroundColor: "var(--card-bg)",
+          border: "1px solid var(--card-border)",
+          color: "var(--text-primary)",
+        }}
+      >
         <button
           onClick={toggleColorMode}
-          className="flex items-center gap-2 text-white hover:text-blue-100 transition-colors"
+          className="flex items-center gap-2 transition-colors"
+          style={{ color: "var(--text-primary)" }}
         >
           <Palette className="w-4 h-4" />
           <span className="text-sm">{getColorLabel()}</span>
         </button>
-        <img src="/avatar.png" alt="user" className="h-8 w-8 rounded-full border-2 border-white" />
+        <img
+          src="/avatar.png"
+          alt="user"
+          className="h-8 w-8 rounded-full"
+          style={{ border: "2px solid var(--card-border)" }}
+        />
       </div>
     </nav>
   );

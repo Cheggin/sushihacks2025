@@ -50,6 +50,7 @@ body {
   padding: 0;
 }
 
+/* Keep the original prefers-color-scheme behaviors in place (unchanged) */
 @media (prefers-color-scheme: light) {
   body {
     color: var(--color-text-primary);
@@ -64,7 +65,45 @@ body {
   }
 }
 
-/* Black & White Theme - Only for dashboard content */
-[data-theme="bw"] .dashboard-content {
-  filter: grayscale(100%);
+/* ---------- App-level theme variables (used by components) ---------- */
+/* These are the variables that the components will read (card bg, text colors, etc.) */
+
+:root {
+  /* Defaults assume your dark/glass UI */
+  --card-bg: rgba(255, 255, 255, 0.06); /* translucent card for default/dark mode */
+  --card-border: rgba(255, 255, 255, 0.12);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255,255,255,0.85);
+  --muted: rgba(255,255,255,0.6);
 }
+
+/* BW (the 'light' look you wanted, but keep background unchanged) */
+[data-theme="bw"] {
+  /* Background left alone intentionally (per your request) */
+  --card-bg: #ffffff;       /* cards become white */
+  --card-border: rgba(0,0,0,0.06);
+  --text-primary: #000000;  /* main text black */
+  --text-secondary: #007bff; /* secondary text blue */
+  --muted: rgba(0,0,0,0.6);
+}
+
+/* Convenience utility classes you may find handy (optional) */
+.theme-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary); /* default text color for card content */
+}
+
+.theme-txt-primary { color: var(--text-primary) !important; }
+.theme-txt-secondary { color: var(--text-secondary) !important; }
+.theme-muted { color: var(--muted) !important; }
+
+/* Remove the old grayscale rule (you said it's not real B&W). */
+/* (Do not apply grayscale anywhere) */
+
+/* Keep a small set of helpers so popups/overlays work well on top */
+.bg-overlay {
+  background: rgba(0,0,0,0.5);
+}
+
+/* preserve any other global styles from your original file (spacing, body, etc.) */

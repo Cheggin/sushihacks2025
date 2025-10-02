@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import PageLayout from "../components/PageLayout"; // Import the new PageLayout component
+import PageLayout from "../components/PageLayout";
 import { Card, CardContent } from "../components/ui/card";
 import {
   LineChart,
@@ -47,6 +47,7 @@ const onboardData = [
   { name: "Sea Urchin", value: 10 },
   { name: "Mackerel", value: 5 },
 ];
+
 // Professional colors for dark/transparent background - ocean palette
 const COLORS = ["#3b82f6", "#06b6d4", "#f59e0b", "#ec4899", "#8b5cf6", "#10b981"];
 
@@ -73,17 +74,39 @@ const LONGITUDE = 139.8894;
 
 const weatherCodeToEmoji = (code: number) => {
   switch (code) {
-    case 0: return "☀️";
-    case 1: return "🌤️";
-    case 2: return "⛅";
-    case 3: return "🌥️";
-    case 45: case 48: return "🌫️";
-    case 51: case 53: case 55: return "🌧️";
-    case 61: case 63: case 65: return "🌦️";
-    case 71: case 73: case 75: return "🌨️";
-    case 80: case 81: case 82: return "🌧️";
-    case 95: case 96: case 99: return "🌩️";
-    default: return "🌫️";
+    case 0:
+      return "☀️";
+    case 1:
+      return "🌤️";
+    case 2:
+      return "⛅";
+    case 3:
+      return "🌥️";
+    case 45:
+    case 48:
+      return "🌫️";
+    case 51:
+    case 53:
+    case 55:
+      return "🌧️";
+    case 61:
+    case 63:
+    case 65:
+      return "🌦️";
+    case 71:
+    case 73:
+    case 75:
+      return "🌨️";
+    case 80:
+    case 81:
+    case 82:
+      return "🌧️";
+    case 95:
+    case 96:
+    case 99:
+      return "🌩️";
+    default:
+      return "🌫️";
   }
 };
 
@@ -140,21 +163,13 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
   return (
     <div
       className={`${
-        isHomePageVisible
-          ? "opacity-100 translate-y-0" // Visible and slide down
-          : "opacity-0 translate-y-10" // Hidden and slide up
-      } transition-all duration-500 ease-in-out h-full dashboard-content`}
+        isHomePageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
+      } transition-all duration-500 ease-in-out h-full`}
     >
       <PageLayout
         title="Dashboard"
         rightText={
-          loading ? (
-            "Loading weather..."
-          ) : error ? (
-            <span className="text-red-300">{error}</span>
-          ) : (
-            weather
-          )
+          loading ? "Loading weather..." : error ? <span style={{ color: "var(--text-secondary)" }}>{error}</span> : weather
         }
       >
         {/* Page content */}
@@ -163,19 +178,26 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
           <Card className="col-span-3">
             <CardContent>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-semibold text-lg flex items-center gap-2 text-white">
-                  <Fish className="w-5 h-5 text-cyan-400" />
-                  Top Fish to Fish (14)
+                <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, fontSize: "1.125rem", color: "var(--text-primary)" }}>
+                  <Fish style={{ width: 20, height: 20, color: "var(--text-secondary)" }} />
+                  <span>Top Fish to Fish (14)</span>
                 </h2>
-                <span className="text-sm text-white/80 font-medium">24h</span>
+                <span style={{ color: "var(--text-secondary)", fontSize: 12, fontWeight: 500 }}>24h</span>
               </div>
 
-              <div className="flex items-center bg-white/5 backdrop-blur-sm rounded-lg px-3 py-2 mb-4 border border-white/20 focus-within:border-cyan-400/60 focus-within:bg-white/10 transition-all">
-                <Search className="w-4 h-4 text-cyan-400/80" />
+              <div
+                className="flex items-center rounded-lg px-3 py-2 mb-4 border transition-all"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                }}
+              >
+                <Search style={{ width: 16, height: 16, color: "var(--text-secondary)" }} />
                 <input
                   type="text"
                   placeholder="Search fish..."
-                  className="bg-transparent w-full px-2 py-1 outline-none text-sm text-white placeholder-white/40"
+                  className="bg-transparent w-full px-2 py-1 outline-none text-sm placeholder:text-[var(--muted)]"
+                  style={{ color: "var(--text-primary)" }}
                 />
               </div>
 
@@ -183,11 +205,12 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                 {fishData.map((f) => (
                   <li
                     key={f.id}
-                    className="flex justify-between text-sm border-b border-white/20 py-3 hover:bg-white/10 hover:border-cyan-400/40 rounded-lg px-2 transition-all cursor-pointer group"
+                    className="flex justify-between text-sm border-b py-3 hover:bg-white/5 rounded-lg px-2 transition-all cursor-pointer group"
+                    style={{ borderBottomColor: "rgba(255,255,255,0.06)" }}
                   >
-                    <span className="text-cyan-400 font-mono group-hover:text-cyan-300">{f.id}</span>
-                    <span className="text-white font-medium group-hover:text-cyan-100">{f.fish}</span>
-                    <span className="text-white/60 text-xs group-hover:text-white/80">{f.date}</span>
+                    <span style={{ fontFamily: "monospace", color: "var(--text-secondary)" }}>{f.id}</span>
+                    <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{f.fish}</span>
+                    <span style={{ color: "var(--muted)", fontSize: 12 }}>{f.date}</span>
                   </li>
                 ))}
               </ul>
@@ -198,43 +221,40 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
           <div className="col-span-9 grid grid-cols-12 gap-4">
             <Card className="col-span-12">
               <CardContent>
-                <h2 className="font-semibold text-lg mb-3 text-white">
-                  Number of Fish Caught per Month
-                </h2>
+                <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Number of Fish Caught per Month</h2>
                 <ResponsiveContainer width="100%" height={200}>
                   <LineChart data={catchData}>
                     <XAxis
                       dataKey="month"
-                      stroke="rgba(255,255,255,0.3)"
-                      tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
-                      axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
+                      stroke="var(--text-secondary)"
+                      tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
+                      axisLine={{ stroke: "rgba(0,0,0,0.08)" }}
                     />
                     <YAxis
-                      stroke="rgba(255,255,255,0.3)"
-                      tick={{ fill: 'rgba(255,255,255,0.8)', fontSize: 12 }}
-                      axisLine={{ stroke: 'rgba(255,255,255,0.2)' }}
-                      gridLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                      label={{ value: 'Fish Caught', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.7)' }}
+                      stroke="var(--text-secondary)"
+                      tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
+                      axisLine={{ stroke: "rgba(0,0,0,0.08)" }}
+                      label={{ value: "Fish Caught", angle: -90, position: "insideLeft", fill: "var(--text-secondary)" }}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        border: '1px solid rgba(6,182,212,0.4)',
-                        borderRadius: '12px',
-                        backdropFilter: 'blur(16px)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                        backgroundColor: "rgba(15, 23, 42, 0.95)",
+                        border: "1px solid rgba(6,182,212,0.4)",
+                        borderRadius: "12px",
+                        backdropFilter: "blur(16px)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
                       }}
-                      itemStyle={{ color: '#06b6d4' }}
-                      labelStyle={{ color: 'rgba(255,255,255,0.95)', fontWeight: 'bold' }}
-                      formatter={(value) => [`${value} fish`, 'Caught']}
+                      itemStyle={{ color: "#06b6d4" }}
+                      labelStyle={{ color: "rgba(255,255,255,0.95)", fontWeight: "bold" }}
+                      formatter={(value) => [`${value} fish`, "Caught"]}
                     />
                     <Line
                       type="monotone"
                       dataKey="caught"
                       stroke="#06b6d4"
                       strokeWidth={3}
-                      dot={{ fill: '#06b6d4', r: 5, strokeWidth: 2, stroke: '#0891b2' }}
-                      activeDot={{ r: 7, fill: '#06b6d4', stroke: '#fff', strokeWidth: 2 }}
+                      dot={{ fill: "#06b6d4", r: 5, strokeWidth: 2, stroke: "#0891b2" }}
+                      activeDot={{ r: 7, fill: "#06b6d4", stroke: "#fff", strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -243,9 +263,7 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
 
             <Card className="col-span-6">
               <CardContent>
-                <h2 className="font-semibold text-lg mb-3 text-white">
-                  Fish Types
-                </h2>
+                <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Fish Types</h2>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie
@@ -254,16 +272,11 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                       cy="50%"
                       outerRadius={70}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                      labelLine={{ stroke: 'rgba(255,255,255,0.5)', strokeWidth: 1 }}
+                      label={({ name, percent }) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
+                      labelLine={{ stroke: "rgba(0,0,0,0.1)", strokeWidth: 1 }}
                     >
                       {onboardData.map((entry, idx) => (
-                        <Cell
-                          key={idx}
-                          fill={COLORS[idx % COLORS.length]}
-                          stroke="rgba(255,255,255,0.3)"
-                          strokeWidth={2}
-                        />
+                        <Cell key={idx} fill={COLORS[idx % COLORS.length]} stroke="rgba(0,0,0,0.06)" strokeWidth={2} />
                       ))}
                     </Pie>
                     <Legend
@@ -272,22 +285,19 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                       verticalAlign="middle"
                       iconType="circle"
                       iconSize={10}
-                      wrapperStyle={{
-                        paddingLeft: '20px',
-                        fontSize: '13px',
-                      }}
-                      formatter={(value) => <span style={{ color: 'rgba(255,255,255,0.9)', fontWeight: '500' }}>{value}</span>}
+                      wrapperStyle={{ paddingLeft: "20px", fontSize: "13px" }}
+                      formatter={(value) => <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>{value}</span>}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                        border: '1px solid rgba(59,130,246,0.4)',
-                        borderRadius: '12px',
-                        backdropFilter: 'blur(16px)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                        backgroundColor: "rgba(15, 23, 42, 0.95)",
+                        border: "1px solid rgba(59,130,246,0.4)",
+                        borderRadius: "12px",
+                        backdropFilter: "blur(16px)",
+                        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
                       }}
-                      itemStyle={{ color: '#3b82f6' }}
-                      labelStyle={{ color: 'rgba(255,255,255,0.95)', fontWeight: 'bold' }}
+                      itemStyle={{ color: "#3b82f6" }}
+                      labelStyle={{ color: "rgba(255,255,255,0.95)", fontWeight: "bold" }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -296,12 +306,10 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
 
             <Card className="col-span-6">
               <CardContent>
-                <h2 className="font-semibold text-lg mb-3 text-white">
-                  Fishing Conditions
-                </h2>
+                <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Fishing Conditions</h2>
                 <div className="relative h-[180px] flex items-center justify-center">
                   {loading ? (
-                    <div className="text-white/60">Loading...</div>
+                    <div style={{ color: "var(--muted)" }}>Loading...</div>
                   ) : (
                     <>
                       <ResponsiveContainer width="100%" height="100%">
@@ -311,47 +319,43 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                           innerRadius="70%"
                           outerRadius="90%"
                           barSize={20}
-                          data={[{ name: 'Score', value: fishingScore, fill: getConditionColor(fishingScore) }]}
+                          data={[{ name: "Score", value: fishingScore, fill: getConditionColor(fishingScore) }]}
                           startAngle={180}
                           endAngle={0}
                         >
                           <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-                          <RadialBar
-                            background={{ fill: 'rgba(255,255,255,0.1)' }}
-                            dataKey="value"
-                            cornerRadius={10}
-                          />
+                          <RadialBar background={{ fill: "rgba(0,0,0,0.04)" }} dataKey="value" cornerRadius={10} />
                         </RadialBarChart>
                       </ResponsiveContainer>
 
                       {/* Center text overlay */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <div className="text-4xl font-bold text-white mb-1">{fishingScore}</div>
-                        <div className="text-base font-semibold" style={{ color: getConditionColor(fishingScore) }}>
+                        <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>{fishingScore}</div>
+                        <div className="font-semibold" style={{ color: getConditionColor(fishingScore) }}>
                           {getConditionLabel(fishingScore)}
                         </div>
-                        <div className="text-xs text-white/60 mt-1">{temperature}°C</div>
+                        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>{temperature}°C</div>
                       </div>
                     </>
                   )}
                 </div>
 
                 {/* Legend */}
-                <div className="grid grid-cols-4 gap-2 mt-3 text-xs text-white/70">
+                <div className="grid grid-cols-4 gap-2 mt-3 text-xs" style={{ color: "var(--text-primary)" }}>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-[#06b6d4]"></div>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#06b6d4" }}></div>
                     <span>Excellent</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-[#10b981]"></div>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#10b981" }}></div>
                     <span>Good</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-[#f59e0b]"></div>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#f59e0b" }}></div>
                     <span>Fair</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-[#ef4444]"></div>
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#ef4444" }}></div>
                     <span>Poor</span>
                   </div>
                 </div>

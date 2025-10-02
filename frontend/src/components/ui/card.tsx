@@ -1,26 +1,31 @@
-import * as React from "react";
-import clsx from "clsx";
+import React from "react";
 
-interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
-export function Card({ className, ...props }: CardProps) {
+interface CardProps {
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+/**
+ * Card: theme-aware container
+ * - Uses CSS variables defined in index.css: --card-bg, --card-border, --text-primary
+ */
+export function Card({ children, className = "", style = {} }: CardProps) {
   return (
     <div
-      className={clsx(
-        "rounded-2xl border-2 transition-all duration-300",
-        // No background - transparent to show liquid glass
-        "bg-transparent",
-        // Vibrant border with glow effect
-        "border-white/40 hover:border-white/60",
-        // Subtle shadow for depth
-        "shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]",
-        className
-      )}
-      {...props}
-    />
+      className={`rounded-2xl shadow-xl p-4 ${className}`}
+      style={{
+        backgroundColor: "var(--card-bg)",
+        border: "1px solid var(--card-border)",
+        color: "var(--text-primary)",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
   );
 }
 
-interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {}
-export function CardContent({ className, ...props }: CardContentProps) {
-  return <div className={clsx("p-5", className)} {...props} />;
+export function CardContent({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={className}>{children}</div>;
 }

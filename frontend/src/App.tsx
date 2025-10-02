@@ -9,6 +9,7 @@ import FishSidebar from "./components/FishSidebar";
 import SearchPanel from "./components/SearchPanel";
 import { Search } from "lucide-react";
 import type { FishOccurrence } from "./types/fish";
+import MarketsPage from "./pages/MarketsPage";
 
 interface UserMarker {
   name: string;
@@ -123,7 +124,7 @@ export default function App() {
               isMapPageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             } transition-all duration-1000 ease-in-out`}
           >
-            <FishMapPage />
+            <MarketsPage isMarketsPageVisible={isMapPageVisible} />
           </div>
         )}
 

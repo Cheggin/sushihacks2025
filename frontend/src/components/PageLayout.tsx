@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom'; // This will track route changes
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom"; // This will track route changes
 
 interface PageLayoutProps {
   title: string;
@@ -13,24 +13,36 @@ const PageLayout: React.FC<PageLayoutProps> = ({ title, rightText, children }) =
 
   // Update active section based on route
   useEffect(() => {
-    // Example: Set active section based on location pathname
-    if (location.pathname === '/homepage') {
-      setActiveSection('homepage');
-    } else if (location.pathname === '/map') {
-      setActiveSection('map');
-    } else if (location.pathname === '/health') {
-      setActiveSection('health');
+    if (location.pathname === "/homepage") {
+      setActiveSection("homepage");
+    } else if (location.pathname === "/map") {
+      setActiveSection("map");
+    } else if (location.pathname === "/health") {
+      setActiveSection("health");
     } else {
-      setActiveSection(null); // Reset section if no match
+      setActiveSection(null);
     }
   }, [location]);
 
   return (
-    <div className="rounded-3xl bg-white/8 backdrop-blur-xl border border-white/20 shadow-xl p-6 h-full flex flex-col overflow-hidden">
+    <div
+      className="rounded-3xl backdrop-blur-xl p-6 h-full flex flex-col overflow-hidden"
+      style={{
+        backgroundColor: "transparent", // main background handled by outer container, PageLayout should be glass/card-like via CSS variables
+        color: "var(--text-primary)",
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 mb-6 border-b border-white/10 flex-shrink-0">
-        <h1 className="text-2xl font-bold text-white">{title}</h1>
-        <div className="text-white">{rightText}</div>
+      <div
+        className="flex items-center justify-between pb-4 mb-6 flex-shrink-0"
+        style={{
+          borderBottom: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <h1 className="text-2xl font-bold" style={{ color: "white" }}>
+          {title}
+        </h1>
+        <div style={{ color: "white" }}>{rightText}</div>
       </div>
 
       {/* Section content with animation */}
