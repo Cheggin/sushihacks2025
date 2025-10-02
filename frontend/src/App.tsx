@@ -96,9 +96,9 @@ export default function App() {
         />
       )}
 
-      {/* Navbar when no popup is active */}
+      {/* Navbar at bottom when no popup is active */}
       {userMarker && !activePopup && (
-        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-40">
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
           <div className="flex gap-12 items-center font-medium rounded-3xl px-6 py-3 bg-white/10 backdrop-blur-xl border border-white/20">
             <button onClick={() => togglePopup("homepage")} style={{ color: "white" }} className="hover:underline">
               Dashboard
@@ -146,7 +146,11 @@ export default function App() {
               isMapPageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             } transition-all duration-1000 ease-in-out`}
           >
-            <MarketsPage isMarketsPageVisible={isMapPageVisible} togglePopup={togglePopup} />
+            <MarketsPage
+              isMarketsPageVisible={isMapPageVisible}
+              togglePopup={togglePopup}
+              userLocation={userMarker ? { lat: userMarker.lat, lng: userMarker.lng } : null}
+            />
           </div>
         )}
 

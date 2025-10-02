@@ -9,6 +9,7 @@ import asyncio
 import httpx
 import os
 from dotenv import load_dotenv
+import google.generativeai as genai
 
 # Load environment variables
 load_dotenv()
@@ -37,6 +38,14 @@ fish_df = None
 MAPS_BASE = "https://maps.googleapis.com/maps/api/place"
 maps_client: httpx.AsyncClient | None = None
 
+# Configure Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    gemini_model = genai.GenerativeModel('models/gemini-2.5-flash')
+else:
+    gemini_model = None
+
 
 # ─── Pydantic Models for Places API ───────
 class LatLng(BaseModel):
@@ -55,6 +64,25 @@ class PlaceSummary(BaseModel):
 
 class NearbyResponse(BaseModel):
     results: List[PlaceSummary]
+
+
+class FishRankingRequest(BaseModel):
+    fish_list: List[str]
+
+
+# Chat models
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    messages: List[ChatMessage]
+    ctsData: Optional[dict] = None
+
+
+class ChatResponse(BaseModel):
+    response: str
 
 
 @app.on_event("startup")
@@ -121,6 +149,9 @@ async def root():
             },
             "market_analysis": {
                 "POST /market-insight": "Generate AI-powered market insights from fish market data"
+            },
+            "ai_chat": {
+                "POST /chat": "AI fishing assistant chatbot"
             }
         },
         "fish_records": len(fish_df) if fish_df is not None else 0
@@ -238,10 +269,6 @@ async def get_fish_stats():
     return stats
 
 
-class FishRankingRequest(BaseModel):
-    fish_list: List[str]
-
-
 @app.post("/fish-ranking")
 async def rank_fish(request: FishRankingRequest):
     """
@@ -266,6 +293,60 @@ async def rank_fish(request: FishRankingRequest):
         raise HTTPException(status_code=500, detail=f"Fish classification data not found: {str(e)}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error ranking fish: {str(e)}")
+
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """AI chatbot endpoint for fishing assistance"""
+    if not gemini_model:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY environment variable is not set")
+
+    try:
+        # Build context with CTS data if available
+        system_context = """You are an AI fishing assistant helping fishermen and maritime workers.
+You provide advice on:
+- Fish handling techniques and best practices
+- Optimal fishing conditions based on weather and location
+- Health considerations for fishermen (especially repetitive strain injuries like Carpal Tunnel Syndrome)
+- Equipment recommendations
+- Safety guidelines
+
+Be concise, practical, and always prioritize safety. Use a friendly, helpful tone."""
+
+        if request.ctsData:
+            cts_severity = request.ctsData.get('severity', 'Unknown')
+            grip_strength = request.ctsData.get('gripStrength', 0)
+            pinch_strength = request.ctsData.get('pinchStrength', 0)
+
+            system_context += f"\n\nCurrent user health data:"
+            system_context += f"\n- CTS Risk Level: {cts_severity}"
+            system_context += f"\n- Grip Strength: {grip_strength:.1f} kg"
+            system_context += f"\n- Pinch Strength: {pinch_strength:.1f} kg"
+            system_context += "\n\nConsider this health information when providing advice about fishing techniques and equipment."
+
+        # Convert messages to Gemini format
+        conversation_history = []
+        for msg in request.messages:
+            conversation_history.append({
+                "role": "user" if msg.role == "user" else "model",
+                "parts": [msg.content]
+            })
+
+        # Start chat with history
+        chat = gemini_model.start_chat(history=conversation_history[:-1])
+
+        # Get the last user message
+        last_message = conversation_history[-1]["parts"][0]
+
+        # Send message with system context prepended to first message
+        full_prompt = f"{system_context}\n\nUser: {last_message}" if len(conversation_history) == 1 else last_message
+        response = chat.send_message(full_prompt)
+
+        return ChatResponse(response=response.text)
+
+    except Exception as e:
+        print(f"Chat error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ─── Google Places API Endpoints ───────

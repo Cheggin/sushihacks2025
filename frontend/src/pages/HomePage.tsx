@@ -3,6 +3,8 @@ import PageLayout from "../components/PageLayout";
 import { Card, CardContent } from "../components/ui/card";
 import DashboardSummary from "../components/DashboardSummary";
 import AIAssistant from "../components/AIAssistant";
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import {
   LineChart,
   Line,
@@ -18,15 +20,20 @@ import {
   RadialBar,
   PolarAngleAxis,
 } from "recharts";
-import { Search, Fish, MessageCircle, Palette } from "lucide-react";
+import { Fish, MessageCircle, Palette } from "lucide-react";
 
-// Dummy data
-const fishData = [
-  { id: "#F-001", fish: "Tuna", date: "31/01/2025" },
-  { id: "#F-002", fish: "Salmon", date: "31/01/2025" },
-  { id: "#F-003", fish: "Mackerel", date: "31/01/2025" },
-  { id: "#F-004", fish: "Sardine", date: "31/01/2025" },
-];
+// User ID - In production, this would come from authentication
+const USER_ID = 'user_001';
+
+interface RankedFish {
+  scientific_name: string;
+  rank: number;
+  cleaning_difficulty: string;
+  commonality: string;
+  peak_season: string;
+  is_edible: boolean;
+  score: number;
+}
 
 const catchData = [
   { month: "Jan", caught: 145 },
@@ -145,15 +152,20 @@ const weatherCodeToEmoji = (code: number) => {
 };
 
 export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePageVisible: boolean; togglePopup: (page: string) => void }) {
-  const [weather, setWeather] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fishingScore, setFishingScore] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
-  const [colorMode, setColorMode] = useState<"color" | "bw">(
-    (document.documentElement.getAttribute("data-theme") as "color" | "bw") || "color"
-  );
+  const [rankedFish, setRankedFish] = useState<RankedFish[]>([]);
+  const [fishLoading, setFishLoading] = useState(true);
+  const [colorMode, setColorMode] = useState<"color" | "bw">(() => {
+    const saved = localStorage.getItem("theme");
+    return (saved as "color" | "bw") || "color";
+  });
+
+  // Fetch most recent CTS assessment
+  const latestAssessment = useQuery(api.ctsAssessments.getMostRecent, { userId: USER_ID });
 
   const getConditionLabel = (score: number): string => {
     if (score >= 80) return "Excellent";
@@ -172,6 +184,7 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
   const toggleColorMode = () => {
     const newMode = colorMode === "color" ? "bw" : "color";
     setColorMode(newMode);
+    localStorage.setItem("theme", newMode);
     document.documentElement.setAttribute("data-theme", newMode);
   };
 
@@ -179,57 +192,111 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
     return colorMode === "color" ? "Dark" : "Light";
   };
 
-useEffect(() => {
-  const fetchWeather = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current_weather=true`
-      );
-      if (!res.ok) throw new Error("fetch failed");
+  // Apply saved theme on mount
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", colorMode);
+  }, []);
 
-      const data = await res.json();
-      const cw = data.current_weather;
-      if (cw) {
-        setWeather(`${weatherCodeToEmoji(cw.weathercode)} ${cw.temperature}°C`);
-        setTemperature(cw.temperature);
+  useEffect(() => {
+    const fetchWeather = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current_weather=true&timezone=Asia/Tokyo`
+        );
+        if (!res.ok) throw new Error("fetch failed");
 
-        // Parse time from Open-Meteo API (ISO 8601 format)
-        const currentDate = new Date(cw.time);
-        const currentHour = currentDate.getHours();
+        const data = await res.json();
+        const cw = data.current_weather;
+        if (cw) {
+          setTemperature(cw.temperature);
 
-        // Enhanced score calculation
-        const score = calculateFishingScore({
-          temp: cw.temperature,
-          weatherCode: cw.weathercode,
-          date: currentDate,
-          timeOfDay: currentHour,
-          windSpeed: cw.windspeed,
+          // Parse time from Open-Meteo API (ISO 8601 format)
+          const currentDate = new Date(cw.time);
+          const currentHour = currentDate.getHours();
+
+          // Enhanced score calculation
+          const score = calculateFishingScore({
+            temp: cw.temperature,
+            weatherCode: cw.weathercode,
+            date: currentDate,
+            timeOfDay: currentHour,
+            windSpeed: cw.windspeed,
+          });
+
+          setFishingScore(score);
+        } else {
+          setTemperature(0);
+          setFishingScore(50);
+        }
+      } catch {
+        setError("Weather error");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWeather();
+  }, []);
+
+
+  // Fetch top fish rankings
+  useEffect(() => {
+    const fetchFishRankings = async () => {
+      setFishLoading(true);
+      try {
+        const response = await fetch('http://localhost:8000/fish-ranking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fish_list: [
+              "Thunnus albacares",    // Yellowfin Tuna
+              "Oncorhynchus keta",    // Chum Salmon
+              "Scomber japonicus",    // Mackerel
+              "Sardinops sagax",      // Sardine
+              "Katsuwonus pelamis",   // Skipjack Tuna
+              "Seriola quinqueradiata", // Yellowtail
+              "Engraulis japonicus",  // Japanese Anchovy
+            ]
+          })
         });
 
-        setFishingScore(score);
-      } else {
-        setWeather("No weather");
-        setFishingScore(50);
+        if (!response.ok) throw new Error('Failed to fetch fish rankings');
+
+        const data = await response.json();
+        // Convert response object to array with scientific names
+        const ranked: RankedFish[] = Object.entries(data).map(([scientificName, fishData]: [string, any]) => ({
+          scientific_name: scientificName,
+          ...fishData
+        }));
+        // Sort by rank and take top 14
+        const sorted = ranked.sort((a, b) => a.rank - b.rank).slice(0, 14);
+        setRankedFish(sorted);
+      } catch (err) {
+        console.error('Error fetching fish rankings:', err);
+      } finally {
+        setFishLoading(false);
       }
-    } catch {
-      setError("Weather error");
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  fetchWeather();
-}, []);
+    fetchFishRankings();
+  }, []);
 
+  // Transform latestAssessment to match DashboardSummary's expected format
+  const ctsData = latestAssessment ? {
+    severity: latestAssessment.predictedClass,
+    gripStrength: latestAssessment.gripStrength,
+    pinchStrength: latestAssessment.pinchStrength,
+    lastAssessment: new Date(latestAssessment.timestamp),
+  } : null;
 
   return (
     <>
       {showAIAssistant && (
         <AIAssistant
           onClose={() => setShowAIAssistant(false)}
-          ctsData={null}
+          ctsData={ctsData}
         />
       )}
       <div
@@ -248,9 +315,11 @@ useEffect(() => {
                 <MessageCircle className="w-4 h-4" />
                 Ask AI Assistant
               </button>
-              <span>
-                {loading ? "Loading weather..." : error ? <span style={{ color: "var(--text-secondary)" }}>{error}</span> : weather}
-              </span>
+              <div className="flex items-center gap-2 px-3 py-2 bg-white/5 rounded-lg border border-white/10">
+                <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+                  {loading ? "..." : error ? "N/A" : `☀️ ${temperature.toFixed(1)}°C`}
+                </span>
+              </div>
               <button
                 onClick={toggleColorMode}
                 className="flex items-center gap-2 transition-colors hover:opacity-80"
@@ -267,7 +336,7 @@ useEffect(() => {
         <div className="grid grid-cols-12 gap-2">
           {/* Dashboard Summary - Today's Summary Box */}
           <DashboardSummary
-            ctsData={null}
+            ctsData={ctsData}
             fishingScore={fishingScore}
             temperature={temperature}
           />
@@ -278,40 +347,86 @@ useEffect(() => {
               <div className="flex items-center justify-between mb-4">
                 <h2 style={{ display: "flex", alignItems: "center", gap: "8px", fontWeight: 600, fontSize: "1.125rem", color: "var(--text-primary)" }}>
                   <Fish style={{ width: 20, height: 20, color: "var(--text-secondary)" }} />
-                  <span>Top Fish to Fish (14)</span>
+                  <span>Top Fish to Fish ({rankedFish.length})</span>
                 </h2>
-                <span style={{ color: "var(--text-secondary)", fontSize: 12, fontWeight: 500 }}>24h</span>
+                <span style={{ color: "var(--text-secondary)", fontSize: 12, fontWeight: 500 }}>Ranked</span>
               </div>
 
-              <div
-                className="flex items-center rounded-lg px-3 py-2 mb-4 border transition-all"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.06)",
-                }}
-              >
-                <Search style={{ width: 16, height: 16, color: "var(--text-secondary)" }} />
-                <input
-                  type="text"
-                  placeholder="Search fish..."
-                  className="bg-transparent w-full px-2 py-1 outline-none text-sm placeholder:text-[var(--muted)]"
-                  style={{ color: "var(--text-primary)" }}
-                />
-              </div>
+              {fishLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <div style={{ color: "var(--text-secondary)" }}>Loading...</div>
+                </div>
+              ) : (
+                <ul className="space-y-1 max-h-[520px] overflow-y-auto">
+                  {rankedFish.map((fish) => {
+                    // Map scientific name to common name
+                    const commonNames: { [key: string]: string } = {
+                      "Thunnus albacares": "Yellowfin Tuna",
+                      "Oncorhynchus keta": "Chum Salmon",
+                      "Scomber japonicus": "Mackerel",
+                      "Sardinops sagax": "Sardine",
+                      "Katsuwonus pelamis": "Skipjack Tuna",
+                      "Seriola quinqueradiata": "Yellowtail",
+                      "Engraulis japonicus": "Japanese Anchovy"
+                    };
+                    const commonName = commonNames[fish.scientific_name] || fish.scientific_name;
 
-              <ul className="space-y-1">
-                {fishData.map((f) => (
-                  <li
-                    key={f.id}
-                    className="flex justify-between text-sm border-b py-3 hover:bg-white/5 rounded-lg px-2 transition-all cursor-pointer group"
-                    style={{ borderBottomColor: "rgba(255,255,255,0.06)" }}
-                  >
-                    <span style={{ fontFamily: "monospace", color: "var(--text-secondary)" }}>{f.id}</span>
-                    <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>{f.fish}</span>
-                    <span style={{ color: "var(--muted)", fontSize: 12 }}>{f.date}</span>
-                  </li>
-                ))}
-              </ul>
+                    // Calculate formula components based on actual backend logic
+                    // Formula: score = (is_edible * commonality) / (peak_season_score + cleaning_difficulty)
+                    const edibleMultiplier = fish.is_edible ? 1 : 0;
+                    const commonalityValue = fish.commonality === "rare" ? 1 : fish.commonality === "uncommon" ? 2 : 3;
+                    const cleaningValue = fish.cleaning_difficulty === "easy" ? 1 : fish.cleaning_difficulty === "medium" ? 2 : 3;
+                    // Calculate peak_season_score from the formula: peak_season_score = (edible * commonality) / score - cleaning_difficulty
+                    const peakSeasonScore = edibleMultiplier > 0 && fish.score > 0
+                      ? Math.max(1, (edibleMultiplier * commonalityValue) / fish.score - cleaningValue)
+                      : 1;
+
+                    return (
+                      <li
+                        key={fish.scientific_name}
+                        className="flex flex-col text-sm border-b py-2 hover:bg-white/5 rounded-lg px-2 transition-all cursor-pointer group"
+                        style={{ borderBottomColor: "rgba(255,255,255,0.06)" }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-start gap-2 flex-1">
+                            <span style={{ color: "var(--text-secondary)", fontSize: 11, fontWeight: 600, minWidth: 20 }}>#{fish.rank}</span>
+                            <div className="flex flex-col gap-0.5">
+                              <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: 13 }} className="group-hover:text-cyan-400 transition-colors">
+                                {commonName}
+                              </span>
+                              <span style={{ color: "var(--muted)", fontSize: 9, fontStyle: "italic" }}>{fish.scientific_name}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-md" style={{ backgroundColor: "rgba(6, 182, 212, 0.15)", border: "1px solid rgba(6, 182, 212, 0.3)" }}>
+                              <span style={{ color: "#06b6d4", fontSize: 11, fontWeight: 700 }}>
+                                {fish.score.toFixed(3)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Score Formula Display */}
+                        <div className="mt-2 px-2 py-1.5 rounded-md" style={{ backgroundColor: "rgba(6, 182, 212, 0.05)", border: "1px solid rgba(6, 182, 212, 0.15)" }}>
+                          <div className="flex items-center gap-1 flex-wrap text-[10px]" style={{ color: "var(--text-secondary)", fontFamily: "monospace" }}>
+                            <span style={{ color: "#06b6d4", fontWeight: 700 }}>Score:</span>
+                            <span>(</span>
+                            <span style={{ color: fish.is_edible ? "#10b981" : "#ef4444", fontWeight: 600 }} title="is_edible: 1 if true, 0 if false">{edibleMultiplier}</span>
+                            <span>×</span>
+                            <span style={{ color: "#8b5cf6", fontWeight: 600 }} title="commonality: rare=1, uncommon=2, common=3">{commonalityValue}</span>
+                            <span>) ÷ (</span>
+                            <span style={{ color: "#f59e0b", fontWeight: 600 }} title="peak_season_score: 1 if in season, up to 6 if far from season">{peakSeasonScore.toFixed(1)}</span>
+                            <span>+</span>
+                            <span style={{ color: "#ec4899", fontWeight: 600 }} title="cleaning_difficulty: easy=1, medium=2, hard=3">{cleaningValue}</span>
+                            <span>) =</span>
+                            <span style={{ color: "#06b6d4", fontWeight: 700, fontSize: 11 }}>{fish.score.toFixed(3)}</span>
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </CardContent>
           </Card>
 
@@ -321,7 +436,7 @@ useEffect(() => {
               <CardContent>
                 <h2 style={{ fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Number of Fish Caught per Month</h2>
                 <ResponsiveContainer width="100%" height={130}>
-                  <LineChart data={catchData}>
+                  <LineChart data={catchData} margin={{ left: 20, right: 10, top: 5, bottom: 5 }}>
                     <defs>
                       <linearGradient id="colorCaught" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
@@ -338,7 +453,7 @@ useEffect(() => {
                       stroke="var(--text-secondary)"
                       tick={{ fill: "var(--text-secondary)", fontSize: 12 }}
                       axisLine={{ stroke: "rgba(0,0,0,0.08)" }}
-                      label={{ value: "Fish Caught", angle: -90, position: "insideLeft", fill: "var(--text-secondary)" }}
+                      label={{ value: "Fish Caught", angle: -90, position: "insideLeft", fill: "var(--text-secondary)", offset: -5 }}
                     />
                     <Tooltip
                       contentStyle={{
@@ -369,13 +484,13 @@ useEffect(() => {
             <Card className="col-span-6">
               <CardContent>
                 <h2 style={{ fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Fish Types</h2>
-                <ResponsiveContainer width="100%" height={120}>
+                <ResponsiveContainer width="100%" height={140}>
                   <PieChart>
                     <Pie
                       data={onboardData}
                       cx="50%"
                       cy="50%"
-                      outerRadius={45}
+                      outerRadius={50}
                       dataKey="value"
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       labelLine={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
@@ -412,9 +527,9 @@ useEffect(() => {
                         <RadialBarChart
                           cx="50%"
                           cy="50%"
-                          innerRadius="70%"
-                          outerRadius="90%"
-                          barSize={20}
+                          innerRadius="75%"
+                          outerRadius="95%"
+                          barSize={16}
                           data={[{ name: "Score", value: fishingScore, fill: getConditionColor(fishingScore) }]}
                           startAngle={180}
                           endAngle={0}
