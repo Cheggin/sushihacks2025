@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Card, CardContent } from './ui/card';
-import { Activity, TrendingUp, Anchor, AlertCircle, MapPin } from 'lucide-react';
+import { Activity, TrendingUp, Anchor, AlertCircle } from 'lucide-react';
 
 interface DashboardSummaryProps {
   ctsData?: {
@@ -13,7 +13,7 @@ interface DashboardSummaryProps {
   temperature: number;
 }
 
-const DashboardSummary = memo(function DashboardSummary({ ctsData, fishingScore, temperature }: DashboardSummaryProps) {
+const DashboardSummary = memo(function DashboardSummary({ ctsData, fishingScore }: DashboardSummaryProps) {
   const getCTSColor = (severity?: string) => {
     if (!severity) return 'bg-gray-500/20 border-gray-500/30 text-gray-400';
     if (severity === 'mild') return 'bg-green-500/20 border-green-500/30 text-green-400';
@@ -34,34 +34,6 @@ const DashboardSummary = memo(function DashboardSummary({ ctsData, fishingScore,
     if (severity === 'moderate') return <AlertCircle className="w-5 h-5" />;
     return <AlertCircle className="w-5 h-5" />;
   };
-
-  const getFishingConditionColor = (score: number) => {
-    if (score >= 80) return 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400';
-    if (score >= 60) return 'bg-green-500/20 border-green-500/30 text-green-400';
-    if (score >= 40) return 'bg-yellow-500/20 border-yellow-500/30 text-yellow-400';
-    return 'bg-red-500/20 border-red-500/30 text-red-400';
-  };
-
-  const getFishingLabel = (score: number) => {
-    if (score >= 80) return 'Excellent';
-    if (score >= 60) return 'Good';
-    if (score >= 40) return 'Fair';
-    return 'Poor';
-  };
-
-  // AI-generated fish recommendations based on health
-  const getRecommendedFish = () => {
-    if (!ctsData) return ['Tuna', 'Salmon', 'Mackerel'];
-
-    if (ctsData.severity === 'severe') {
-      return ['Sardines', 'Anchovies', 'Mackerel'];
-    } else if (ctsData.severity === 'moderate') {
-      return ['Mackerel', 'Sea Bass', 'Bonito'];
-    }
-    return ['Tuna', 'Yellowfin', 'Salmon'];
-  };
-
-  const recommendedFish = getRecommendedFish();
 
   return (
     <Card className="col-span-12">
@@ -93,29 +65,26 @@ const DashboardSummary = memo(function DashboardSummary({ ctsData, fishingScore,
 
             {/* Catch Summary */}
             <div className="p-3 rounded-lg border bg-emerald-500/10 border-emerald-500/30">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Anchor className="w-4 h-4 text-emerald-400" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Catch Summary</span>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Anchor className="w-5 h-5 text-emerald-400" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-400">Catch Summary</span>
               </div>
-              <p className="text-xl font-bold mb-1 text-emerald-400">156 kg</p>
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-1">
-                  <TrendingUp className="w-3 h-3 text-emerald-400" />
-                  <p className="text-[10px] opacity-80 text-white">+12% vs last week</p>
-                </div>
-                <p className="text-[10px] opacity-80 text-white">Monthly: 2,435 kg</p>
+              <p className="text-3xl font-bold mb-2 text-emerald-400">156 kg</p>
+              <div className="flex items-center gap-1.5">
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+                <p className="text-sm font-medium text-white">+12% vs last week</p>
               </div>
             </div>
 
             {/* AI Recommendation */}
             <div className="p-3 rounded-lg border bg-cyan-500/10 border-cyan-500/30">
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <Activity className="w-4 h-4 text-cyan-400" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-cyan-400">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Activity className="w-5 h-5 text-cyan-400" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-cyan-400">
                   AI Recommendation
                 </span>
               </div>
-              <p className="text-xs text-white/80 leading-tight">
+              <p className="text-base text-white/95 leading-snug font-semibold">
                 {ctsData && ctsData.severity === 'severe' && (
                   "Focus on lighter species. Use ergonomic tools and take frequent breaks."
                 )}

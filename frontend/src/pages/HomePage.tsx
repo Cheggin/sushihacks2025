@@ -15,7 +15,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
   RadialBarChart,
   RadialBar,
   PolarAngleAxis,
@@ -52,12 +51,6 @@ const catchData = [
   { month: "Dec", caught: 156 },
 ];
 
-const onboardData = [
-  { name: "Tuna", value: 8 },
-  { name: "Eel", value: 6 },
-  { name: "Sea Urchin", value: 10 },
-  { name: "Mackerel", value: 5 },
-];
 
 // Professional colors for dark/transparent background - ocean palette
 const COLORS = ["#3b82f6", "#06b6d4", "#f59e0b", "#ec4899", "#8b5cf6", "#10b981"];
@@ -115,43 +108,6 @@ const calculateFishingScore = ({
 const LATITUDE = 35.5311;
 const LONGITUDE = 139.8894;
 
-const weatherCodeToEmoji = (code: number) => {
-  switch (code) {
-    case 0:
-      return "☀️";
-    case 1:
-      return "🌤️";
-    case 2:
-      return "⛅";
-    case 3:
-      return "🌥️";
-    case 45:
-    case 48:
-      return "🌫️";
-    case 51:
-    case 53:
-    case 55:
-      return "🌧️";
-    case 61:
-    case 63:
-    case 65:
-      return "🌦️";
-    case 71:
-    case 73:
-    case 75:
-      return "🌨️";
-    case 80:
-    case 81:
-    case 82:
-      return "🌧️";
-    case 95:
-    case 96:
-    case 99:
-      return "🌩️";
-    default:
-      return "🌫️";
-  }
-};
 
 export default function HomePage({
   isHomePageVisible,
@@ -169,6 +125,7 @@ export default function HomePage({
   const [showAIAssistant, setShowAIAssistant] = useState(false);
   const [rankedFish, setRankedFish] = useState<RankedFish[]>([]);
   const [fishLoading, setFishLoading] = useState(true);
+  const [fishTypeData, setFishTypeData] = useState<Array<{ name: string; value: number }>>([]);
   const [colorMode, setColorMode] = useState<"color" | "bw">(() => {
     const saved = localStorage.getItem("theme");
     return (saved as "color" | "bw") || "color";
@@ -205,7 +162,7 @@ export default function HomePage({
   // Apply saved theme on mount
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", colorMode);
-  }, []);
+  }, [colorMode]);
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -247,7 +204,7 @@ export default function HomePage({
       }
     };
 
-    fetchWeather();
+    void fetchWeather();
   }, []);
 
 
@@ -345,16 +302,61 @@ export default function HomePage({
             : 1 + ((fish.score - minScore) / (maxScore - minScore)) * 9
         }));
 
-        // Sort by normalized score (higher is better) and take top 3
-        const sorted = normalized.sort((a, b) => b.score - a.score).slice(0, 3);
+        // Sort by normalized score (higher is better) and take top 10
+        const sorted = normalized.sort((a, b) => b.score - a.score).slice(0, 10);
 
-        // Reassign ranks to be 1, 2, 3
+        // Reassign ranks to be 1, 2, 3, ...
         const reranked = sorted.map((fish, index) => ({
           ...fish,
           rank: index + 1
         }));
 
         setRankedFish(reranked);
+
+        // Calculate fish type distribution from closest fish
+        const familyCounts = new Map<string, number>();
+        occurrenceData.data
+          .filter((fish: any) => fish.decimalLatitude && fish.decimalLongitude && fish.family)
+          .slice(0, 100) // Use closest 100 fish for pie chart
+          .forEach((fish: any) => {
+            const family = fish.family;
+            familyCounts.set(family, (familyCounts.get(family) || 0) + 1);
+          });
+
+        // Map scientific family names to common names
+        const familyCommonNames: { [key: string]: string } = {
+          'Scombridae': 'Mackerels & Tunas',
+          'Myctophidae': 'Lanternfish',
+          'Clupeidae': 'Herrings & Sardines',
+          'Gobiidae': 'Gobies',
+          'Engraulidae': 'Anchovies',
+          'Carangidae': 'Jacks & Pompanos',
+          'Sparidae': 'Sea Breams',
+          'Serranidae': 'Groupers',
+          'Labridae': 'Wrasses',
+          'Salmonidae': 'Salmon & Trout',
+          'Gadidae': 'Cods',
+          'Pleuronectidae': 'Righteye Flounders',
+          'Soleidae': 'Soles',
+          'Anguillidae': 'Freshwater Eels',
+          'Synodontidae': 'Lizardfishes',
+          'Macrouridae': 'Grenadiers',
+          'Zoarcidae': 'Eelpouts',
+          'Paralichthyidae': 'Sand Flounders',
+          'Bothidae': 'Lefteye Flounders',
+          'Moridae': 'Morid Cods'
+        };
+
+        // Convert to array and sort by count, take top 5
+        const typeData = Array.from(familyCounts.entries())
+          .map(([scientificName, value]) => ({
+            name: familyCommonNames[scientificName] || scientificName,
+            value
+          }))
+          .sort((a, b) => b.value - a.value)
+          .slice(0, 5);
+
+        setFishTypeData(typeData);
       } catch (err) {
         console.error('Error fetching fish rankings:', err);
       } finally {
@@ -362,7 +364,7 @@ export default function HomePage({
       }
     };
 
-    fetchFishRankings();
+    void fetchFishRankings();
   }, [userLocation]);
 
   // Transform latestAssessment to match DashboardSummary's expected format
@@ -452,7 +454,6 @@ export default function HomePage({
                       "Engraulis japonicus": "Japanese Anchovy",
                       "Thunnus alalunga": "Albacore",
                       "Thunnus obesus": "Bigeye Tuna",
-                      "Katsuwonus pelamis": "Skipjack Tuna",
                       "Sarda orientalis": "Striped Bonito",
                       "Anguilla japonica": "Japanese Eel"
                     };
@@ -465,12 +466,6 @@ export default function HomePage({
                     const commonalityValue = fish.commonality === "rare" ? 1 : fish.commonality === "uncommon" ? 2 : 3;
                     const cleaningValue = fish.cleaning_difficulty === "easy" ? 1 : fish.cleaning_difficulty === "medium" ? 2 : 3;
                     const peakSeasonValue = fish.peak_season === "in_season" ? 1 : fish.peak_season === "near_season" ? 3 : 6;
-
-                    // Backend base score
-                    const baseScore = fish.original_score || ((edibleMultiplier * commonalityValue) / (peakSeasonValue + cleaningValue));
-
-                    // Distance factor
-                    const distanceFactor = 1 + (fish.distance || 0) * 10;
 
                     return (
                       <li
@@ -506,44 +501,6 @@ export default function HomePage({
                               {fish.score.toFixed(1)}
                             </span>
                             <span style={{ color: "#06b6d4", fontSize: 10, fontWeight: 600, opacity: 0.8 }}>/ 10</span>
-                          </div>
-                        </div>
-
-                        {/* Combined Formula Display */}
-                        <div className="mt-2 px-4 py-3 rounded-lg" style={{
-                          backgroundColor: "rgba(6, 182, 212, 0.1)",
-                          border: "2px solid rgba(6, 182, 212, 0.3)"
-                        }}>
-                          <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-1 flex-wrap text-[11px]" style={{ color: "var(--text-secondary)", fontFamily: "monospace", lineHeight: 1.6 }}>
-                              <span style={{ color: "#06b6d4", fontWeight: 700, fontSize: 12 }}>Score =</span>
-                              <span className="text-white">[</span>
-                              <span>(</span>
-                              <span style={{ color: fish.is_edible ? "#10b981" : "#ef4444", fontWeight: 700 }} title="is_edible: 1 if true, 0 if false">{edibleMultiplier}</span>
-                              <span>×</span>
-                              <span style={{ color: "#8b5cf6", fontWeight: 700 }} title="commonality: rare=1, uncommon=2, common=3">{commonalityValue}</span>
-                              <span>) ÷ (</span>
-                              <span style={{ color: "#f59e0b", fontWeight: 700 }} title="peak_season: in=1, near=3, off=6">{peakSeasonValue}</span>
-                              <span>+</span>
-                              <span style={{ color: "#ec4899", fontWeight: 700 }} title="cleaning_difficulty: easy=1, medium=2, hard=3">{cleaningValue}</span>
-                              <span>)</span>
-                              <span className="text-white">]</span>
-                              <span>÷</span>
-                              <span className="text-white">(</span>
-                              <span>1 +</span>
-                              <span style={{ color: "#10b981", fontWeight: 700 }} title="distance from your location">{(fish.distance || 0).toFixed(2)}</span>
-                              <span>× 10</span>
-                              <span className="text-white">)</span>
-                              <span className="mx-1">=</span>
-                              <span style={{
-                                color: "#06b6d4",
-                                fontWeight: 900,
-                                fontSize: 14,
-                                padding: "2px 8px",
-                                backgroundColor: "rgba(6, 182, 212, 0.2)",
-                                borderRadius: "4px"
-                              }}>{fish.score.toFixed(1)}</span>
-                            </div>
                           </div>
                         </div>
                       </li>
@@ -590,7 +547,7 @@ export default function HomePage({
                       }}
                       itemStyle={{ color: "#06b6d4" }}
                       labelStyle={{ color: "rgba(255,255,255,0.95)", fontWeight: "bold" }}
-                      formatter={(value) => [`${value} fish`, "Caught"]}
+                      formatter={(value: number) => [`${value} fish`, "Caught"]}
                     />
                     <Line
                       type="monotone"
@@ -608,20 +565,20 @@ export default function HomePage({
             </Card>
 
             <Card className="col-span-6">
-              <CardContent>
-                <h2 style={{ fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Fish Types</h2>
-                <ResponsiveContainer width="100%" height={140}>
-                  <PieChart>
+              <CardContent style={{ paddingTop: "20px", paddingBottom: "12px" }}>
+                <h2 style={{ fontWeight: 600, marginBottom: 16, color: "var(--text-primary)" }}>Fish Types</h2>
+                <ResponsiveContainer width="100%" height={150}>
+                  <PieChart margin={{ top: 20, right: 10, bottom: 5, left: 10 }}>
                     <Pie
-                      data={onboardData}
+                      data={fishTypeData}
                       cx="50%"
                       cy="50%"
                       outerRadius={50}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }: { name: string; percent: number }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       labelLine={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
                     >
-                      {onboardData.map((entry, idx) => (
+                      {fishTypeData.map((entry, idx) => (
                         <Cell key={idx} fill={COLORS[idx % COLORS.length]} stroke="rgba(0,0,0,0.06)" strokeWidth={2} />
                       ))}
                     </Pie>
@@ -642,9 +599,9 @@ export default function HomePage({
             </Card>
 
             <Card className="col-span-6">
-              <CardContent>
-                <h2 style={{ fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Fishing Conditions</h2>
-                <div className="relative h-[120px] flex items-center justify-center">
+              <CardContent style={{ paddingTop: "16px", paddingBottom: "12px" }}>
+                <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Fishing Conditions</h2>
+                <div className="relative h-[140px] flex items-center justify-center mb-2">
                   {loading ? (
                     <div style={{ color: "var(--muted)" }}>Loading...</div>
                   ) : (
@@ -652,47 +609,46 @@ export default function HomePage({
                       <ResponsiveContainer width="100%" height="100%">
                         <RadialBarChart
                           cx="50%"
-                          cy="50%"
-                          innerRadius="75%"
+                          cy="55%"
+                          innerRadius="65%"
                           outerRadius="95%"
-                          barSize={16}
+                          barSize={22}
                           data={[{ name: "Score", value: fishingScore, fill: getConditionColor(fishingScore) }]}
                           startAngle={180}
                           endAngle={0}
                         >
                           <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-                          <RadialBar background={{ fill: "rgba(0,0,0,0.04)" }} dataKey="value" cornerRadius={10} />
+                          <RadialBar background={{ fill: "rgba(255,255,255,0.08)" }} dataKey="value" cornerRadius={10} />
                         </RadialBarChart>
                       </ResponsiveContainer>
 
                       {/* Center text overlay */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <div style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>{fishingScore}</div>
-                        <div className="font-semibold text-sm" style={{ color: getConditionColor(fishingScore) }}>
+                      <div className="absolute inset-0 flex flex-col items-center pointer-events-none" style={{ paddingTop: "45px" }}>
+                        <div style={{ fontSize: 36, fontWeight: 900, color: "var(--text-primary)", marginBottom: 6 }}>{fishingScore}</div>
+                        <div className="font-semibold text-base" style={{ color: getConditionColor(fishingScore) }}>
                           {getConditionLabel(fishingScore)}
                         </div>
-                        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>{temperature}°C</div>
                       </div>
                     </>
                   )}
                 </div>
 
                 {/* Legend */}
-                <div className="grid grid-cols-4 gap-1 mt-2" style={{ color: "var(--text-primary)", fontSize: "10px" }}>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#06b6d4" }}></div>
+                <div className="flex items-center justify-center gap-4" style={{ color: "var(--text-primary)", fontSize: "10px" }}>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#06b6d4" }}></div>
                     <span>Excellent</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#10b981" }}></div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#10b981" }}></div>
                     <span>Good</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#f59e0b" }}></div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#f59e0b" }}></div>
                     <span>Fair</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#ef4444" }}></div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "#ef4444" }}></div>
                     <span>Poor</span>
                   </div>
                 </div>

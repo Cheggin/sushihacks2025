@@ -234,7 +234,7 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
     } catch (error) {
       console.error('Grip strength collection failed:', error);
       alert(
-        `Failed to collect grip strength data: ${error}. Make sure the sensor API is running on port 8003.`
+        `Failed to collect grip strength data: ${error instanceof Error ? error.message : String(error)}. Make sure the sensor API is running on port 8003.`
       );
     } finally {
       setIsCollectingGrip(false);
@@ -322,7 +322,7 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
     } catch (error) {
       console.error('Pinch strength collection failed:', error);
       alert(
-        `Failed to collect pinch strength data: ${error}. Make sure the sensor API is running on port 8003.`
+        `Failed to collect pinch strength data: ${error instanceof Error ? error.message : String(error)}. Make sure the sensor API is running on port 8003.`
       );
     } finally {
       setIsCollectingPinch(false);
@@ -382,7 +382,7 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
       setRiskTestStep('results');
     } catch (error) {
       console.error('Prediction failed:', error);
-      alert(`Failed to get CTS prediction: ${error}. Make sure the CTS API is running on port 8002.`);
+      alert(`Failed to get CTS prediction: ${error instanceof Error ? error.message : String(error)}. Make sure the CTS API is running on port 8002.`);
     }
   };
 
@@ -447,7 +447,7 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
             </p>
           </div>
 
-          <form onSubmit={handleOnboardingSubmit} className="space-y-4">
+          <form onSubmit={(e) => void handleOnboardingSubmit(e)} className="space-y-4">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-white mb-1">Age</label>
@@ -687,7 +687,7 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
                   <Hand className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
                   <p className="text-white/70 mb-6">Ready to measure grip strength</p>
                   <button
-                    onClick={collectGripData}
+                    onClick={() => void collectGripData()}
                     className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-8 py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
                   >
                     Start Grip Measurement
@@ -815,7 +815,7 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
                   <Heart className="w-16 h-16 text-cyan-400 mx-auto mb-4" />
                   <p className="text-white/70 mb-6">Ready to measure pinch strength</p>
                   <button
-                    onClick={collectPinchData}
+                    onClick={() => void collectPinchData()}
                     className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-8 py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
                   >
                     Start Pinch Measurement
@@ -909,7 +909,7 @@ export default function Health({ togglePopup }: { togglePopup: (page: string) =>
                         Retake Measurement
                       </button>
                       <button
-                        onClick={continueToSummary}
+                        onClick={() => void continueToSummary()}
                         className="flex-1 bg-cyan-500 hover:bg-cyan-600 text-white font-medium py-3 rounded-lg transition-all shadow-lg shadow-cyan-500/20"
                       >
                         View Assessment

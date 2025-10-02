@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
-import FishMapPage from "./pages/FishMapPage";
 import HealthPage from "./pages/Health";
 import Landing from "./pages/Landing";
 import GlobeBackground from "./components/GlobeBackground";

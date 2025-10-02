@@ -114,7 +114,7 @@ const getLastPrice = (scientificName: string, priceData: FishPriceData[]): Price
 
 
 // Generate common name from scientific name
-const getCommonName = (scientificName: string, genus?: string): string => {
+const getCommonName = (scientificName: string, _genus?: string): string => {
   const commonNames: Record<string, string> = {
     // FISH - TUNA & MACKEREL (SCOMBRIDAE)
     'Scombridae': 'Tuna/Mackerel Family',
@@ -363,8 +363,8 @@ const getCommonName = (scientificName: string, genus?: string): string => {
   }
 
   // Try genus match
-  if (genus && commonNames[genus]) {
-    return commonNames[genus];
+  if (_genus && commonNames[_genus]) {
+    return commonNames[_genus];
   }
 
   // Try partial match
@@ -397,7 +397,7 @@ const getCategoryColor = (category: string): string => {
 };
 
 // Get general category from class/phylum
-const getCategory = (className?: string, phylum?: string): string => {
+const getCategory = (className?: string, _phylum?: string): string => {
   if (!className) return 'Unknown';
 
   const categoryMap: Record<string, string> = {
@@ -499,7 +499,7 @@ export default function FishSidebar({ fish, onClose }: FishSidebarProps) {
       }
     };
 
-    loadPrices();
+    void loadPrices();
   }, []);
 
   if (!fish) return null;

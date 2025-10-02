@@ -138,20 +138,9 @@ const MarketsPage = ({
     };
 
     if (isMarketsPageVisible) {
-      fetchMarkets();
+      void fetchMarkets();
     }
-  }, [isMarketsPageVisible, userLocation]);
-
-  // Re-sort markets when sort type changes
-  useEffect(() => {
-    if (markets.length > 0) {
-      const sortedMarkets = sortMarkets(markets, sortType).slice(0, 4);
-      setMarkets(sortedMarkets);
-      if (sortedMarkets.length > 0 && !sortedMarkets.find(m => m.place_id === selectedMarket?.place_id)) {
-        setSelectedMarket(sortedMarkets[0]);
-      }
-    }
-  }, [sortType]);
+  }, [isMarketsPageVisible, userLocation, sortType]);
 
   return (
     <div

@@ -104,12 +104,12 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
       }
     };
 
-    loadFishData();
+    void loadFishData();
   }, []);
 
   // Load country data for labels
   useEffect(() => {
-    fetch('//unpkg.com/world-atlas/countries-110m.json')
+    void fetch('//unpkg.com/world-atlas/countries-110m.json')
       .then(res => res.json())
       .then(data => {
         setCountries(data);
@@ -228,7 +228,7 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
   };
 
   // Helper function to get common name
-  const getCommonName = (scientificName: string, genus?: string, family?: string): string => {
+  const getCommonName = (scientificName: string, _genus?: string, _family?: string): string => {
     const commonNames: Record<string, string> = {
       'Thunnus albacares': 'Yellowfin Tuna', 'Thunnus': 'Tuna', 'Katsuwonus': 'Skipjack Tuna',
       'Euthynnus': 'Little Tunny', 'Gymnosarda unicolor': 'Dogtooth Tuna', 'Scombridae': 'Tuna/Mackerel',
@@ -242,8 +242,8 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
       'Acartia': 'Copepod', 'Holothuria': 'Sea Cucumber', 'Acanthaster planci': 'Crown-of-Thorns Starfish',
     };
     if (commonNames[scientificName]) return commonNames[scientificName];
-    if (genus && commonNames[genus]) return commonNames[genus];
-    if (family && commonNames[family]) return commonNames[family];
+    if (_genus && commonNames[_genus]) return commonNames[_genus];
+    if (_family && commonNames[_family]) return commonNames[_family];
     return scientificName.split(' ')[0];
   };
 
@@ -467,6 +467,7 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
         clearTimeout(hoverTimeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fishData, filters, onFishClick, onCountsUpdate]);
 
   // Add user marker when available
@@ -559,11 +560,11 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
     // Add country labels that are always visible
     globeInstance.current
       .labelsData(countries.features)
-      .labelLat((d: any) => {
+      .labelLat((_d: any) => {
         // Calculate centroid latitude (simplified)
         return 0;
       })
-      .labelLng((d: any) => 0)
+      .labelLng((_d: any) => 0)
       .labelText((d: any) => d.properties.name)
       .labelSize(0.5)
       .labelColor(() => 'rgba(255, 255, 255, 0.7)')
@@ -571,7 +572,7 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
       .labelAltitude(0.01);
   }, [countries]);
 
-  const getColorFromFishType = (scientificName: string, genus?: string, family?: string) => {
+  const getColorFromFishType = (scientificName: string, _genus?: string, _family?: string) => {
     // Color mapping based on scientific names and taxonomy
     const colors: Record<string, string> = {
       // Tuna species - Dark blue/grey shades
@@ -624,8 +625,8 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
     }
 
     // Try genus match
-    if (genus && colors[genus]) {
-      return colors[genus];
+    if (_genus && colors[_genus]) {
+      return colors[_genus];
     }
 
     // Try partial match in scientific name
@@ -647,8 +648,8 @@ export default function GlobeBackground({ onFishClick, userMarker, filters, onCo
       'Megacalanidae': '#ff8c42',
     };
 
-    if (family && familyColors[family]) {
-      return familyColors[family];
+    if (_family && familyColors[_family]) {
+      return familyColors[_family];
     }
 
     // Generate a consistent color based on the first letter of the name

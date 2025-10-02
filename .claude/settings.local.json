@@ -20,7 +20,9 @@
       "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_ItPJd0/**)",
       "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_7Pb41K/**)",
       "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_IhW68W/**)",
-      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_1TfV02/**)"
+      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_1TfV02/**)",
+      "Bash(git checkout:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

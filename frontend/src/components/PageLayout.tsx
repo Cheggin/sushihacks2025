@@ -1,6 +1,4 @@
-import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom"; // This will track route changes
-import Navbar from "./Navbar";
+import React from "react";
 
 interface PageLayoutProps {
   title: string;
@@ -10,21 +8,6 @@ interface PageLayoutProps {
 }
 
 const PageLayout: React.FC<PageLayoutProps> = ({ title, rightText, children, togglePopup }) => {
-  const location = useLocation(); // Track location
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-
-  // Update active section based on route
-  useEffect(() => {
-    if (location.pathname === "/homepage") {
-      setActiveSection("homepage");
-    } else if (location.pathname === "/map") {
-      setActiveSection("map");
-    } else if (location.pathname === "/health") {
-      setActiveSection("health");
-    } else {
-      setActiveSection(null);
-    }
-  }, [location]);
 
   return (
     <div
