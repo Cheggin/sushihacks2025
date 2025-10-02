@@ -14,9 +14,10 @@ import google.generativeai as genai
 # Load environment variables
 load_dotenv()
 
-# Add fish_market directory to path to import fish_ranking
+# Add fish_market directory to path to import fish_ranking and market_insight
 sys.path.append(str(Path(__file__).parent / "fish_market"))
 from fish_ranking import fish_ranking
+from market_insight import market_insight
 
 app = FastAPI()
 
@@ -145,6 +146,9 @@ async def root():
                 "GET /nearby": "Find places near coordinates",
                 "GET /place-details/{place_id}": "Get detailed place information",
                 "GET /nearby-with-details": "Find places with phone numbers (slower)"
+            },
+            "market_analysis": {
+                "POST /market-insight": "Generate AI-powered market insights from fish market data"
             },
             "ai_chat": {
                 "POST /chat": "AI fishing assistant chatbot"
@@ -494,6 +498,42 @@ async def nearby_with_details(
     print("="*60 + "\n")
 
     return NearbyResponse(results=detailed_results)
+
+
+class MarketInsightRequest(BaseModel):
+    markets: List[dict]
+
+
+@app.post("/market-insight")
+async def get_market_insight(request: MarketInsightRequest):
+    """
+    Generate market insights from fish market data.
+
+    Input: List of markets (typically from /nearby-with-details)
+    Output: Comprehensive market analysis with summary, findings, and recommendations
+
+    Example:
+    POST /market-insight
+    {
+        "markets": [
+            {
+                "name": "Tokyo Fish Market",
+                "rating": 4.5,
+                "address": "5-2-1 Toyosu, Koto City, Tokyo",
+                "phone": "+81-3-1234-5678",
+                "location": {"lat": 35.6495, "lng": 139.7854}
+            }
+        ]
+    }
+    """
+    if not request.markets:
+        raise HTTPException(status_code=400, detail="markets list cannot be empty")
+
+    try:
+        insights = market_insight(request.markets)
+        return insights
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating market insights: {str(e)}")
 
 
 if __name__ == "__main__":
