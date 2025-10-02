@@ -197,7 +197,7 @@ body {
   -webkit-backdrop-filter: none !important;
 }
 
-/* Ensure all buttons are 100% opaque in light mode with proper borders (except navbar) */
+/* Ensure all buttons are 100% opaque in light mode with proper borders (except navbar and table headers) */
 [data-theme="accessible"] button {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
@@ -206,6 +206,16 @@ body {
 
 /* Override: Navbar buttons specifically have no borders */
 [data-theme="accessible"] nav button {
+  border: none !important;
+}
+
+/* Override: Table header sort buttons have no borders */
+[data-theme="accessible"] .dashboard-content button[class*="text-left"],
+[data-theme="accessible"] .dashboard-content button[class*="text-center"],
+[data-theme="accessible"] .dashboard-content button[class*="text-right"],
+[data-theme="accessible"] .page-content button[class*="text-left"],
+[data-theme="accessible"] .page-content button[class*="text-center"],
+[data-theme="accessible"] .page-content button[class*="text-right"] {
   border: none !important;
 }
 

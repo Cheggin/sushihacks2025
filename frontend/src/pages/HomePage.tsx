@@ -6,36 +6,15 @@ import { Card, CardContent } from "../components/ui/card";
 import AIAssistant from "../components/AIAssistant";
 import PricePrediction from "../components/PricePrediction";
 import DashboardSummary from "../components/DashboardSummary";
-import {
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Legend,
-  RadialBarChart,
-  RadialBar,
-  PolarAngleAxis,
-} from "recharts";
-import type { PieLabelRenderProps } from "recharts";
-import { Search, Fish, MessageCircle } from "lucide-react";
+import { Search, Fish, MessageCircle, ChevronUp, ChevronDown } from "lucide-react";
 
-// Dummy data
+// Dummy data with percentages integrated
 const fishData = [
-  { id: "#F-001", fish: "Tuna", date: "31/01/2025" },
-  { id: "#F-002", fish: "Salmon", date: "31/01/2025" },
-  { id: "#F-003", fish: "Mackerel", date: "31/01/2025" },
-  { id: "#F-004", fish: "Sardine", date: "31/01/2025" },
+  { id: "#F-001", fish: "Tuna", date: "31/01/2025", percentage: 28 },
+  { id: "#F-002", fish: "Eel", date: "31/01/2025", percentage: 21 },
+  { id: "#F-003", fish: "Sea Urchin", date: "31/01/2025", percentage: 34 },
+  { id: "#F-004", fish: "Mackerel", date: "31/01/2025", percentage: 17 },
 ];
-
-const onboardData = [
-  { name: "Tuna", value: 8 },
-  { name: "Eel", value: 6 },
-  { name: "Sea Urchin", value: 10 },
-  { name: "Mackerel", value: 5 },
-];
-// Professional colors for dark/transparent background - ocean palette
-const COLORS = ["#3b82f6", "#06b6d4", "#f59e0b", "#ec4899", "#8b5cf6", "#10b981"];
 
 // Calculate fishing conditions score (0-100) based on weather
 const calculateFishingScore = (temp: number, weatherCode: number): number => {
@@ -76,6 +55,9 @@ const weatherCodeToEmoji = (code: number) => {
 
 const USER_ID = 'user_001';
 
+type SortKey = 'id' | 'fish' | 'percentage' | 'date';
+type SortDirection = 'asc' | 'desc';
+
 export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boolean }) {
   const [weather, setWeather] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -83,7 +65,8 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
   const [fishingScore, setFishingScore] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
-  const [isAccessibleMode, setIsAccessibleMode] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>('id');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   // Fetch CTS data
   const assessments = useQuery(api.ctsAssessments.getByUserId, { userId: USER_ID });
@@ -95,34 +78,39 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
       )
     : null;
 
-  const getConditionLabel = (score: number): string => {
-    if (score >= 80) return "Excellent";
-    if (score >= 60) return "Good";
-    if (score >= 40) return "Fair";
-    return "Poor";
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDirection('asc');
+    }
   };
 
-  const getConditionColor = (score: number): string => {
-    if (score >= 80) return "#06b6d4"; // Cyan/Blue
-    if (score >= 60) return "#10b981"; // Green
-    if (score >= 40) return "#f59e0b"; // Amber
-    return "#ef4444"; // Red
-  };
+  const sortedFishData = [...fishData].sort((a, b) => {
+    let comparison = 0;
 
-  // Track accessible mode
-  useEffect(() => {
-    const checkAccessibleMode = () => {
-      setIsAccessibleMode(document.documentElement.getAttribute('data-theme') === 'accessible');
-    };
-    
-    checkAccessibleMode();
-    
-    // Listen for theme changes
-    const observer = new MutationObserver(checkAccessibleMode);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-    
-    return () => observer.disconnect();
-  }, []);
+    if (sortKey === 'id') {
+      comparison = a.id.localeCompare(b.id);
+    } else if (sortKey === 'fish') {
+      comparison = a.fish.localeCompare(b.fish);
+    } else if (sortKey === 'percentage') {
+      comparison = a.percentage - b.percentage;
+    } else if (sortKey === 'date') {
+      comparison = a.date.localeCompare(b.date);
+    }
+
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
+    if (sortKey !== columnKey) {
+      return <ChevronUp className="w-3 h-3 inline ml-1 opacity-20" />;
+    }
+    return sortDirection === 'asc' ?
+      <ChevronUp className="w-3 h-3 inline ml-1" /> :
+      <ChevronDown className="w-3 h-3 inline ml-1" />;
+  };
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -244,154 +232,58 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
                 />
               </div>
 
-              <ul className="space-y-1">
-                {fishData.map((f) => (
+              {/* Header Labels */}
+              <div className="flex justify-between items-center text-xs font-semibold text-white/60 uppercase tracking-wider px-2 pb-2 border-b border-white/30">
+                <button
+                  onClick={() => handleSort('id')}
+                  className="w-16 text-left hover:text-cyan-400 transition-colors"
+                >
+                  ID<SortIcon columnKey="id" />
+                </button>
+                <button
+                  onClick={() => handleSort('fish')}
+                  className="flex-1 text-center hover:text-cyan-400 transition-colors"
+                >
+                  Fish<SortIcon columnKey="fish" />
+                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => handleSort('percentage')}
+                    className="w-12 text-right whitespace-nowrap hover:text-cyan-400 transition-colors"
+                  >
+                    Catch %<SortIcon columnKey="percentage" />
+                  </button>
+                  <button
+                    onClick={() => handleSort('date')}
+                    className="w-20 text-right hover:text-cyan-400 transition-colors"
+                  >
+                    Date<SortIcon columnKey="date" />
+                  </button>
+                </div>
+              </div>
+
+              <ul className="space-y-1 mt-1">
+                {sortedFishData.map((f) => (
                   <li
                     key={f.id}
-                    className="flex justify-between text-sm border-b border-white/20 py-3 hover:bg-white/10 hover:border-cyan-400/40 rounded-lg px-2 transition-all cursor-pointer group"
+                    className="flex justify-between items-center text-sm border-b border-white/20 py-3 hover:bg-white/10 hover:border-cyan-400/40 rounded-lg px-2 transition-all cursor-pointer group"
                   >
-                    <span className="text-cyan-400 font-mono group-hover:text-cyan-300">{f.id}</span>
-                    <span className="text-white font-medium group-hover:text-cyan-100">{f.fish}</span>
-                    <span className="text-white/60 text-xs group-hover:text-white/80">{f.date}</span>
+                    <span className="text-cyan-400 font-mono group-hover:text-cyan-300 w-16">{f.id}</span>
+                    <span className="text-white font-medium group-hover:text-cyan-100 flex-1 text-center">{f.fish}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-cyan-400 text-sm font-semibold w-12 text-right">{f.percentage}%</span>
+                      <span className="text-white/60 text-xs group-hover:text-white/80 w-20 text-right">{f.date}</span>
+                    </div>
                   </li>
                 ))}
               </ul>
             </CardContent>
           </Card>
 
-          {/* Right chart area */}
-          <div className="col-span-8 grid grid-cols-12 gap-3">
-            <Card className="col-span-6">
-              <CardContent>
-                <h2 className="font-semibold text-base mb-2 text-white">
-                  Fish Types
-                </h2>
-                <ResponsiveContainer width="100%" height={160}>
-                  <PieChart margin={{ top: 10, right: 10, bottom: 10, left: 10 }}>
-                    <Pie
-                      data={onboardData}
-                      cx="40%"
-                      cy="50%"
-                      outerRadius={50}
-                      dataKey="value"
-                      label={(props: PieLabelRenderProps) => {
-                        const percent = typeof props.percent === 'number' ? props.percent : 0;
-                        return `${String(props.name)} ${(percent * 100).toFixed(0)}%`;
-                      }}
-                      labelLine={{ stroke: isAccessibleMode ? 'rgba(15,23,42,0.3)' : 'rgba(255,255,255,0.5)', strokeWidth: 1 }}
-                    >
-                      {onboardData.map((entry, idx) => (
-                        <Cell
-                          key={`${entry.name}-${idx}`}
-                          fill={COLORS[idx % COLORS.length]}
-                          stroke="rgba(255,255,255,0.3)"
-                          strokeWidth={2}
-                          aria-label={entry.name}
-                        />
-                      ))}
-                    </Pie>
-                    <Legend
-                      layout="vertical"
-                      align="right"
-                      verticalAlign="middle"
-                      iconType="circle"
-                      iconSize={8}
-                      wrapperStyle={{
-                        paddingLeft: '15px',
-                        fontSize: '12px',
-                        lineHeight: '1.2',
-                      }}
-                      formatter={(value) => <span style={{ color: isAccessibleMode ? '#111827' : 'rgba(255,255,255,0.9)', fontWeight: '500' }}>{value}</span>}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: isAccessibleMode ? '#ffffff' : 'rgba(15, 23, 42, 0.95)',
-                        border: isAccessibleMode ? '2px solid #e2e8f0' : '1px solid rgba(59,130,246,0.4)',
-                        borderRadius: '12px',
-                        backdropFilter: isAccessibleMode ? 'none' : 'blur(16px)',
-                        boxShadow: isAccessibleMode ? '0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06)' : '0 8px 32px rgba(0,0,0,0.4)',
-                      }}
-                      itemStyle={{
-                        color: isAccessibleMode ? '#0f172a' : '#3b82f6'
-                      }}
-                      labelStyle={{
-                        color: isAccessibleMode ? '#0f172a' : 'rgba(255,255,255,0.95)',
-                        fontWeight: 'bold'
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-
-            <Card className="col-span-6">
-              <CardContent>
-                <h2 className="font-semibold text-base mb-2 text-white">
-                  Fishing Conditions
-                </h2>
-                <div className="relative h-[160px] flex items-center justify-center">
-                  {loading ? (
-                    <div className="text-white/60">Loading...</div>
-                  ) : (
-                    <>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RadialBarChart
-                          cx="50%"
-                          cy="50%"
-                          innerRadius="70%"
-                          outerRadius="90%"
-                          barSize={20}
-                          data={[{ name: 'Score', value: fishingScore, fill: getConditionColor(fishingScore) }]}
-                          startAngle={180}
-                          endAngle={0}
-                        >
-                          <PolarAngleAxis type="number" domain={[0, 100]} angleAxisId={0} tick={false} />
-                          <RadialBar
-                            background={{ fill: 'rgba(255,255,255,0.1)' }}
-                            dataKey="value"
-                            cornerRadius={10}
-                          />
-                        </RadialBarChart>
-                      </ResponsiveContainer>
-
-                      {/* Center text overlay */}
-                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <div className="text-4xl font-bold text-white mb-1">{fishingScore}</div>
-                        <div className="text-base font-semibold" style={{ color: getConditionColor(fishingScore) }}>
-                          {getConditionLabel(fishingScore)}
-                        </div>
-                        <div className="text-xs text-white/60 mt-1">{temperature}°C</div>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Legend */}
-                <div className="grid grid-cols-4 gap-2 mt-3 text-xs text-white/70">
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-[#06b6d4]"></div>
-                    <span>Excellent</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-[#10b981]"></div>
-                    <span>Good</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-[#f59e0b]"></div>
-                    <span>Fair</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-[#ef4444]"></div>
-                    <span>Poor</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="col-span-12">
-              <PricePrediction />
-            </Card>
-          </div>
+          {/* Price Predictions */}
+          <Card className="col-span-8">
+            <PricePrediction />
+          </Card>
         </div>
       </PageLayout>
       </div>
