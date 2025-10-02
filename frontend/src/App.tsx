@@ -32,7 +32,12 @@ export default function App() {
   const [isHealthPageVisible, setIsHealthPageVisible] = useState<boolean>(false);
   const [selectedFish, setSelectedFish] = useState<FishOccurrence | null>(null);
   const [showSearchPanel, setShowSearchPanel] = useState<boolean>(false);
-  const [searchFilters, setSearchFilters] = useState<SearchFilters | null>(null);
+  const [searchFilters, setSearchFilters] = useState<SearchFilters | null>({
+    searchText: '',
+    fishTypes: ['Tuna & Mackerel', 'Surgeonfish'],
+    locations: [],
+    priceRange: [0, 100],
+  });
   const [filteredCount, setFilteredCount] = useState<number>(0);
   const [totalCount, setTotalCount] = useState<number>(0);
 
@@ -91,6 +96,23 @@ export default function App() {
         />
       )}
 
+      {/* Navbar when no popup is active */}
+      {userMarker && !activePopup && (
+        <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-40">
+          <div className="flex gap-12 items-center font-medium rounded-3xl px-6 py-3 bg-white/10 backdrop-blur-xl border border-white/20">
+            <button onClick={() => togglePopup("homepage")} style={{ color: "white" }} className="hover:underline">
+              Dashboard
+            </button>
+            <button onClick={() => togglePopup("map")} style={{ color: "white" }} className="hover:underline">
+              Map
+            </button>
+            <button onClick={() => togglePopup("health")} style={{ color: "white" }} className="hover:underline">
+              Health
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Search Toggle Button - only show when globe is visible (no popups active) */}
       {userMarker && !showSearchPanel && !activePopup && (
         <button
@@ -105,15 +127,15 @@ export default function App() {
       <FishSidebar fish={selectedFish} onClose={() => setSelectedFish(null)} />
 
       {/* Main content area */}
-      <main className="flex-1 p-6 relative overflow-y-auto" style={{ zIndex: activePopup ? 20 : 5 }}>
+      <main className="flex-1 p-6 relative overflow-y-auto overflow-x-hidden" style={{ zIndex: activePopup ? 20 : 5 }}>
         {/* Home Page Popup */}
         {activePopup === "homepage" && (
           <div
             className={`${
               isHomePageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"
-            } transition-all duration-1000 ease-in-out`}
+            } transition-all duration-1000 ease-in-out h-full`}
           >
-            <HomePage isHomePageVisible={isHomePageVisible} />
+            <HomePage isHomePageVisible={isHomePageVisible} togglePopup={togglePopup} />
           </div>
         )}
 
@@ -124,7 +146,7 @@ export default function App() {
               isMapPageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             } transition-all duration-1000 ease-in-out`}
           >
-            <MarketsPage isMarketsPageVisible={isMapPageVisible} />
+            <MarketsPage isMarketsPageVisible={isMapPageVisible} togglePopup={togglePopup} />
           </div>
         )}
 
@@ -135,15 +157,10 @@ export default function App() {
               isHealthPageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
             } transition-all duration-1000 ease-in-out`}
           >
-            <HealthPage />
+            <HealthPage togglePopup={togglePopup} />
           </div>
         )}
       </main>
-
-      {/* Navbar - at bottom */}
-      <div className="relative z-30 flex-shrink-0">
-        <Navbar togglePopup={togglePopup} />
-      </div>
     </div>
   );
 }

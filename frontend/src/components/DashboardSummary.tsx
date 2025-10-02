@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { Card, CardContent } from './ui/card';
-import { Activity, TrendingUp, Waves, AlertCircle } from 'lucide-react';
+import { Activity, TrendingUp, Anchor, AlertCircle, MapPin } from 'lucide-react';
 
 interface DashboardSummaryProps {
   ctsData?: {
@@ -91,16 +91,19 @@ const DashboardSummary = memo(function DashboardSummary({ ctsData, fishingScore,
               )}
             </div>
 
-            {/* Fishing Conditions */}
-            <div className={`p-3 rounded-lg border ${getFishingConditionColor(fishingScore)}`}>
+            {/* Catch Summary */}
+            <div className="p-3 rounded-lg border bg-emerald-500/10 border-emerald-500/30">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <Waves className="w-4 h-4" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider">Conditions</span>
+                <Anchor className="w-4 h-4 text-emerald-400" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-400">Catch Summary</span>
               </div>
-              <p className="text-xl font-bold mb-1">{getFishingLabel(fishingScore)}</p>
+              <p className="text-xl font-bold mb-1 text-emerald-400">156 kg</p>
               <div className="space-y-0.5">
-                <p className="text-[10px] opacity-80">Score: {fishingScore}/100</p>
-                <p className="text-[10px] opacity-80">Temp: {temperature}°C</p>
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3 text-emerald-400" />
+                  <p className="text-[10px] opacity-80 text-white">+12% vs last week</p>
+                </div>
+                <p className="text-[10px] opacity-80 text-white">Monthly: 2,435 kg</p>
               </div>
             </div>
 

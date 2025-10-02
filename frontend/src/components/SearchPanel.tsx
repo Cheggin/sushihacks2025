@@ -45,7 +45,7 @@ const REGIONS = [
 
 export default function SearchPanel({ onFiltersChange, onClose, resultsCount = 0, totalCount = 0 }: SearchPanelProps) {
   const [searchText, setSearchText] = useState('');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(['Tuna & Mackerel', 'Surgeonfish']);
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100]);
   const [showCategories, setShowCategories] = useState(false);

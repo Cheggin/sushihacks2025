@@ -28,9 +28,10 @@ export default function Navbar({ togglePopup }: NavbarProps) {
   };
 
   return (
-    <nav className="mx-6 flex items-center justify-between px-2 py-6 relative">
+    <nav className="w-full flex items-center justify-between px-6 py-4 relative">
+      {/* Left: Logo */}
       <div
-        className="flex items-center gap-3 rounded-3xl backdrop-blur-xl shadow-md px-4 py-2 mr-16 h-[50px]"
+        className="flex items-center gap-3 rounded-3xl backdrop-blur-xl shadow-md px-4 py-2 h-[50px]"
         style={{
           backgroundColor: "var(--card-bg)",
           border: "1px solid var(--card-border)",
@@ -41,6 +42,7 @@ export default function Navbar({ togglePopup }: NavbarProps) {
         <span style={{ fontWeight: 700, color: "var(--text-primary)" }}>CARP</span>
       </div>
 
+      {/* Center: Navigation */}
       <div
         className="flex gap-12 h-[50px] items-center font-medium rounded-3xl px-4 py-2"
         style={{
@@ -60,8 +62,9 @@ export default function Navbar({ togglePopup }: NavbarProps) {
         </button>
       </div>
 
+      {/* Right: Color Switch */}
       <div
-        className="flex items-center gap-4 rounded-3xl px-4 py-2 ml-16 h-[50px]"
+        className="flex items-center gap-4 rounded-3xl px-4 py-2 h-[50px]"
         style={{
           backgroundColor: "var(--card-bg)",
           border: "1px solid var(--card-border)",

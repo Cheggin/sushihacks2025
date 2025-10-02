@@ -46,7 +46,7 @@ interface CTSPrediction {
   confidence: number;
 }
 
-export default function Health() {
+export default function Health({ togglePopup }: { togglePopup: (page: string) => void }) {
   // View state
   const [viewMode, setViewMode] = useState<ViewMode>('onboarding');
   const [riskTestStep, setRiskTestStep] = useState<RiskTestStep>('intro');
@@ -437,7 +437,7 @@ export default function Health() {
 
   // Render onboarding screen
   const renderOnboarding = () => (
-    <PageLayout title="Welcome to Carpal Tunnel Monitoring" rightText="Let's get started">
+    <PageLayout title="Welcome to Carpal Tunnel Monitoring" rightText="Let's get started" togglePopup={togglePopup}>
       <Card>
         <CardContent>
           <div className="mb-6">
@@ -561,7 +561,7 @@ export default function Health() {
 
   // Render risk test intro
   const renderRiskTestIntro = () => (
-    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 1 of 4">
+    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 1 of 4" togglePopup={togglePopup}>
       <Card>
         <CardContent>
           <div className="text-center py-8">
@@ -607,7 +607,7 @@ export default function Health() {
 
   // Render pain rating screen
   const renderPainRating = () => (
-    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 2 of 4">
+    <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 2 of 4" togglePopup={togglePopup}>
       <Card>
         <CardContent>
           <div className="max-w-2xl mx-auto py-8">
@@ -668,7 +668,7 @@ export default function Health() {
     }));
 
     return (
-      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 3 of 4">
+      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 3 of 4" togglePopup={togglePopup}>
         <Card>
           <CardContent>
             <div className="max-w-3xl mx-auto py-8">
@@ -796,7 +796,7 @@ export default function Health() {
     }));
 
     return (
-      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 4 of 4">
+      <PageLayout title="Carpal Tunnel Risk Assessment" rightText="Step 4 of 4" togglePopup={togglePopup}>
         <Card>
           <CardContent>
             <div className="max-w-3xl mx-auto py-8">
@@ -929,7 +929,7 @@ export default function Health() {
   const renderSummary = () => {
     if (!prediction) {
       return (
-        <PageLayout title="Calculating Assessment" rightText="Please wait">
+        <PageLayout title="Calculating Assessment" rightText="Please wait" togglePopup={togglePopup}>
           <Card>
             <CardContent>
               <div className="text-center py-12">
@@ -963,7 +963,7 @@ export default function Health() {
     const avgPinch = pinchData.reduce((sum, r) => sum + r.pinch_strength_kg, 0) / pinchData.length;
 
     return (
-      <PageLayout title="Your Complete Assessment" rightText="Results">
+      <PageLayout title="Your Complete Assessment" rightText="Results" togglePopup={togglePopup}>
         <div className="space-y-6">
           {/* CTS Risk Level - Large Card */}
           <Card>
@@ -1175,6 +1175,7 @@ export default function Health() {
           month: 'long',
           day: 'numeric',
         })}
+        togglePopup={togglePopup}
       >
         <div className="space-y-6">
           {/* Risk Test Button */}

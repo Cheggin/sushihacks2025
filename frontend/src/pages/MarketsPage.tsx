@@ -35,7 +35,7 @@ const marketData = [
   },
 ];
 
-const MarketsPage = ({ isMarketsPageVisible }: { isMarketsPageVisible: boolean }) => {
+const MarketsPage = ({ isMarketsPageVisible, togglePopup }: { isMarketsPageVisible: boolean; togglePopup: (page: string) => void }) => {
   const [selectedMarket, setSelectedMarket] = useState(marketData[0]);
   const [showCallOverlay, setShowCallOverlay] = useState(false);
 
@@ -45,7 +45,7 @@ const MarketsPage = ({ isMarketsPageVisible }: { isMarketsPageVisible: boolean }
         isMarketsPageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
       } transition-all duration-500 ease-in-out`}
     >
-      <PageLayout title="Fish Markets" rightText={<span style={{ color: "var(--text-secondary)" }}>Find local markets</span>}>
+      <PageLayout title="Fish Markets" rightText={<span style={{ color: "var(--text-secondary)" }}>Find local markets</span>} togglePopup={togglePopup}>
         <div className="relative min-h-screen">
           {/* Background remains whatever you already have (kept intentionally) */}
           <div className="relative z-10 px-6 py-8 space-y-6">

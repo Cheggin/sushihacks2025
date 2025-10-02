@@ -18,7 +18,7 @@ import {
   RadialBar,
   PolarAngleAxis,
 } from "recharts";
-import { Search, Fish, MessageCircle } from "lucide-react";
+import { Search, Fish, MessageCircle, Palette } from "lucide-react";
 
 // Dummy data
 const fishData = [
@@ -112,13 +112,16 @@ const weatherCodeToEmoji = (code: number) => {
   }
 };
 
-export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boolean }) {
+export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePageVisible: boolean; togglePopup: (page: string) => void }) {
   const [weather, setWeather] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fishingScore, setFishingScore] = useState<number>(0);
   const [temperature, setTemperature] = useState<number>(0);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [colorMode, setColorMode] = useState<"color" | "bw">(
+    (document.documentElement.getAttribute("data-theme") as "color" | "bw") || "color"
+  );
 
   const getConditionLabel = (score: number): string => {
     if (score >= 80) return "Excellent";
@@ -132,6 +135,16 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
     if (score >= 60) return "#10b981"; // Green
     if (score >= 40) return "#f59e0b"; // Amber
     return "#ef4444"; // Red
+  };
+
+  const toggleColorMode = () => {
+    const newMode = colorMode === "color" ? "bw" : "color";
+    setColorMode(newMode);
+    document.documentElement.setAttribute("data-theme", newMode);
+  };
+
+  const getColorLabel = () => {
+    return colorMode === "color" ? "Dark" : "Light";
   };
 
   useEffect(() => {
@@ -190,11 +203,20 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
               <span>
                 {loading ? "Loading weather..." : error ? <span style={{ color: "var(--text-secondary)" }}>{error}</span> : weather}
               </span>
+              <button
+                onClick={toggleColorMode}
+                className="flex items-center gap-2 transition-colors hover:opacity-80"
+                style={{ color: "white" }}
+              >
+                <Palette className="w-4 h-4" />
+                <span className="text-sm">{getColorLabel()}</span>
+              </button>
             </div>
           }
+          togglePopup={togglePopup}
         >
         {/* Page content */}
-        <div className="grid grid-cols-12 gap-4">
+        <div className="grid grid-cols-12 gap-2">
           {/* Dashboard Summary - Today's Summary Box */}
           <DashboardSummary
             ctsData={null}
@@ -246,11 +268,11 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
           </Card>
 
           {/* Right chart area */}
-          <div className="col-span-9 grid grid-cols-12 gap-4">
+          <div className="col-span-9 grid grid-cols-12 gap-2">
             <Card className="col-span-12">
               <CardContent>
-                <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Number of Fish Caught per Month</h2>
-                <ResponsiveContainer width="100%" height={180}>
+                <h2 style={{ fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Number of Fish Caught per Month</h2>
+                <ResponsiveContainer width="100%" height={130}>
                   <LineChart data={catchData}>
                     <defs>
                       <linearGradient id="colorCaught" x1="0" y1="0" x2="0" y2="1">
@@ -298,31 +320,22 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
 
             <Card className="col-span-6">
               <CardContent>
-                <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Fish Types</h2>
-                <ResponsiveContainer width="100%" height={160}>
+                <h2 style={{ fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Fish Types</h2>
+                <ResponsiveContainer width="100%" height={120}>
                   <PieChart>
                     <Pie
                       data={onboardData}
                       cx="50%"
                       cy="50%"
-                      outerRadius={70}
+                      outerRadius={45}
                       dataKey="value"
-                      label={({ name, percent }) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
-                      labelLine={{ stroke: "rgba(0,0,0,0.1)", strokeWidth: 1 }}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={{ stroke: "rgba(255,255,255,0.2)", strokeWidth: 1 }}
                     >
                       {onboardData.map((entry, idx) => (
                         <Cell key={idx} fill={COLORS[idx % COLORS.length]} stroke="rgba(0,0,0,0.06)" strokeWidth={2} />
                       ))}
                     </Pie>
-                    <Legend
-                      layout="vertical"
-                      align="right"
-                      verticalAlign="middle"
-                      iconType="circle"
-                      iconSize={10}
-                      wrapperStyle={{ paddingLeft: "20px", fontSize: "13px" }}
-                      formatter={(value) => <span style={{ color: "var(--text-primary)", fontWeight: 500 }}>{value}</span>}
-                    />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "rgba(15, 23, 42, 0.95)",
@@ -341,8 +354,8 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
 
             <Card className="col-span-6">
               <CardContent>
-                <h2 style={{ fontWeight: 600, marginBottom: 12, color: "var(--text-primary)" }}>Fishing Conditions</h2>
-                <div className="relative h-[160px] flex items-center justify-center">
+                <h2 style={{ fontWeight: 600, marginBottom: 8, color: "var(--text-primary)" }}>Fishing Conditions</h2>
+                <div className="relative h-[120px] flex items-center justify-center">
                   {loading ? (
                     <div style={{ color: "var(--muted)" }}>Loading...</div>
                   ) : (
@@ -365,32 +378,32 @@ export default function HomePage({ isHomePageVisible }: { isHomePageVisible: boo
 
                       {/* Center text overlay */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <div style={{ fontSize: 28, fontWeight: 700, color: "var(--text-primary)", marginBottom: 4 }}>{fishingScore}</div>
-                        <div className="font-semibold" style={{ color: getConditionColor(fishingScore) }}>
+                        <div style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", marginBottom: 2 }}>{fishingScore}</div>
+                        <div className="font-semibold text-sm" style={{ color: getConditionColor(fishingScore) }}>
                           {getConditionLabel(fishingScore)}
                         </div>
-                        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 6 }}>{temperature}°C</div>
+                        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 4 }}>{temperature}°C</div>
                       </div>
                     </>
                   )}
                 </div>
 
                 {/* Legend */}
-                <div className="grid grid-cols-4 gap-2 mt-3 text-xs" style={{ color: "var(--text-primary)" }}>
+                <div className="grid grid-cols-4 gap-1 mt-2" style={{ color: "var(--text-primary)", fontSize: "10px" }}>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#06b6d4" }}></div>
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#06b6d4" }}></div>
                     <span>Excellent</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#10b981" }}></div>
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#10b981" }}></div>
                     <span>Good</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#f59e0b" }}></div>
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#f59e0b" }}></div>
                     <span>Fair</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: "#ef4444" }}></div>
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#ef4444" }}></div>
                     <span>Poor</span>
                   </div>
                 </div>

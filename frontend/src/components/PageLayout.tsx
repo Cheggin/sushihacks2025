@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom"; // This will track route changes
+import Navbar from "./Navbar";
 
 interface PageLayoutProps {
   title: string;
   rightText: React.ReactNode;
   children: React.ReactNode;
+  togglePopup: (page: string) => void;
 }
 
-const PageLayout: React.FC<PageLayoutProps> = ({ title, rightText, children }) => {
+const PageLayout: React.FC<PageLayoutProps> = ({ title, rightText, children, togglePopup }) => {
   const location = useLocation(); // Track location
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
@@ -32,16 +34,30 @@ const PageLayout: React.FC<PageLayoutProps> = ({ title, rightText, children }) =
         color: "var(--text-primary)",
       }}
     >
-      {/* Header */}
+      {/* Header with integrated navbar */}
       <div
         className="flex items-center justify-between pb-4 mb-6 flex-shrink-0"
         style={{
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <h1 className="text-2xl font-bold" style={{ color: "white" }}>
-          {title}
-        </h1>
+        <div className="flex items-center gap-12">
+          <h1 className="text-2xl font-bold" style={{ color: "white" }}>
+            {title}
+          </h1>
+          {/* Navigation buttons */}
+          <div className="flex gap-12 items-center font-medium">
+            <button onClick={() => togglePopup("homepage")} style={{ color: "white" }} className="hover:underline">
+              Dashboard
+            </button>
+            <button onClick={() => togglePopup("map")} style={{ color: "white" }} className="hover:underline">
+              Map
+            </button>
+            <button onClick={() => togglePopup("health")} style={{ color: "white" }} className="hover:underline">
+              Health
+            </button>
+          </div>
+        </div>
         <div style={{ color: "white" }}>{rightText}</div>
       </div>
 
