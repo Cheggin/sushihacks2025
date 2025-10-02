@@ -1,0 +1,241 @@
+const groupMap: Record<string, string> = {
+  // TUNA & MACKEREL
+  'Scombridae': 'Tuna & Mackerel',
+  'Thunnus': 'Tuna & Mackerel',
+  'Thunnus albacares': 'Tuna & Mackerel',
+  'Thunnus obesus': 'Tuna & Mackerel',
+  'Thunnus thynnus': 'Tuna & Mackerel',
+  'Thunnus alalunga': 'Tuna & Mackerel',
+  'Katsuwonus': 'Tuna & Mackerel',
+  'Katsuwonus pelamis': 'Tuna & Mackerel',
+  'Euthynnus': 'Tuna & Mackerel',
+  'Euthynnus affinis': 'Tuna & Mackerel',
+  'Gymnosarda unicolor': 'Tuna & Mackerel',
+  'Auxis': 'Tuna & Mackerel',
+  'Sarda': 'Tuna & Mackerel',
+
+  // SURGEONFISH
+  'Acanthuridae': 'Surgeonfish',
+  'Acanthurus': 'Surgeonfish',
+  'Acanthurus auranticavus': 'Surgeonfish',
+  'Acanthurus bariene': 'Surgeonfish',
+  'Acanthurus bleekeri': 'Surgeonfish',
+  'Acanthurus dussumieri': 'Surgeonfish',
+  'Acanthurus fowleri': 'Surgeonfish',
+  'Acanthurus gahhm': 'Surgeonfish',
+  'Acanthurus guttatus': 'Surgeonfish',
+  'Acanthurus leucocheilus': 'Surgeonfish',
+  'Acanthurus leucopareius': 'Surgeonfish',
+  'Acanthurus leucosternon': 'Surgeonfish',
+  'Acanthurus lineatus': 'Surgeonfish',
+  'Acanthurus mata': 'Surgeonfish',
+  'Acanthurus nigricauda': 'Surgeonfish',
+  'Acanthurus nigrofuscus': 'Surgeonfish',
+  'Acanthurus olivaceus': 'Surgeonfish',
+  'Acanthurus pyroferus': 'Surgeonfish',
+  'Acanthurus triostegus': 'Surgeonfish',
+  'Acanthurus xanthopterus': 'Surgeonfish',
+
+  // DAMSELFISH
+  'Pomacentridae': 'Damselfish',
+  'Abudefduf': 'Damselfish',
+  'Abudefduf bengalensis': 'Damselfish',
+  'Abudefduf saxatilis': 'Damselfish',
+  'Abudefduf septemfasciatus': 'Damselfish',
+  'Abudefduf sexfasciatus': 'Damselfish',
+  'Abudefduf sordidus': 'Damselfish',
+  'Abudefduf vaigiensis': 'Damselfish',
+  'Chromis': 'Damselfish',
+  'Chromis viridis': 'Damselfish',
+  'Chromis atripectoralis': 'Damselfish',
+  'Chromis margaritifer': 'Damselfish',
+  'Chromis retrofasciata': 'Damselfish',
+  'Chromis xanthura': 'Damselfish',
+  'Dascyllus': 'Damselfish',
+  'Dascyllus aruanus': 'Damselfish',
+  'Dascyllus carneus': 'Damselfish',
+  'Dascyllus melanurus': 'Damselfish',
+  'Dascyllus reticulatus': 'Damselfish',
+  'Dascyllus trimaculatus': 'Damselfish',
+  'Amblyglyphidodon aureus': 'Damselfish',
+  'Amblyglyphidodon curacao': 'Damselfish',
+  'Amblyglyphidodon leucogaster': 'Damselfish',
+
+  // CLOWNFISH/ANEMONEFISH
+  'Amphiprion': 'Clownfish',
+  'Amphiprion akallopisos': 'Clownfish',
+  'Amphiprion clarkii': 'Clownfish',
+  'Amphiprion ephippium': 'Clownfish',
+  'Amphiprion frenatus': 'Clownfish',
+  'Amphiprion ocellaris': 'Clownfish',
+  'Amphiprion perideraion': 'Clownfish',
+  'Amphiprion polymnus': 'Clownfish',
+  'Amphiprion sandaracinos': 'Clownfish',
+
+  // CARDINALFISH
+  'Apogonidae': 'Cardinalfish',
+  'Apogon': 'Cardinalfish',
+  'Archamia': 'Cardinalfish',
+  'Archamia fucata': 'Cardinalfish',
+
+// TRIGGERFISH
+  'Balistidae': 'Triggerfish',
+  'Abalistes stellaris': 'Triggerfish',
+  'Balistapus': 'Triggerfish',
+  'Balistapus undulatus': 'Triggerfish',
+  'Balistes': 'Triggerfish',
+  'Balistoides conspicillum': 'Triggerfish',
+  'Balistoides viridescens': 'Triggerfish',
+
+  // WRASSES
+  'Labridae': 'Wrasse',
+  'Anampses': 'Wrasse',
+  'Anampses caeruleopunctatus': 'Wrasse',
+  'Anampses geographicus': 'Wrasse',
+  'Cheilinus': 'Wrasse',
+  'Cheilinus undulatus': 'Wrasse',
+  'Halichoeres': 'Wrasse',
+
+  // PUFFERFISH
+  'Tetraodontidae': 'Pufferfish',
+  'Arothron': 'Pufferfish',
+  'Arothron hispidus': 'Pufferfish',
+  'Arothron mappa': 'Pufferfish',
+  'Arothron nigropunctatus': 'Pufferfish',
+  'Arothron stellatus': 'Pufferfish',
+  'Canthigaster': 'Pufferfish',
+  'Canthigaster valentini': 'Pufferfish',
+
+  // GOBIES
+  'Gobiidae': 'Gobies',
+  'Amblygobius': 'Gobies',
+  'Amblyeleotris': 'Gobies',
+  'Acentrogobius': 'Gobies',
+
+  // BLENNIES
+  'Blenniidae': 'Blennies',
+  'Salarias': 'Blennies',
+  'Salarias fasciatus': 'Blennies',
+  'Ecsenius': 'Blennies',
+  'Ecsenius bicolor': 'Blennies',
+  'Meiacanthus': 'Blennies',
+
+  // GROUPERS
+  'Serranidae': 'Groupers',
+  'Cephalopholis': 'Groupers',
+  'Cephalopholis argus': 'Groupers',
+  'Cephalopholis miniata': 'Groupers',
+  'Epinephelus': 'Groupers',
+  'Plectropomus': 'Groupers',
+
+  // BUTTERFLYFISH
+  'Chaetodontidae': 'Butterflyfish',
+  'Chaetodon': 'Butterflyfish',
+
+  // ANGELFISH
+  'Pomacanthidae': 'Angelfish',
+  'Centropyge': 'Angelfish',
+  'Centropyge bicolor': 'Angelfish',
+  'Centropyge bispinosus': 'Angelfish',
+  'Centropyge loriculus': 'Angelfish',
+
+  // FUSILIERS
+  'Caesionidae': 'Fusiliers',
+  'Caesio': 'Fusiliers',
+
+  // JACKS/TREVALLIES
+  'Carangidae': 'Jacks & Trevallies',
+  'Carangoides': 'Jacks & Trevallies',
+  'Caranx': 'Jacks & Trevallies',
+  'Caranx ignobilis': 'Jacks & Trevallies',
+
+  // SNAPPERS
+  'Lutjanidae': 'Snappers',
+
+  // SHARKS & RAYS
+  'Carcharhinidae': 'Sharks & Rays',
+  'Carcharhinus': 'Sharks & Rays',
+  'Carcharhinus melanopterus': 'Sharks & Rays',
+  'Dasyatidae': 'Sharks & Rays',
+  'Myliobatidae': 'Sharks & Rays',
+  'Aetobatus narinari': 'Sharks & Rays',
+
+  // HARD CORALS
+  'Scleractinia': 'Hard Corals',
+  'Acroporidae': 'Hard Corals',
+  'Acropora': 'Hard Corals',
+  'Acanthastrea': 'Hard Corals',
+  'Fungiidae': 'Hard Corals',
+  'Fungia': 'Hard Corals',
+  'Galaxea': 'Hard Corals',
+  'Goniopora': 'Hard Corals',
+  'Montipora': 'Hard Corals',
+  'Pocillopora': 'Hard Corals',
+  'Porites': 'Hard Corals',
+
+  // SOFT CORALS
+  'Alcyonacea': 'Soft Corals',
+  'Alcyoniidae': 'Soft Corals',
+
+  // ANEMONES & JELLYFISH
+  'Actiniaria': 'Anemones & Jellyfish',
+  'Scyphozoa': 'Anemones & Jellyfish',
+  'Hydrozoa': 'Anemones & Jellyfish',
+
+  // ECHINODERMS
+  'Asteroidea': 'Echinoderms',
+  'Acanthaster planci': 'Echinoderms',
+  'Ophiuroidea': 'Echinoderms',
+  'Echinoidea': 'Echinoderms',
+  'Holothuroidea': 'Echinoderms',
+  'Holothuria': 'Echinoderms',
+  'Holothuria atra': 'Echinoderms',
+  'Actinopyga': 'Echinoderms',
+  'Stichopus': 'Echinoderms',
+  'Crinoidea': 'Echinoderms',
+
+  // MOLLUSKS
+  'Cephalopoda': 'Mollusks',
+  'Octopoda': 'Mollusks',
+  'Teuthida': 'Mollusks',
+  'Sepiida': 'Mollusks',
+  'Bivalvia': 'Mollusks',
+  'Tridacna': 'Mollusks',
+  'Gastropoda': 'Mollusks',
+
+  // CRUSTACEANS
+  'Decapoda': 'Crustaceans',
+  'Caridea': 'Crustaceans',
+  'Alpheus': 'Crustaceans',
+  'Lysmata': 'Crustaceans',
+  'Paguroidea': 'Crustaceans',
+  'Brachyura': 'Crustaceans',
+  'Stomatopoda': 'Crustaceans',
+  'Cirripedia': 'Crustaceans',
+  'Balanus': 'Crustaceans',
+  'Copepoda': 'Crustaceans',
+  'Calanoida': 'Crustaceans',
+  'Acartia': 'Crustaceans',
+  'Calanus': 'Crustaceans',
+  'Eucalanus': 'Crustaceans',
+  'Amphipoda': 'Crustaceans',
+
+  // WORMS
+  'Polychaeta': 'Worms',
+  'Sabellidae': 'Worms',
+  'Platyhelminthes': 'Worms',
+
+  // TUNICATES & SPONGES
+  'Ascidiacea': 'Tunicates & Sponges',
+  'Porifera': 'Tunicates & Sponges',
+
+  // MARINE ALGAE
+  'Chlorophyta': 'Marine Algae',
+  'Caulerpa': 'Marine Algae',
+  'Caulerpa racemosa': 'Marine Algae',
+  'Halimeda': 'Marine Algae',
+  'Ulva': 'Marine Algae',
+  'Rhodophyta': 'Marine Algae',
+  'Phaeophyceae': 'Marine Algae',
+  'Sargassum': 'Marine Algae',
+};
