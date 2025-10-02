@@ -3,6 +3,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { MapPin, Phone, Star, Navigation, Palette } from "lucide-react";
 import PageLayout from "../components/PageLayout";
+import MarketInsights from "../components/MarketInsights";
 import axios from "axios";
 
 interface Market {
@@ -33,12 +34,16 @@ const MarketsPage = ({
   const [selectedMarket, setSelectedMarket] = useState<Market | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCallOverlay, setShowCallOverlay] = useState(false);
   const [sortType, setSortType] = useState<SortType>("rating");
   const [colorMode, setColorMode] = useState<"color" | "bw">(() => {
     const saved = localStorage.getItem("theme");
     return (saved as "color" | "bw") || "color";
   });
+
+  // Market insights state
+  const [insights, setInsights] = useState<any>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
 
   // Calculate distance between two coordinates using Haversine formula
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
@@ -141,6 +146,53 @@ const MarketsPage = ({
       void fetchMarkets();
     }
   }, [isMarketsPageVisible, userLocation, sortType]);
+
+  // Fetch market insights when markets data changes
+  useEffect(() => {
+    const fetchInsights = async () => {
+      if (markets.length === 0 || loading) {
+        setInsights(null);
+        return;
+      }
+
+      try {
+        setInsightsLoading(true);
+        setInsightsError(null);
+
+        const response = await axios.post('http://localhost:8000/market-insight', {
+          markets: markets.map(m => ({
+            name: m.name,
+            rating: m.rating,
+            address: m.address,
+            phone: m.phone,
+            location: m.location
+          }))
+        });
+
+        setInsights(response.data);
+      } catch (err) {
+        console.error('Error fetching market insights:', err);
+        setInsightsError('Failed to generate market insights. Please try again.');
+      } finally {
+        setInsightsLoading(false);
+      }
+    };
+
+    // Only fetch when markets are loaded and not currently loading
+    if (markets.length > 0 && !loading) {
+      fetchInsights();
+    }
+  }, [markets.length, loading]);
+
+  const handleRetryInsights = () => {
+    if (markets.length > 0) {
+      setInsights(null);
+      setInsightsError(null);
+      // Trigger re-fetch by updating a dependency
+      setInsightsLoading(true);
+      setTimeout(() => setInsightsLoading(false), 100);
+    }
+  };
 
   return (
     <div
@@ -268,93 +320,17 @@ const MarketsPage = ({
             </Card>
           </div>
 
-          {/* AI Caller - Right Side */}
+          {/* Market Insights - Right Side */}
           <div className="col-span-4">
-            <Card className="relative overflow-hidden flex flex-col" style={{ height: "calc(3 * 160px + 100px)" }}>
-              <div className="flex-1 flex items-end justify-center pt-6">
-                <img
-                  src="/ai_caller.png"
-                  alt="AI Market Assistant"
-                  className="w-full max-w-[280px] h-auto object-contain"
-                />
-              </div>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-2 text-center" style={{ color: "var(--text-primary)" }}>
-                  AI Market Assistant
-                </h3>
-                <p className="text-sm mb-4 text-center" style={{ color: "var(--muted)" }}>
-                  Let our AI assistant tell you more about the market
-                </p>
-                <Button
-                  className="w-full py-3 text-base flex items-center justify-center gap-2"
-                  style={{
-                    background: "linear-gradient(90deg, #3b82f6, #06b6d4)",
-                    color: "#fff",
-                  }}
-                  onClick={() => setShowCallOverlay(true)}
-                  disabled={!selectedMarket}
-                >
-                  <Phone className="w-5 h-5" />
-                  Call {selectedMarket?.name || "Market"}
-                </Button>
-              </CardContent>
-            </Card>
+            <MarketInsights
+              markets={markets}
+              insights={insights}
+              loading={insightsLoading}
+              error={insightsError}
+              onRetry={handleRetryInsights}
+            />
           </div>
         </div>
-        )}
-
-        {/* Call Options Overlay */}
-        {showCallOverlay && selectedMarket && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="flex gap-4 p-4">
-              <Card className="w-64">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-center mb-2" style={{ color: "var(--text-primary)" }}>
-                    AI Assistant Call
-                  </h3>
-                  <p className="text-sm" style={{ color: "var(--muted)", marginBottom: 12 }}>
-                    Let our AI assistant help you make a reservation
-                  </p>
-                  <Button
-                    className="w-full py-2"
-                    style={{ background: "linear-gradient(90deg,#3b82f6,#06b6d4)", color: "#fff" }}
-                    onClick={() => {
-                      setShowCallOverlay(false);
-                    }}
-                  >
-                    Start AI Call
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="w-64">
-                <CardContent className="p-6">
-                  <h3 className="text-lg font-semibold text-center mb-2" style={{ color: "var(--text-primary)" }}>
-                    Direct Call
-                  </h3>
-                  <p className="text-sm" style={{ color: "var(--muted)", marginBottom: 12 }}>
-                    Call the market directly: {selectedMarket.phone}
-                  </p>
-                  <Button
-                    className="w-full py-2"
-                    style={{ background: "linear-gradient(90deg,#10b981,#06b6d4)", color: "#fff" }}
-                    onClick={() => {
-                      setShowCallOverlay(false);
-                    }}
-                  >
-                    Call Now
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-            <Button
-              className="absolute top-4 right-4"
-              style={{ backgroundColor: "rgba(255,255,255,0.9)", color: "var(--muted)" }}
-              onClick={() => setShowCallOverlay(false)}
-            >
-              Close
-            </Button>
-          </div>
         )}
       </PageLayout>
     </div>
