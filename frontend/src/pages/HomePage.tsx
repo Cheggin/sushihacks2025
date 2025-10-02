@@ -53,22 +53,54 @@ const onboardData = [
 // Professional colors for dark/transparent background - ocean palette
 const COLORS = ["#3b82f6", "#06b6d4", "#f59e0b", "#ec4899", "#8b5cf6", "#10b981"];
 
-// Calculate fishing conditions score (0-100) based on weather
-const calculateFishingScore = (temp: number, weatherCode: number): number => {
-  let score = 50; // Base score
+interface FishingConditions {
+  temp: number;
+  weatherCode: number;
+  date?: Date; // parsed from API timestamp
+  timeOfDay?: number;
+  windSpeed?: number;
+}
 
-  // Temperature optimization (20-25°C is ideal)
-  if (temp >= 20 && temp <= 25) score += 20;
-  else if (temp >= 15 && temp < 30) score += 10;
-  else score -= 10;
+const calculateFishingScore = ({
+  temp,
+  weatherCode,
+  date = new Date(),
+  timeOfDay = date.getHours(),
+  windSpeed
+}: FishingConditions): number => {
+  let score = 50;
 
-  // Weather conditions
-  if (weatherCode === 0 || weatherCode === 1) score += 30; // Clear/Mostly clear
-  else if (weatherCode === 2 || weatherCode === 3) score += 20; // Partly cloudy
-  else if (weatherCode >= 61 && weatherCode <= 65) score -= 20; // Rain
-  else if (weatherCode >= 95) score -= 30; // Storms
+  // ---- Temperature curve: ideal ~22°C
+  const tempPenalty = Math.pow(temp - 22, 2) * 0.5;
+  score -= tempPenalty;
 
-  return Math.max(0, Math.min(100, score)); // Clamp between 0-100
+  // ---- Weather conditions
+  if ([0, 1].includes(weatherCode)) score += 20;
+  else if ([2, 3].includes(weatherCode)) score += 10;
+  else if (weatherCode >= 61 && weatherCode <= 67) score -= 25;
+  else if (weatherCode >= 80 && weatherCode <= 86) score -= 30;
+  else if (weatherCode >= 95) score -= 40;
+
+  // ---- Time of day
+  if (timeOfDay >= 5 && timeOfDay <= 9) score += 10;
+  else if (timeOfDay >= 16 && timeOfDay <= 19) score += 8;
+  else if (timeOfDay >= 0 && timeOfDay <= 4) score -= 10;
+  else score -= 5;
+
+  // ---- Season
+  const month = date.getMonth();
+  if ([5, 6, 7].includes(month)) score += 10; // Summer
+  else if ([3, 4].includes(month)) score += 5; // Spring
+  else if ([10, 11, 0].includes(month)) score -= 5; // Winter
+
+  // ---- Wind
+  if (typeof windSpeed === 'number') {
+    if (windSpeed > 12) score -= 15;
+    else if (windSpeed > 8) score -= 10;
+    else if (windSpeed < 3) score += 5;
+  }
+
+  return Math.round(Math.max(0, Math.min(100, score)));
 };
 
 const LATITUDE = 35.5311;
@@ -147,34 +179,50 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
     return colorMode === "color" ? "Dark" : "Light";
   };
 
-  useEffect(() => {
-    const fetchWeather = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current_weather=true&timezone=Asia/Tokyo`
-        );
-        if (!res.ok) throw new Error("fetch failed");
-        const data = await res.json();
-        const cw = data.current_weather;
-        if (cw) {
-          setWeather(`${weatherCodeToEmoji(cw.weathercode)} ${cw.temperature}°C`);
-          setTemperature(cw.temperature);
-          const score = calculateFishingScore(cw.temperature, cw.weathercode);
-          setFishingScore(score);
-        } else {
-          setWeather("No weather");
-          setFishingScore(50);
-        }
-      } catch {
-        setError("Weather error");
-      } finally {
-        setLoading(false);
+useEffect(() => {
+  const fetchWeather = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current_weather=true&timezone=Asia/Tokyo`
+      );
+      if (!res.ok) throw new Error("fetch failed");
+
+      const data = await res.json();
+      const cw = data.current_weather;
+      if (cw) {
+        setWeather(`${weatherCodeToEmoji(cw.weathercode)} ${cw.temperature}°C`);
+        setTemperature(cw.temperature);
+
+        // Parse time from Open-Meteo API (ISO 8601 format)
+        const currentDate = new Date(cw.time);
+        const currentHour = currentDate.getHours();
+
+        // Enhanced score calculation
+        const score = calculateFishingScore({
+          temp: cw.temperature,
+          weatherCode: cw.weathercode,
+          date: currentDate,
+          timeOfDay: currentHour,
+          windSpeed: cw.windspeed,
+        });
+
+        setFishingScore(score);
+      } else {
+        setWeather("No weather");
+        setFishingScore(50);
       }
-    };
-    fetchWeather();
-  }, []);
+    } catch {
+      setError("Weather error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchWeather();
+}, []);
+
 
   return (
     <>
