@@ -3,6 +3,8 @@ import PageLayout from "../components/PageLayout";
 import { Card, CardContent } from "../components/ui/card";
 import DashboardSummary from "../components/DashboardSummary";
 import AIAssistant from "../components/AIAssistant";
+import { useQuery } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 import {
   LineChart,
   Line,
@@ -19,6 +21,9 @@ import {
   PolarAngleAxis,
 } from "recharts";
 import { Fish, MessageCircle, Palette } from "lucide-react";
+
+// User ID - In production, this would come from authentication
+const USER_ID = 'user_001';
 
 interface RankedFish {
   scientific_name: string;
@@ -159,6 +164,9 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
     return (saved as "color" | "bw") || "color";
   });
 
+  // Fetch most recent CTS assessment
+  const latestAssessment = useQuery(api.ctsAssessments.getMostRecent, { userId: USER_ID });
+
   const getConditionLabel = (score: number): string => {
     if (score >= 80) return "Excellent";
     if (score >= 60) return "Good";
@@ -275,12 +283,20 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
     fetchFishRankings();
   }, []);
 
+  // Transform latestAssessment to match DashboardSummary's expected format
+  const ctsData = latestAssessment ? {
+    severity: latestAssessment.predictedClass,
+    gripStrength: latestAssessment.gripStrength,
+    pinchStrength: latestAssessment.pinchStrength,
+    lastAssessment: new Date(latestAssessment.timestamp),
+  } : null;
+
   return (
     <>
       {showAIAssistant && (
         <AIAssistant
           onClose={() => setShowAIAssistant(false)}
-          ctsData={null}
+          ctsData={ctsData}
         />
       )}
       <div
@@ -320,7 +336,7 @@ export default function HomePage({ isHomePageVisible, togglePopup }: { isHomePag
         <div className="grid grid-cols-12 gap-2">
           {/* Dashboard Summary - Today's Summary Box */}
           <DashboardSummary
-            ctsData={null}
+            ctsData={ctsData}
             fishingScore={fishingScore}
             temperature={temperature}
           />
