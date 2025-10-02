@@ -185,7 +185,7 @@ useEffect(() => {
     setError(null);
     try {
       const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current_weather=true&timezone=Asia/Tokyo`
+        `https://api.open-meteo.com/v1/forecast?latitude=${LATITUDE}&longitude=${LONGITUDE}&current_weather=true`
       );
       if (!res.ok) throw new Error("fetch failed");
 
