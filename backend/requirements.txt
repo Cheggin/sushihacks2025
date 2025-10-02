@@ -21,5 +21,8 @@ bleak
 xgboost
 
 #fish-market
-dotenv
+python-dotenv
 browser_use_sdk
+
+# AI Chat
+google-generativeai

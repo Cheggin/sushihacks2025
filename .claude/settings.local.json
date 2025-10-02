@@ -10,7 +10,10 @@
       "Bash(npx expo prebuild:*)",
       "Bash(git log:*)",
       "Bash(git stash push:*)",
-      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_Yba0w0/**)"
+      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_Yba0w0/**)",
+      "Bash(git stash:*)",
+      "Bash(curl:*)",
+      "Read(//var/folders/qz/m7yw0pb15pscg7s49jpqrp7r0000gn/T/TemporaryItems/NSIRD_screencaptureui_Gs4bp4/**)"
     ],
     "deny": [],
     "ask": []

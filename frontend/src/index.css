@@ -70,11 +70,11 @@ body {
 
 :root {
   /* Defaults assume your dark/glass UI */
-  --card-bg: rgba(255, 255, 255, 0.06); /* translucent card for default/dark mode */
-  --card-border: rgba(255, 255, 255, 0.12);
+  --card-bg: rgba(15, 23, 42, 0.85); /* dark background with high opacity for better contrast */
+  --card-border: rgba(255, 255, 255, 0.2);
   --text-primary: #ffffff;
-  --text-secondary: rgba(255,255,255,0.85);
-  --muted: rgba(255,255,255,0.6);
+  --text-secondary: rgba(255,255,255,0.9);
+  --muted: rgba(255,255,255,0.7);
 }
 
 /* BW (the 'light' look you wanted, but keep background unchanged) */
