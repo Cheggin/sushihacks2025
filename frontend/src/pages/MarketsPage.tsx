@@ -46,10 +46,9 @@ const MarketsPage = ({ isMarketsPageVisible, togglePopup }: { isMarketsPageVisib
       } transition-all duration-500 ease-in-out`}
     >
       <PageLayout title="Fish Markets" rightText={<span style={{ color: "var(--text-secondary)" }}>Find local markets</span>} togglePopup={togglePopup}>
-        <div className="relative min-h-screen">
-          {/* Background remains whatever you already have (kept intentionally) */}
-          <div className="relative z-10 px-6 py-8 space-y-6">
-            {/* Large Card with Market List */}
+        <div className="grid grid-cols-12 gap-4">
+          {/* Market List - Left Side */}
+          <div className="col-span-8">
             <Card className="rounded-2xl overflow-hidden">
               <CardContent className="p-6">
                 <div className="space-y-4">
@@ -91,86 +90,94 @@ const MarketsPage = ({ isMarketsPageVisible, togglePopup }: { isMarketsPageVisib
                 </div>
               </CardContent>
             </Card>
+          </div>
 
-            {/* Call Button Card with AI Caller Image */}
-            <div className="relative -mt-24 ml-48 z-10">
-              <Card className="relative overflow-hidden w-72 h-96">
+          {/* AI Caller - Right Side */}
+          <div className="col-span-4">
+            <Card className="relative overflow-hidden h-full flex flex-col">
+              <div className="flex-1 flex items-end justify-center pt-8">
                 <img
                   src="/ai_caller.png"
                   alt="AI Caller"
-                  className="absolute -top-48 right-1/2 transform translate-x-1/2 w-[500px] h-[500px] object-contain z-20"
+                  className="w-full max-w-[300px] h-auto object-contain"
                 />
-                <CardContent className="p-6 absolute bottom-0 left-0 right-0">
+              </div>
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-2 text-center" style={{ color: "var(--text-primary)" }}>
+                  AI Call Assistant
+                </h3>
+                <p className="text-sm mb-4 text-center" style={{ color: "var(--muted)" }}>
+                  Let our AI assistant call and make reservations for you
+                </p>
+                <Button
+                  className="w-full py-3 text-base flex items-center justify-center gap-2"
+                  style={{
+                    background: "linear-gradient(90deg, #3b82f6, #06b6d4)",
+                    color: "#fff",
+                  }}
+                  onClick={() => setShowCallOverlay(true)}
+                >
+                  <Phone className="w-5 h-5" />
+                  Call {selectedMarket.name}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Call Options Overlay */}
+        {showCallOverlay && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="flex gap-4 p-4">
+              <Card className="w-64">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-center mb-2" style={{ color: "var(--text-primary)" }}>
+                    AI Assistant Call
+                  </h3>
+                  <p className="text-sm" style={{ color: "var(--muted)", marginBottom: 12 }}>
+                    Let our AI assistant help you make a reservation
+                  </p>
                   <Button
-                    className="w-full py-6 text-lg flex items-center justify-center gap-3"
-                    style={{
-                      background: "linear-gradient(90deg, #3b82f6, #06b6d4)",
-                      color: "#fff",
+                    className="w-full py-2"
+                    style={{ background: "linear-gradient(90deg,#3b82f6,#06b6d4)", color: "#fff" }}
+                    onClick={() => {
+                      setShowCallOverlay(false);
                     }}
-                    onClick={() => setShowCallOverlay(true)}
                   >
-                    <Phone className="w-6 h-6" />
-                    Call Market
+                    Start AI Call
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="w-64">
+                <CardContent className="p-6">
+                  <h3 className="text-lg font-semibold text-center mb-2" style={{ color: "var(--text-primary)" }}>
+                    Direct Call
+                  </h3>
+                  <p className="text-sm" style={{ color: "var(--muted)", marginBottom: 12 }}>
+                    Call the market directly: {selectedMarket.phone}
+                  </p>
+                  <Button
+                    className="w-full py-2"
+                    style={{ background: "linear-gradient(90deg,#10b981,#06b6d4)", color: "#fff" }}
+                    onClick={() => {
+                      setShowCallOverlay(false);
+                    }}
+                  >
+                    Call Now
                   </Button>
                 </CardContent>
               </Card>
             </div>
+            <Button
+              className="absolute top-4 right-4"
+              style={{ backgroundColor: "rgba(255,255,255,0.9)", color: "var(--muted)" }}
+              onClick={() => setShowCallOverlay(false)}
+            >
+              Close
+            </Button>
           </div>
-
-          {/* Call Options Overlay */}
-          {showCallOverlay && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-              <div className="flex gap-4 p-4">
-                <Card className="w-64">
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-center mb-2" style={{ color: "var(--text-primary)" }}>
-                      AI Assistant Call
-                    </h3>
-                    <p className="text-sm" style={{ color: "var(--muted)", marginBottom: 12 }}>
-                      Let our AI assistant help you make a reservation
-                    </p>
-                    <Button
-                      className="w-full py-2"
-                      style={{ background: "linear-gradient(90deg,#3b82f6,#06b6d4)", color: "#fff" }}
-                      onClick={() => {
-                        setShowCallOverlay(false);
-                      }}
-                    >
-                      Start AI Call
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="w-64">
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold text-center mb-2" style={{ color: "var(--text-primary)" }}>
-                      Direct Call
-                    </h3>
-                    <p className="text-sm" style={{ color: "var(--muted)", marginBottom: 12 }}>
-                      Call the market directly: {selectedMarket.phone}
-                    </p>
-                    <Button
-                      className="w-full py-2"
-                      style={{ background: "linear-gradient(90deg,#10b981,#06b6d4)", color: "#fff" }}
-                      onClick={() => {
-                        setShowCallOverlay(false);
-                      }}
-                    >
-                      Call Now
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-              <Button
-                className="absolute top-4 right-4"
-                style={{ backgroundColor: "rgba(255,255,255,0.9)", color: "var(--muted)" }}
-                onClick={() => setShowCallOverlay(false)}
-              >
-                Close
-              </Button>
-            </div>
-          )}
-        </div>
+        )}
       </PageLayout>
     </div>
   );

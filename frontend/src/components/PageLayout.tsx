@@ -51,7 +51,7 @@ const PageLayout: React.FC<PageLayoutProps> = ({ title, rightText, children, tog
               Dashboard
             </button>
             <button onClick={() => togglePopup("map")} style={{ color: "white" }} className="hover:underline">
-              Map
+              Markets
             </button>
             <button onClick={() => togglePopup("health")} style={{ color: "white" }} className="hover:underline">
               Health

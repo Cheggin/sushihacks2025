@@ -104,7 +104,7 @@ export default function App() {
               Dashboard
             </button>
             <button onClick={() => togglePopup("map")} style={{ color: "white" }} className="hover:underline">
-              Map
+              Markets
             </button>
             <button onClick={() => togglePopup("health")} style={{ color: "white" }} className="hover:underline">
               Health
