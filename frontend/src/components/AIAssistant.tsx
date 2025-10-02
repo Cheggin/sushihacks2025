@@ -36,69 +36,36 @@ export default function AIAssistant({ onClose, ctsData }: AIAssistantProps) {
     scrollToBottom();
   }, [messages]);
 
-  // Simulated AI response (in production, this would call an LLM API)
+  // Call AI chatbot API
   const generateResponse = async (userMessage: string): Promise<string> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const response = await fetch('http://localhost:8000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, { role: 'user', content: userMessage }],
+          ctsData: ctsData ? {
+            severity: ctsData.severity,
+            gripStrength: ctsData.gripStrength,
+            pinchStrength: ctsData.pinchStrength
+          } : null
+        })
+      });
 
-    const lowerMessage = userMessage.toLowerCase();
-
-    // Context-aware responses based on CTS data
-    if (ctsData && (lowerMessage.includes('health') || lowerMessage.includes('carpal tunnel') || lowerMessage.includes('cts'))) {
-      const healthContext = `Based on your current health data (${ctsData.severity} carpal tunnel, grip strength: ${ctsData.gripStrength.toFixed(1)}kg, pinch strength: ${ctsData.pinchStrength.toFixed(1)}kg), `;
-
-      if (ctsData.severity === 'severe') {
-        return healthContext + "I recommend focusing on lighter fish species that require less grip strength, such as mackerel or sardines. Consider using ergonomic fishing tools and taking frequent breaks. For larger catches like tuna, you may want to fish with a partner.";
-      } else if (ctsData.severity === 'moderate') {
-        return healthContext + "you should be mindful of prolonged gripping. I recommend alternating between lighter and heavier catches, using padded grips on your equipment, and doing hand stretches between catches.";
-      } else {
-        return healthContext + "your hand strength is good! You're well-suited for a variety of fish types, but remember to maintain proper form to prevent future issues.";
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
-    }
 
-    // Fish handling questions
-    if (lowerMessage.includes('mackerel') && lowerMessage.includes('handle')) {
-      return "Mackerel are best handled with wet hands to protect their slime coating. Grip them firmly but gently behind the head, avoiding the sharp gill covers. They're oily fish, so rinse your hands afterward. For optimal freshness, immediately place them on ice.";
-    }
-
-    if (lowerMessage.includes('tuna') && (lowerMessage.includes('handle') || lowerMessage.includes('catch'))) {
-      return "Tuna are powerful fish requiring strong grip and proper technique. Use a gaff for larger specimens. Always handle from the tail or gill plate. Due to their size and strength, they require significant grip strength - if you have carpal tunnel issues, consider using mechanical assistance or fishing with a partner.";
-    }
-
-    // Weather and fishing conditions
-    if (lowerMessage.includes('weather') || lowerMessage.includes('condition') || lowerMessage.includes('when')) {
-      return "Best fishing conditions typically occur during stable weather with temperatures between 20-25°C. Overcast days can be excellent as fish are more active. Avoid fishing during storms or extreme temperature changes. Early morning and late afternoon are usually the most productive times.";
-    }
-
-    // Fish recommendations
-    if (lowerMessage.includes('recommend') || lowerMessage.includes('what fish') || lowerMessage.includes('should i catch')) {
-      if (ctsData) {
-        if (ctsData.severity === 'severe') {
-          return "Given your current hand condition, I recommend targeting smaller species like sardines, anchovies, or mackerel. These require less grip strength and are still valuable catches. Consider using lighter tackle and ergonomic equipment.";
-        } else if (ctsData.severity === 'moderate') {
-          return "You can handle medium-sized fish like mackerel, small tuna, and sea bass comfortably. I'd suggest avoiding very large specimens and taking breaks between catches to prevent strain.";
-        }
+      const data = await response.json();
+      return data.response;
+    } catch (error) {
+      console.error('AI API error:', error);
+      if (error instanceof Error && error.message.includes('GEMINI_API_KEY')) {
+        throw new Error('AI service is not configured. Please set GEMINI_API_KEY environment variable.');
       }
-      return "Based on current conditions, tuna, mackerel, and sea urchins are all excellent choices. Consider water temperature, time of day, and your equipment when making your selection.";
+      throw error;
     }
-
-    // Technique questions
-    if (lowerMessage.includes('technique') || lowerMessage.includes('how to fish') || lowerMessage.includes('tips')) {
-      return "Key fishing techniques: 1) Match your bait to local fish species, 2) Pay attention to tides and currents, 3) Use proper knots for your line, 4) Keep your equipment well-maintained, 5) Practice catch and release for sustainability, 6) Always use ergonomic grips to protect your hands and wrists.";
-    }
-
-    // Price and market questions
-    if (lowerMessage.includes('price') || lowerMessage.includes('market') || lowerMessage.includes('sell')) {
-      return "Fish prices vary by season, quality, and market demand. Tuna typically commands premium prices, especially bluefin. Mackerel and sardines are more affordable but consistent sellers. Check the Markets page for current price trends and predictions. Fresh, well-handled fish always fetch better prices.";
-    }
-
-    // Sustainability
-    if (lowerMessage.includes('sustain') || lowerMessage.includes('environment') || lowerMessage.includes('conservation')) {
-      return "Sustainable fishing is crucial for ocean health. Practice catch limits, avoid overfished species, use circle hooks to reduce bycatch, respect marine protected areas, and handle fish gently if releasing. Your fishing today ensures fish for tomorrow.";
-    }
-
-    // Default response
-    return "I'm here to help with fishing advice! You can ask me about:\n\n• Fish handling techniques (e.g., 'how do I handle mackerel?')\n• How your health impacts fishing choices\n• Best fishing conditions and weather\n• Fish recommendations based on your abilities\n• Fishing techniques and tips\n• Market prices and trends\n• Sustainability practices\n\nWhat would you like to know more about?";
   };
 
   const handleSubmit = (e: React.FormEvent) => {
